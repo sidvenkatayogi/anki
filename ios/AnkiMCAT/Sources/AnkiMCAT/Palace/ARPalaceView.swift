@@ -201,18 +201,40 @@ struct ARPalaceView: UIViewRepresentable {
             }
         }
 
-        /// Refresh pin colors: orange while highlighted, green once learned,
-        /// blue otherwise. Runs whenever SwiftUI pushes updated loci.
+        /// Restyle every pin for the current highlight/learned state. Runs when
+        /// SwiftUI pushes updated loci (e.g. the study target moves).
         func applyPinStyling() {
             guard let root = sceneView?.scene.rootNode else { return }
             for locus in parent.loci {
-                guard let node = root.childNode(withName: locus.id.uuidString, recursively: true),
-                      let material = node.geometry?.firstMaterial else { continue }
-                let highlighted = locus.id == parent.highlightedLocusID
-                material.diffuse.contents = highlighted
-                    ? UIColor.systemOrange
-                    : (locus.learned ? UIColor.systemGreen : UIColor.systemBlue)
-                material.emission.contents = highlighted ? UIColor.systemYellow : UIColor.black
+                if let node = root.childNode(withName: locus.id.uuidString, recursively: true) {
+                    styleNode(node, locusID: locus.id)
+                }
+            }
+        }
+
+        /// Color + emphasize a single pin. The highlighted spot is bright orange,
+        /// glows, and pulses in scale so it's unmistakable in 3-D; others are
+        /// green (recalled) or blue, static.
+        private func styleNode(_ node: SCNNode, locusID: UUID) {
+            let highlighted = locusID == parent.highlightedLocusID
+            let learned = parent.loci.first { $0.id == locusID }?.learned ?? false
+            let material = node.geometry?.firstMaterial
+            material?.diffuse.contents = highlighted
+                ? UIColor.systemOrange
+                : (learned ? UIColor.systemGreen : UIColor.systemBlue)
+            material?.emission.contents = highlighted ? UIColor.systemYellow : UIColor.black
+
+            if highlighted {
+                if node.action(forKey: "pulse") == nil {
+                    let up = SCNAction.scale(to: 1.6, duration: 0.55)
+                    let down = SCNAction.scale(to: 1.0, duration: 0.55)
+                    up.timingMode = .easeInEaseOut
+                    down.timingMode = .easeInEaseOut
+                    node.runAction(.repeatForever(.sequence([up, down])), forKey: "pulse")
+                }
+            } else {
+                node.removeAction(forKey: "pulse")
+                node.scale = SCNVector3(1, 1, 1)
             }
         }
 
@@ -229,6 +251,9 @@ struct ARPalaceView: UIViewRepresentable {
                 let pin = Coordinator.makePin(number: index, learned: learned)
                 pin.name = locusID.uuidString
                 node.addChildNode(pin)
+                // Style immediately: a restored anchor can appear AFTER the
+                // current highlight was applied, so it must pick it up on creation.
+                self.styleNode(pin, locusID: locusID)
             }
         }
 
