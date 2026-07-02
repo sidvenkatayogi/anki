@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import functools
+import html
 import os
 from collections.abc import Callable
 from concurrent.futures import Future
@@ -353,21 +354,30 @@ def get_id_and_pass_from_user(
     password: str = "",
 ) -> None:
     diag = QDialog(mw)
-    diag.setWindowTitle(tr.qt_misc_sync())
+    # When a self-hosted server is configured, present a product-branded sign-in
+    # (no AnkiWeb copy or sign-up link); otherwise keep the stock AnkiWeb flow.
+    custom_url = mw.pm.custom_sync_url()
+    diag.setWindowTitle("Sync" if custom_url else tr.qt_misc_sync())
     disable_help_button(diag)
     diag.setWindowModality(Qt.WindowModality.WindowModal)
     vbox = QVBoxLayout()
-    info_label = QLabel(
-        without_unicode_isolation(
-            tr.sync_account_required(link="https://ankiweb.net/account/register")
+    if custom_url:
+        info_label = QLabel(
+            "Sign in to sync your cards and progress across your devices.<br><br>"
+            f"Server: <b>{html.escape(custom_url)}</b>"
         )
-    )
+    else:
+        info_label = QLabel(
+            without_unicode_isolation(
+                tr.sync_account_required(link="https://ankiweb.net/account/register")
+            )
+        )
     info_label.setOpenExternalLinks(True)
     info_label.setWordWrap(True)
     vbox.addWidget(info_label)
     vbox.addSpacing(20)
     g = QGridLayout()
-    l1 = QLabel(tr.sync_ankiweb_id_label())
+    l1 = QLabel("Username" if custom_url else tr.sync_ankiweb_id_label())
     g.addWidget(l1, 0, 0)
     user = QLineEdit()
     user.setText(username)
