@@ -21,6 +21,26 @@ What runs today (the "core works on both screens, no AI" milestone):
 
 Not built yet (later milestones, tracked honestly): AI card generation/checks, two-way desktop⇄phone sync, the phone's own dashboard, a projected exam-score model, and calibration/ablation evidence. The dashboard measures **memory readiness only** — it does **not** claim a projected MCAT score.
 
+## Install (macOS)
+
+There's no signed release download yet, so you install from a DMG you build locally:
+
+```
+just installer          # builds -> out/installer/dist/anki-26.05-mac-apple.dmg
+open out/installer/dist/anki-26.05-mac-apple.dmg
+```
+
+Then drag **Anki.app** onto the **Applications** folder in the window that opens.
+
+The DMG is unsigned/unnotarized (no Apple certs), so macOS Gatekeeper will block the
+first launch. Clear it once with either:
+
+- **Finder:** right-click **Anki.app** → **Open** → **Open**, or
+- **Terminal:** `xattr -dr com.apple.quarantine "/Applications/Anki.app"`
+
+After that it launches normally. `just installer` runs a full wheels rebuild first, so the
+initial build takes a while.
+
 ## Architecture — two apps, one engine
 
 Both apps drive the same Anki Rust core (`rslib`); neither reimplements the scheduler.
