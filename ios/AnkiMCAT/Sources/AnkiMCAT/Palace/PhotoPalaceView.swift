@@ -2,10 +2,13 @@
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 //
 // PhotoPalaceView — a room photo with card "pins" laid over it at normalized
-// positions. This is the 2-D representation of a palace: it drives placement
-// (tap the photo to drop a pin) and snapshot study (tap a pin to answer
-// "where is it?"), and it's the guaranteed fallback when live AR isn't
-// available (Simulator, no camera, or a failed relocalize on device).
+// positions, optionally connected by a numbered "journey" route (the classic
+// method-of-loci path you walk in order). This one view is reused for:
+//   • capture     — tap to drop pins
+//   • detail map   — read-only overview with the route drawn
+//   • snapshot study — tap a pin to answer "where is it?"
+//   • study recap  — pins recolored by how you did, route drawn
+// It's also the guaranteed fallback when live AR isn't available.
 
 import SwiftUI
 
@@ -16,6 +19,10 @@ struct PhotoPalaceView: View {
     var highlightedLocusID: UUID?
     /// Whether to show card labels next to pins (hidden during recall quizzing).
     var showLabels: Bool = true
+    /// Draw the numbered journey route connecting loci in placement order.
+    var showRoute: Bool = false
+    /// Per-locus color override (study recap: green = recalled, red = missed).
+    var outcomeColors: [UUID: Color]?
     /// Tap on empty photo area → normalized point (place mode).
     var onPlace: ((PalacePoint) -> Void)?
     /// Tap on an existing pin → its locus id (locate mode / editing).
@@ -24,6 +31,10 @@ struct PhotoPalaceView: View {
     var body: some View {
         GeometryReader { geo in
             let rect = Self.fittedRect(imageSize: image.size, in: geo.size)
+            let positions = loci.map { locus in
+                CGPoint(x: rect.minX + CGFloat(locus.point.x) * rect.width,
+                        y: rect.minY + CGFloat(locus.point.y) * rect.height)
+            }
             ZStack(alignment: .topLeading) {
                 Image(uiImage: image)
                     .resizable()
@@ -36,23 +47,30 @@ struct PhotoPalaceView: View {
                         onPlace(p)
                     }
 
+                if showRoute && positions.count >= 2 {
+                    RouteLayer(points: positions)
+                }
+
                 ForEach(Array(loci.enumerated()), id: \.element.id) { index, locus in
                     PinMarker(
                         number: index + 1,
                         label: locus.label,
-                        learned: locus.learned,
+                        color: color(for: locus),
                         highlighted: locus.id == highlightedLocusID,
                         showLabel: showLabels
                     )
-                    .position(
-                        x: rect.minX + CGFloat(locus.point.x) * rect.width,
-                        y: rect.minY + CGFloat(locus.point.y) * rect.height
-                    )
+                    .position(positions[index])
                     .onTapGesture { onSelectLocus?(locus.id) }
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
+    }
+
+    private func color(for locus: Locus) -> Color {
+        if let outcomeColors, let c = outcomeColors[locus.id] { return c }
+        if locus.id == highlightedLocusID { return .orange }
+        return locus.learned ? .green : .accentColor
     }
 
     // MARK: - Geometry
@@ -80,11 +98,38 @@ struct PhotoPalaceView: View {
     }
 }
 
+/// The dashed "journey" line connecting pins in order, drawn in with animation.
+private struct RouteLayer: View {
+    let points: [CGPoint]
+    @State private var progress: CGFloat = 0
+
+    var body: some View {
+        RoutePath(points: points)
+            .trim(from: 0, to: progress)
+            .stroke(Color.accentColor.opacity(0.75),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round, dash: [8, 6]))
+            .shadow(color: .black.opacity(0.25), radius: 1)
+            .allowsHitTesting(false)
+            .onAppear { withAnimation(.easeInOut(duration: 0.8)) { progress = 1 } }
+    }
+}
+
+private struct RoutePath: Shape {
+    let points: [CGPoint]
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        guard let first = points.first else { return p }
+        p.move(to: first)
+        for pt in points.dropFirst() { p.addLine(to: pt) }
+        return p
+    }
+}
+
 /// A single pin over the photo: numbered dot, optional label, highlight pulse.
 private struct PinMarker: View {
     let number: Int
     let label: String
-    let learned: Bool
+    let color: Color
     let highlighted: Bool
     let showLabel: Bool
 
@@ -94,7 +139,7 @@ private struct PinMarker: View {
         VStack(spacing: 3) {
             ZStack {
                 Circle()
-                    .fill(dotColor)
+                    .fill(color)
                     .frame(width: 30, height: 30)
                     .overlay(Circle().stroke(.white, lineWidth: 2))
                     .shadow(radius: 2)
@@ -122,17 +167,18 @@ private struct PinMarker: View {
                     .background(.ultraThinMaterial, in: Capsule())
             }
         }
-        .onAppear {
-            if highlighted {
-                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
-                    pulse = true
-                }
-            }
-        }
+        .onAppear { updatePulse(highlighted) }
+        // Reused pins change `highlighted` as the study target moves; restart
+        // (or stop) the pulse on each transition, not just on first appear.
+        .onChange(of: highlighted) { _, now in updatePulse(now) }
     }
 
-    private var dotColor: Color {
-        if highlighted { return .orange }
-        return learned ? .green : .accentColor
+    private func updatePulse(_ on: Bool) {
+        pulse = false
+        if on {
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
     }
 }

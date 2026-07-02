@@ -110,6 +110,20 @@ enum PalaceLogic {
         return "\(palace.loci.count)/\(palace.capacity) spots used"
     }
 
+    // MARK: - Stats
+
+    /// Whole-percent accuracy (0...100); 0 when there's nothing to score.
+    static func accuracyPercent(correct: Int, total: Int) -> Int {
+        guard total > 0 else { return 0 }
+        return Int((Double(correct) / Double(total) * 100).rounded())
+    }
+
+    /// Fraction learned (0...1) for a progress ring; 0 for an empty palace.
+    static func learnedFraction(_ palace: Palace) -> Double {
+        guard !palace.loci.isEmpty else { return 0 }
+        return Double(palace.learnedCount) / Double(palace.loci.count)
+    }
+
     // MARK: - Study session
 
     /// Build the ordered steps for a study session. `order` is the (typically

@@ -24,10 +24,26 @@ enum PalaceLogicTests {
         testStudySteps()
         testTransformBridge()
         testStoreRoundtrip()
+        testStats()
 
         print("")
         print(failures == 0 ? "ALL LOGIC TESTS PASSED" : "\(failures) FAILURE(S)")
         exit(failures == 0 ? 0 : 1)
+    }
+
+    static func testStats() {
+        print("== stats ==")
+        check(PalaceLogic.accuracyPercent(correct: 3, total: 4) == 75, "accuracy 75%")
+        check(PalaceLogic.accuracyPercent(correct: 0, total: 0) == 0, "accuracy empty -> 0")
+        check(PalaceLogic.accuracyPercent(correct: 1, total: 3) == 33, "accuracy rounds to 33")
+        check(PalaceLogic.accuracyPercent(correct: 2, total: 3) == 67, "accuracy rounds to 67")
+        var p = Palace(name: "x", capacity: 4)
+        check(PalaceLogic.learnedFraction(p) == 0, "empty learnedFraction is 0")
+        p.loci = [
+            Locus(cardID: 1, label: "a", point: PalacePoint(x: 0, y: 0), learned: true),
+            Locus(cardID: 2, label: "b", point: PalacePoint(x: 0, y: 0), learned: false),
+        ]
+        check(PalaceLogic.learnedFraction(p) == 0.5, "half learned -> 0.5")
     }
 
     static func testLabel() {

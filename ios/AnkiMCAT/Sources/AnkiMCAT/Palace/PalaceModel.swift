@@ -162,11 +162,21 @@ final class PalaceModel {
 
     // MARK: - Photo / world map blobs
 
+    /// Save a UIImage as the palace's reference photo (e.g. the sample room).
+    func savePhoto(_ image: UIImage, forPalace palaceID: UUID) {
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            lastError = "Couldn't encode photo."
+            return
+        }
+        savePhoto(data, forPalace: palaceID)
+    }
+
     func savePhoto(_ data: Data, forPalace palaceID: UUID) {
         guard var palace = palace(palaceID) else { return }
         do {
             try store.savePhoto(data, for: palaceID)
             palace.hasPhoto = true
+            palace.photoVersion = (palace.photoVersion ?? 0) + 1
             persist(palace)
         } catch {
             lastError = "Couldn't save photo: \(error)"

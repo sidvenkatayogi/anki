@@ -117,19 +117,26 @@ private struct PalaceRow: View {
                 Text(PalaceLogic.capacityStatus(palace))
                     .font(.caption)
                     .foregroundStyle(palace.isFull ? .orange : .secondary)
-                if palace.loci.count > 0 {
-                    Text("\(palace.learnedCount)/\(palace.loci.count) recalled")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
             }
             Spacer()
             if palace.hasWorldMap {
                 Image(systemName: "arkit").foregroundStyle(.secondary)
             }
+            if !palace.loci.isEmpty {
+                ZStack {
+                    ProgressRing(fraction: PalaceLogic.learnedFraction(palace), lineWidth: 3, tint: .green)
+                        .frame(width: 32, height: 32)
+                    Text("\(palace.learnedCount)")
+                        .font(.caption2.bold().monospacedDigit())
+                }
+                .accessibilityLabel("\(palace.learnedCount) of \(palace.loci.count) recalled")
+            }
         }
         .padding(.vertical, 4)
-        .task(id: palace.id) { thumb = await Self.loadThumbnail(model: model, id: palace.id) }
+        // Re-run when the palace changes OR its photo is (re)saved.
+        .task(id: "\(palace.id)-\(palace.photoVersion ?? 0)") {
+            thumb = await Self.loadThumbnail(model: model, id: palace.id)
+        }
     }
 
     @ViewBuilder private var thumbnail: some View {
@@ -191,11 +198,20 @@ struct NewPalaceSheet: View {
     }
 }
 
-/// Per-palace detail: add cards, study, and manage the placed spots.
+/// Wraps a locus id so it can drive a `.sheet(item:)`.
+private struct LocusSelection: Identifiable { let id: UUID }
+
+/// Per-palace detail: a journey map, stats, add cards / study, and per-spot
+/// management (tap a spot to view its card, edit its mnemonic, or remove it).
 struct PalaceDetailView: View {
     @Bindable var model: PalaceModel
     let palaceID: UUID
     @Binding var path: [PalaceRoute]
+
+    @State private var photo: UIImage?
+    @State private var selected: LocusSelection?
+    @State private var renaming = false
+    @State private var newName = ""
 
     private var palace: Palace? { model.palace(palaceID) }
 
@@ -207,18 +223,45 @@ struct PalaceDetailView: View {
                 ContentUnavailableView("Palace not found", systemImage: "questionmark.folder")
             }
         }
+        // Keyed on photoVersion so the map appears/refreshes when a photo is
+        // added OR replaced after this screen first loaded (e.g. returning from
+        // capture); this view stays in the nav stack, so it won't re-appear.
+        .task(id: palace?.photoVersion ?? 0) {
+            if let data = model.photoData(forPalace: palaceID) {
+                photo = UIImage(data: data)
+            } else {
+                photo = nil
+            }
+        }
+        .sheet(item: $selected) { sel in
+            LocusDetailView(model: model, palaceID: palaceID, locusID: sel.id)
+        }
+        .alert("Rename place", isPresented: $renaming) {
+            TextField("Name", text: $newName)
+            Button("Save") { if let palace { model.rename(palace, to: newName) } }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 
     private func content(_ palace: Palace) -> some View {
         List {
-            Section {
-                actionButtons(palace)
+            if let photo, !palace.loci.isEmpty {
+                Section {
+                    PhotoPalaceView(image: photo, loci: palace.loci,
+                                    showLabels: false, showRoute: true)
+                        .frame(height: 220)
+                        .listRowInsets(EdgeInsets())
+                } header: {
+                    Text("Your journey")
+                }
             }
 
+            Section { statsRow(palace) }
+
+            Section { actionButtons(palace) }
+
             if palace.isFull {
-                Section {
-                    fullBanner
-                }
+                Section { fullBanner }
             }
 
             Section("Spots (\(palace.loci.count)/\(palace.capacity))") {
@@ -226,8 +269,13 @@ struct PalaceDetailView: View {
                     Text("No cards placed yet. Tap \"Add cards\" to start filling this place.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(palace.loci) { locus in
-                        LocusRow(locus: locus)
+                    ForEach(Array(palace.loci.enumerated()), id: \.element.id) { index, locus in
+                        Button {
+                            selected = LocusSelection(id: locus.id)
+                        } label: {
+                            LocusRow(number: index + 1, locus: locus)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .onDelete { offsets in
                         let ids = offsets.map { palace.loci[$0].id }
@@ -238,6 +286,39 @@ struct PalaceDetailView: View {
         }
         .navigationTitle(palace.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button {
+                        newName = palace.name
+                        renaming = true
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+    }
+
+    private func statsRow(_ palace: Palace) -> some View {
+        HStack(spacing: 16) {
+            StatRing(
+                fraction: PalaceLogic.learnedFraction(palace),
+                tint: .green,
+                value: "\(Int((PalaceLogic.learnedFraction(palace) * 100).rounded()))%",
+                caption: "recalled",
+                size: 92)
+            VStack(alignment: .leading, spacing: 6) {
+                Label("\(palace.loci.count) spots placed", systemImage: "mappin")
+                Label("\(palace.learnedCount) recalled", systemImage: "checkmark.circle")
+                Label("\(palace.remainingSpace) spots free", systemImage: "plus.circle")
+            }
+            .font(.subheadline)
+            Spacer()
+        }
+        .padding(.vertical, 4)
     }
 
     private func actionButtons(_ palace: Palace) -> some View {
@@ -279,14 +360,19 @@ struct PalaceDetailView: View {
     }
 }
 
-/// A single placed card in the detail list.
+/// A single placed card in the detail list: spot number, label, mnemonic.
 private struct LocusRow: View {
+    let number: Int
     let locus: Locus
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: locus.learned ? "checkmark.circle.fill" : "mappin.circle.fill")
-                .foregroundStyle(locus.learned ? Color.green : Color.accentColor)
+            ZStack {
+                Circle()
+                    .fill(locus.learned ? Color.green : Color.accentColor)
+                    .frame(width: 26, height: 26)
+                Text("\(number)").font(.caption2.bold()).foregroundStyle(.white)
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(locus.label).lineLimit(2)
                 if !locus.mnemonic.isEmpty {
@@ -296,6 +382,8 @@ private struct LocusRow: View {
                         .lineLimit(1)
                 }
             }
+            Spacer()
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
     }
 }

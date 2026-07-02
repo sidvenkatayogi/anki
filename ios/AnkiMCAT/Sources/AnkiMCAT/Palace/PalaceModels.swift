@@ -94,6 +94,10 @@ struct Palace: Codable, Identifiable, Equatable {
     var hasPhoto: Bool
     /// An ARWorldMap has been captured for this palace (device only).
     var hasWorldMap: Bool
+    /// Bumped each time the reference photo is (re)saved, so views that cache
+    /// the decoded image can tell when to reload. Optional so palaces saved
+    /// before this field existed still decode.
+    var photoVersion: Int?
 
     init(
         id: UUID = UUID(),
@@ -102,7 +106,8 @@ struct Palace: Codable, Identifiable, Equatable {
         capacity: Int = Palace.defaultCapacity,
         loci: [Locus] = [],
         hasPhoto: Bool = false,
-        hasWorldMap: Bool = false
+        hasWorldMap: Bool = false,
+        photoVersion: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -111,6 +116,7 @@ struct Palace: Codable, Identifiable, Equatable {
         self.loci = loci
         self.hasPhoto = hasPhoto
         self.hasWorldMap = hasWorldMap
+        self.photoVersion = photoVersion
     }
 
     /// True when no more cards can be placed — the trigger to capture a new place.

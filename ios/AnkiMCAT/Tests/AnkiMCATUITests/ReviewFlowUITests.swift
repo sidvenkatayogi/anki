@@ -98,4 +98,74 @@ final class ReviewFlowUITests: XCTestCase {
             || app.buttons["Test Desk"].exists
         XCTAssertTrue(appears, "Created palace should appear in the list")
     }
+
+    /// Full end-to-end: create a palace, seed it with the built-in sample room,
+    /// place two real cards on it, then run a recall study session and grade to
+    /// the visual recap. Exercises capture → picker → study → FSRS grade → recap
+    /// entirely in the Simulator (no camera / photo library needed).
+    func testFullPalaceStudyFlow() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let palaceTab = app.tabBars.buttons["Palace"]
+        XCTAssertTrue(palaceTab.waitForExistence(timeout: 30))
+        palaceTab.tap()
+
+        // Create a palace.
+        let add = app.navigationBars.buttons["New place"]
+        XCTAssertTrue(add.waitForExistence(timeout: 5))
+        add.tap()
+        let nameField = app.textFields.firstMatch
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.tap()
+        nameField.typeText("Study Room")
+        app.buttons["Create"].tap()
+
+        // Seed the built-in sample room so the photo surface appears.
+        let sample = app.buttons["Use a sample room"]
+        XCTAssertTrue(sample.waitForExistence(timeout: 5))
+        sample.tap()
+        XCTAssertTrue(app.staticTexts["0/7 spots used"].waitForExistence(timeout: 5),
+                      "photo capture surface should appear after picking the sample room")
+
+        // Place two cards by tapping spots on the photo, choosing the first card each time.
+        for offset in [CGVector(dx: 0.4, dy: 0.4), CGVector(dx: 0.62, dy: 0.5)] {
+            app.coordinate(withNormalizedOffset: offset).tap()
+            let picker = app.navigationBars["Choose a card"]
+            XCTAssertTrue(picker.waitForExistence(timeout: 10), "card picker should open")
+            let firstCard = app.cells.firstMatch
+            XCTAssertTrue(firstCard.waitForExistence(timeout: 10), "cards should be listed")
+            firstCard.tap()
+            XCTAssertTrue(picker.waitForNonExistence(timeout: 5), "picker should dismiss after choosing")
+        }
+
+        // Back to the palace list (create jumps straight to capture, so there's
+        // no detail in the stack yet), open the palace, then study.
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.navigationBars["Memory Palace"].waitForExistence(timeout: 5))
+        let firstPalace = app.cells.firstMatch
+        XCTAssertTrue(firstPalace.waitForExistence(timeout: 5))
+        firstPalace.tap()
+        let study = app.buttons["Study this palace"]
+        XCTAssertTrue(study.waitForExistence(timeout: 5))
+        study.tap()
+
+        // Recall mode is deterministic (no "tap the right pin" step).
+        if app.buttons["What's here?"].waitForExistence(timeout: 5) {
+            app.buttons["What's here?"].tap()
+        }
+        app.buttons["Start"].tap()
+
+        // Grade each recalled card until the recap appears.
+        let recap = app.staticTexts["Session complete"]
+        var guardCount = 0
+        while !recap.exists && guardCount < 10 {
+            if app.buttons["Reveal card"].waitForExistence(timeout: 3) { app.buttons["Reveal card"].tap() }
+            if app.buttons["Show answer"].waitForExistence(timeout: 3) { app.buttons["Show answer"].tap() }
+            if app.buttons["Good"].waitForExistence(timeout: 3) { app.buttons["Good"].tap() }
+            guardCount += 1
+        }
+        XCTAssertTrue(recap.waitForExistence(timeout: 5),
+                      "the visual session recap should appear after grading")
+    }
 }

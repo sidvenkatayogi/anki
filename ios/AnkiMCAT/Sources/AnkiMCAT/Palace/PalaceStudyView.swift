@@ -36,6 +36,11 @@ final class PalaceStudySession {
     private(set) var loading = false
     /// A grade is in flight — guards against double-taps double-grading.
     private(set) var isGrading = false
+    /// Per-spot outcome for the recap (true = recalled / located correctly).
+    private(set) var outcomeByLocus: [UUID: Bool] = [:]
+
+    /// Spots that went well this session.
+    var successCount: Int { outcomeByLocus.values.filter { $0 }.count }
 
     init(model: PalaceModel, palaceID: UUID, mode: StudyMode) {
         self.model = model
@@ -89,6 +94,7 @@ final class PalaceStudySession {
     func grade(_ rating: Anki_Scheduler_CardAnswer.Rating) async {
         guard !isGrading, let locus = currentLocus else { return }
         isGrading = true
+        let mode = currentStep?.mode
         let ok = await model.grade(cardID: locus.cardID, rating: rating)
         if ok {
             gradedCount += 1
@@ -97,9 +103,13 @@ final class PalaceStudySession {
             if rating == .good || rating == .easy {
                 model.markLearned(true, locusID: locus.id, palaceID: palaceID)
             }
+            // Record how this spot went for the recap: located correctly
+            // (locate) or graded Good/Easy (recall). Only when the grade
+            // actually persisted, so counts never over-report vs. graded.
+            let success = (mode == .locate) ? (locateResult == true) : (rating == .good || rating == .easy)
+            outcomeByLocus[locus.id] = success
         }
-        // Advance regardless (a missing card shouldn't wedge the session), but
-        // only successful grades count toward the tally.
+        // Advance regardless (a missing card shouldn't wedge the session).
         await advance()
         isGrading = false
     }
@@ -388,22 +398,77 @@ struct PalaceStudyView: View {
             description: Text("This palace has no photo or spatial map to study against."))
     }
 
-    // MARK: - Finished
+    // MARK: - Finished (visual recap)
 
     private func finishedView(_ session: PalaceStudySession) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 56)).foregroundStyle(.green)
-            Text("Session complete").font(.title2.bold())
-            Text("Graded \(session.gradedCount) card\(session.gradedCount == 1 ? "" : "s") through your scheduler.")
-                .foregroundStyle(.secondary)
-            if session.steps.contains(where: { $0.mode == .locate }) {
-                Text("Located \(session.correctCount) correctly.")
-                    .foregroundStyle(.secondary)
+        let total = max(session.steps.count, 1)
+        let success = session.successCount
+        let pct = PalaceLogic.accuracyPercent(correct: success, total: total)
+        return ScrollView {
+            VStack(spacing: 20) {
+                Text("Session complete").font(.title2.bold()).padding(.top, 8)
+
+                StatRing(fraction: Double(success) / Double(total),
+                         tint: ringTint(pct),
+                         value: "\(pct)%",
+                         caption: "this session",
+                         size: 150)
+
+                if let image = studyImage, let palace, !palace.loci.isEmpty {
+                    VStack(spacing: 6) {
+                        Text("Your journey").font(.headline)
+                        PhotoPalaceView(image: image, loci: palace.loci,
+                                        showLabels: false, showRoute: true,
+                                        outcomeColors: recapColors(session))
+                            .frame(height: 240)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        HStack(spacing: 14) {
+                            Label("recalled", systemImage: "circle.fill").foregroundStyle(.green)
+                            Label("review", systemImage: "circle.fill").foregroundStyle(.red)
+                        }
+                        .font(.caption)
+                    }
+                    .padding(.horizontal)
+                }
+
+                HStack(spacing: 28) {
+                    stat("\(session.gradedCount)", "graded")
+                    stat("\(success)", "recalled")
+                    stat("\(total - success)", "to review")
+                }
+
+                HStack {
+                    Button { restart() } label: {
+                        Label("Study again", systemImage: "arrow.clockwise").padding(.horizontal, 8)
+                    }
+                    .buttonStyle(.bordered)
+                    Button("Done") { self.session = nil }
+                        .buttonStyle(.borderedProminent)
+                }
+                .padding(.bottom)
             }
-            Button("Done") { self.session = nil }
-                .buttonStyle(.borderedProminent)
+            .padding()
         }
-        .padding()
+    }
+
+    private func ringTint(_ pct: Int) -> Color {
+        pct >= 80 ? .green : (pct >= 50 ? .orange : .red)
+    }
+
+    private func recapColors(_ session: PalaceStudySession) -> [UUID: Color] {
+        session.outcomeByLocus.mapValues { $0 ? Color.green : Color.red }
+    }
+
+    private func restart() {
+        let s = PalaceStudySession(model: model, palaceID: palaceID, mode: mode)
+        session = s
+        Task { await s.begin() }
+    }
+
+    private func stat(_ value: String, _ caption: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value).font(.title3.bold().monospacedDigit())
+            Text(caption).font(.caption).foregroundStyle(.secondary)
+        }
     }
 }

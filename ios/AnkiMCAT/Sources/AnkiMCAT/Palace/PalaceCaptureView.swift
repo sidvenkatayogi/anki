@@ -118,6 +118,7 @@ struct PalaceCaptureView: View {
                 image: ui,
                 loci: palace.loci,
                 showLabels: true,
+                showRoute: true,
                 onPlace: { point in
                     guard !palace.isFull else { return }
                     pending = PendingPlacement(transform: nil, anchorID: nil, point: point)
@@ -146,6 +147,15 @@ struct PalaceCaptureView: View {
                     .padding(.vertical, 6).padding(.horizontal, 12)
             }
             .buttonStyle(.borderedProminent)
+
+            Button {
+                if let img = PalaceSampleRoom.image() {
+                    model.savePhoto(img, forPalace: palaceID)
+                }
+            } label: {
+                Label("Use a sample room", systemImage: "square.grid.3x3.square")
+            }
+            .buttonStyle(.bordered)
         }
     }
 
