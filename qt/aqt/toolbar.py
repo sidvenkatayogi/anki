@@ -384,6 +384,18 @@ class Toolbar:
                 self._toLearnLinkHandler,
                 id="to-learn",
             ),
+            self.create_link(
+                "read",
+                "Read",
+                self._readLinkHandler,
+                id="read",
+            ),
+            self.create_link(
+                "practice",
+                "Practice",
+                self._practiceLinkHandler,
+                id="practice",
+            ),
         ]
 
         links.append(self._create_sync_link())
@@ -467,6 +479,12 @@ class Toolbar:
 
     def _toLearnLinkHandler(self) -> None:
         self.mw.onToLearn()
+
+    def _readLinkHandler(self) -> None:
+        self.mw.onRead()
+
+    def _practiceLinkHandler(self) -> None:
+        self.mw.onPractice()
 
     def _syncLinkHandler(self) -> None:
         self.mw.on_sync_button_clicked()

@@ -105,17 +105,17 @@ desktop and the phone, rather than duplicating it per platform.
 
 **Upstream files touched (merge surface):**
 
-| File | Change | Merge risk |
-|---|---|---|
-| `proto/anki/stats.proto` | honest-score fields on `TagMasteryResponse`; `CardTopics` RPC | low (additive) |
-| `proto/anki/tags.proto` | never-learned RPCs | low (additive) |
-| `rslib/src/stats/tag_mastery.rs` | mastery query + honest-score computation (+ 23 tests) | low (new module logic) |
-| `rslib/src/stats/service.rs` | dispatch the new stats RPCs | low (additive) |
-| `rslib/src/tags/never_learned.rs` | new module (bulk tag + suspend) | low (new file) |
-| `rslib/src/tags/{mod.rs,service.rs}` | wire the never-learned module + RPCs | low (additive) |
-| `rslib/src/ops.rs` | add `SetNeverLearned` op | low (additive enum arm) |
-| `rslib/ios/{Cargo.toml,anki_ios.h,src/lib.rs}` | new C ABI shim for the iOS engine | none upstream (new crate) |
-| `rslib/src/storage/sqlite.rs`, `rslib/src/media/files.rs` | iOS storage guards | low (small, cfg-gated) |
+| File                                                      | Change                                                        | Merge risk                |
+| --------------------------------------------------------- | ------------------------------------------------------------- | ------------------------- |
+| `proto/anki/stats.proto`                                  | honest-score fields on `TagMasteryResponse`; `CardTopics` RPC | low (additive)            |
+| `proto/anki/tags.proto`                                   | never-learned RPCs                                            | low (additive)            |
+| `rslib/src/stats/tag_mastery.rs`                          | mastery query + honest-score computation (+ 23 tests)         | low (new module logic)    |
+| `rslib/src/stats/service.rs`                              | dispatch the new stats RPCs                                   | low (additive)            |
+| `rslib/src/tags/never_learned.rs`                         | new module (bulk tag + suspend)                               | low (new file)            |
+| `rslib/src/tags/{mod.rs,service.rs}`                      | wire the never-learned module + RPCs                          | low (additive)            |
+| `rslib/src/ops.rs`                                        | add `SetNeverLearned` op                                      | low (additive enum arm)   |
+| `rslib/ios/{Cargo.toml,anki_ios.h,src/lib.rs}`            | new C ABI shim for the iOS engine                             | none upstream (new crate) |
+| `rslib/src/storage/sqlite.rs`, `rslib/src/media/files.rs` | iOS storage guards                                            | low (small, cfg-gated)    |
 
 New non-engine code lives under `qt/aqt/` (dashboard, interleaving, never-learned UI),
 `ts/routes/mastery/` (dashboard view), and `ios/AnkiMCAT/` (the companion app).
@@ -124,7 +124,7 @@ New non-engine code lives under `qt/aqt/` (dashboard, interleaving, never-learne
 
 Every number on the Topic Mastery dashboard comes with its context, per the honesty rule:
 
-- **Per-topic memory score** — mean *current* FSRS retrievability over that topic's cards that
+- **Per-topic memory score** — mean _current_ FSRS retrievability over that topic's cards that
   actually have memory state (the honest denominator: "scored" vs "total").
 - **Overall recall as a range** — a confidence interval, not a single number.
 - **Coverage** — how many topics have been studied vs the total.

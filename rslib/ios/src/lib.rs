@@ -71,8 +71,9 @@ unsafe fn leak_into_out(bytes: Vec<u8>, out_ptr: *mut *mut u8, out_len: *mut usi
     *out_len = len;
 }
 
-/// Initialize a new backend from a serialized `anki_proto::backend::BackendInit`
-/// message (same bytes the Python bridge decodes).
+/// Initialize a new backend from a serialized
+/// `anki_proto::backend::BackendInit` message (same bytes the Python bridge
+/// decodes).
 ///
 /// Returns a non-null handle on success. Returns `NULL` on failure (the
 /// reason is logged to stderr; there is no payload to inspect).

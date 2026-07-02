@@ -13,29 +13,49 @@ import SwiftUI
 struct AnkiMCATApp: App {
     @State private var review: ReviewModel
     @State private var palace: PalaceModel
+    @State private var sync: SyncModel
+    @State private var read: ReadModel
+    @State private var practice: PracticeModel
 
     init() {
         let engine = AnkiEngine()
         _review = State(initialValue: ReviewModel(engine: engine))
         _palace = State(initialValue: PalaceModel(engine: engine))
+        _sync = State(initialValue: SyncModel(engine: engine))
+        _read = State(initialValue: ReadModel())
+        _practice = State(initialValue: PracticeModel(engine: engine))
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView(review: review, palace: palace)
+            RootView(review: review, palace: palace, sync: sync, read: read, practice: practice)
                 .task {
+                    // A sync that replaces the collection must rebuild the
+                    // reviewer's queue and the palace's card cache.
+                    sync.onCollectionChanged = { [review, palace] in
+                        await review.reloadAfterSync()
+                        palace.onEngineReady()
+                    }
                     await review.start()
                     palace.onEngineReady()
+                    // Pull the latest on launch when signed in.
+                    if sync.isLoggedIn {
+                        await sync.sync()
+                    }
                 }
         }
     }
 }
 
-/// Two tabs on the shared engine: the classic review loop, and the spatial
-/// memory palace built on top of the same cards.
+/// Five tabs on the shared engine: the classic review loop, the spatial memory
+/// palace, MCAT reading passages, practice questions, and the account/sync
+/// screen — all backed by one opened collection.
 struct RootView: View {
     @Bindable var review: ReviewModel
     let palace: PalaceModel
+    let sync: SyncModel
+    let read: ReadModel
+    let practice: PracticeModel
 
     var body: some View {
         TabView {
@@ -44,6 +64,15 @@ struct RootView: View {
 
             PalaceListView(model: palace)
                 .tabItem { Label("Palace", systemImage: "building.columns") }
+
+            ReadView(model: read)
+                .tabItem { Label("Read", systemImage: "text.book.closed") }
+
+            PracticeView(model: practice)
+                .tabItem { Label("Practice", systemImage: "pencil.and.list.clipboard") }
+
+            SyncView(model: sync)
+                .tabItem { Label("Account", systemImage: "person.crop.circle") }
         }
     }
 }

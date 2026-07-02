@@ -108,18 +108,20 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
                 {#if data.enoughData && data.overallN > 0}
                     <div class="how-sure">
-                        {tr.statisticsMasteryHowSure({ level: howSureLabel(data.howSure) })}
+                        {tr.statisticsMasteryHowSure({
+                            level: howSureLabel(data.howSure),
+                        })}
                     </div>
                 {/if}
 
                 <div class="meta">
-                    <span
-                        >{tr.statisticsMasteryReasons({
+                    <span>
+                        {tr.statisticsMasteryReasons({
                             reviews: data.totalGradedReviews,
                             count: data.topicsWithReviews,
                             total: data.topicsTotal,
-                        })}</span
-                    >
+                        })}
+                    </span>
                     <span>{lastUpdatedText(data.lastUpdatedSecs)}</span>
                 </div>
 
@@ -136,13 +138,15 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 <table>
                     <thead>
                         <tr>
-                            <th scope="col" class="left">{tr.statisticsMasteryTopic()}</th>
+                            <th scope="col" class="left">
+                                {tr.statisticsMasteryTopic()}
+                            </th>
                             <th scope="col">{tr.statisticsMasteryCards()}</th>
                             <th scope="col">{tr.statisticsMasteryScored()}</th>
                             <th scope="col">{tr.statisticsMasteryMastered()}</th>
-                            <th scope="col" class="recall-col"
-                                >{tr.statisticsMasteryAverageRecall()}</th
-                            >
+                            <th scope="col" class="recall-col">
+                                {tr.statisticsMasteryAverageRecall()}
+                            </th>
                             <th scope="col">{tr.statisticsMasteryReviews()}</th>
                         </tr>
                     </thead>
@@ -160,7 +164,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                                             style="--v: {group.averageRecall}"
                                         >
                                             <div class="fill" aria-hidden="true"></div>
-                                            <span class="val">{pct(group.averageRecall)}</span>
+                                            <span class="val">
+                                                {pct(group.averageRecall)}
+                                            </span>
                                         </div>
                                     {:else}
                                         <span class="dash">–</span>

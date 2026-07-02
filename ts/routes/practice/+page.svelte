@@ -1,0 +1,707 @@
+<!--
+Copyright: Ankitects Pty Ltd and contributors
+License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+-->
+<script lang="ts">
+    import type { TagMasteryResponse } from "@generated/anki/stats_pb";
+    import { tagMastery } from "@generated/backend";
+
+    import TitledContainer from "$lib/components/TitledContainer.svelte";
+
+    import type {
+        Category,
+        FsrsCategorySummary,
+        FsrsSummary,
+        Performance,
+        PracticeHistoryItem,
+        Readiness,
+    } from "./mcatMetrics";
+    import { CATEGORIES, computePerformance, computeReadiness } from "./mcatMetrics";
+
+    interface SeedQuestion {
+        id: string;
+        category: Category;
+        stem: string;
+        options: string[];
+        answer_index: number;
+        explanation: string;
+        difficulty_b: number;
+    }
+
+    interface PracticeAnswer {
+        client_answer_id: string;
+        question_id: string;
+        category: Category;
+        correct: boolean;
+        difficulty_b: number;
+        answered_at: number;
+    }
+
+    // Same MileDown-taxonomy grouping as the Mastery page (depth-1 collapses
+    // everything into one root tag, so we use depth-2 and map the resulting
+    // "MileDown::<Section>" tags onto the 4 canonical categories below).
+    // See domains/frontend/plan.md's "Category -> tag mapping deviation" note.
+    const fsrsGroupDepth = 2;
+
+    const categoryLabels: Record<Category, string> = {
+        bio_biochem: "Bio/Biochem",
+        chem_phys: "Chem/Phys",
+        psych_soc: "Psych/Soc",
+        cars: "CARS",
+    };
+
+    let questions: SeedQuestion[] | null = null;
+    let history: PracticeAnswer[] | null = null;
+    let loadError = false;
+
+    let currentIndex = 0;
+    let selectedIndex: number | null = null;
+    let submitted = false;
+    let submitting = false;
+    let completedFullSet = false;
+
+    let performance: Performance | null = null;
+    let fsrsSummary: FsrsSummary | null = null;
+    let readiness: Readiness | null = null;
+    // Set when the current question's answer couldn't be persisted to the
+    // local history store (after a best-effort retry) -- see submitAnswer().
+    // Informational only: the reveal/Next flow is never blocked on this.
+    let saveWarning = false;
+
+    async function loadAll(): Promise<void> {
+        loadError = false;
+        try {
+            const [seedResp, historyResp] = await Promise.all([
+                fetch("/_anki/practice-seed.json"),
+                fetch("/_anki/practiceHistory"),
+            ]);
+            if (!seedResp.ok || !historyResp.ok) {
+                throw new Error("bad response");
+            }
+            questions = (await seedResp.json()) as SeedQuestion[];
+            const historyJson = (await historyResp.json()) as {
+                records: PracticeAnswer[];
+            };
+            history = historyJson.records ?? [];
+            recomputePerformance();
+        } catch (e) {
+            loadError = true;
+            questions = null;
+            history = null;
+        }
+    }
+
+    function recomputePerformance(): void {
+        if (!history) {
+            return;
+        }
+        const items: PracticeHistoryItem[] = history.map((r) => ({
+            question_id: r.question_id,
+            category: r.category,
+            correct: r.correct,
+            difficulty_b: r.difficulty_b,
+        }));
+        performance = computePerformance(items);
+        recomputeReadiness();
+    }
+
+    function recomputeReadiness(): void {
+        if (!performance || !fsrsSummary) {
+            return;
+        }
+        readiness = computeReadiness(performance, fsrsSummary);
+        maybeFetchServerMetrics();
+    }
+
+    // Maps a MileDown::<Section> tag (or the "(untagged)" sentinel) to one of
+    // the 4 canonical categories via case-insensitive substring match. Order
+    // matters: bio_biochem is checked before chem_phys so "Biochemistry"
+    // (which contains "chem") is not misrouted. Unmatched tags (including
+    // "(untagged)") are skipped -- never folded into a real category.
+    function tagToCategory(tag: string): Category | null {
+        const t = tag.toLowerCase();
+        if (t.includes("biochem") || t.includes("biology") || t.includes("bio")) {
+            return "bio_biochem";
+        }
+        if (t.includes("chem") || t.includes("physics") || t.includes("phys")) {
+            return "chem_phys";
+        }
+        if (
+            t.includes("psych") ||
+            t.includes("behavior") ||
+            t.includes("social") ||
+            t.includes("soc")
+        ) {
+            return "psych_soc";
+        }
+        if (t.includes("cars") || t.includes("critical") || t.includes("reading")) {
+            return "cars";
+        }
+        return null;
+    }
+
+    function buildFsrsSummary(data: TagMasteryResponse): FsrsSummary {
+        const per_category: FsrsCategorySummary[] = CATEGORIES.map((category) => {
+            const matched = data.groups.filter(
+                (g) => tagToCategory(g.tag) === category,
+            );
+            const cardsWithState = matched.reduce(
+                (sum, g) => sum + g.cardsWithState,
+                0,
+            );
+            if (cardsWithState === 0) {
+                return {
+                    category,
+                    average_recall: 0,
+                    mastered_fraction: 0,
+                    enough_data: false,
+                    graded_reviews: 0,
+                };
+            }
+            const masteredCards = matched.reduce((sum, g) => sum + g.masteredCards, 0);
+            const gradedReviews = matched.reduce((sum, g) => sum + g.gradedReviews, 0);
+            const weightedRecall =
+                matched.reduce(
+                    (sum, g) => sum + g.averageRecall * g.cardsWithState,
+                    0,
+                ) / cardsWithState;
+            return {
+                category,
+                average_recall: weightedRecall,
+                mastered_fraction: masteredCards / cardsWithState,
+                enough_data: cardsWithState >= 20,
+                graded_reviews: gradedReviews,
+            };
+        });
+
+        return {
+            per_category,
+            // Reusing the backend's own weighted overall figure rather than
+            // recomputing (it already spans all groups, tagged or not).
+            overall_mean_recall: data.overallMeanRecall,
+        };
+    }
+
+    async function loadFsrsSummary(): Promise<void> {
+        try {
+            const data = await tagMastery({
+                groupDepth: fsrsGroupDepth,
+                masteredThreshold: 0,
+                search: "",
+            });
+            fsrsSummary = buildFsrsSummary(data);
+            recomputeReadiness();
+        } catch (e) {
+            // FSRS summary is an enhancement layer over the offline practice
+            // metrics; if it fails, per-category readiness just treats every
+            // category as fsrs-not-enough-data (still shows Performance).
+            fsrsSummary = {
+                per_category: CATEGORIES.map((category) => ({
+                    category,
+                    average_recall: 0,
+                    mastered_fraction: 0,
+                    enough_data: false,
+                    graded_reviews: 0,
+                })),
+                overall_mean_recall: 0,
+            };
+            recomputeReadiness();
+        }
+    }
+
+    // Optional online overlay: if a sync-server URL/token is configured,
+    // prefer its /metrics/compute numbers over the local calc (spec: server
+    // numbers supersede when available). Silently keeps the local calc on
+    // any failure -- Practice must work fully offline.
+    async function maybeFetchServerMetrics(): Promise<void> {
+        if (!history || !performance || !fsrsSummary) {
+            return;
+        }
+        try {
+            const configResp = await fetch("/_anki/mcatToolsConfig");
+            if (!configResp.ok) {
+                return;
+            }
+            const config = (await configResp.json()) as { url: string; token: string };
+            if (!config.url || !config.token) {
+                return;
+            }
+            const body = {
+                practice_history: history.map((r) => ({
+                    question_id: r.question_id,
+                    category: r.category,
+                    correct: r.correct,
+                    difficulty_b: r.difficulty_b,
+                })),
+                fsrs: fsrsSummary,
+            };
+            const resp = await fetch(
+                `${config.url.replace(/\/$/, "")}/metrics/compute`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Mcat-Token": config.token,
+                    },
+                    body: JSON.stringify(body),
+                },
+            );
+            if (!resp.ok) {
+                return;
+            }
+            const json = (await resp.json()) as {
+                performance: Performance;
+                readiness: Readiness;
+            };
+            performance = json.performance;
+            readiness = json.readiness;
+        } catch (e) {
+            // Offline or unreachable server -- keep the local calc, no error UI.
+        }
+    }
+
+    loadAll();
+    loadFsrsSummary();
+
+    $: currentQuestion = questions ? questions[currentIndex] : null;
+
+    function selectOption(i: number): void {
+        if (submitted) {
+            return;
+        }
+        selectedIndex = i;
+    }
+
+    // Single attempt at persisting one answer record. Returns the endpoint's
+    // full updated record list on success, or null on any failure (network
+    // error or non-OK response) -- never throws.
+    async function postAppendPracticeAnswer(
+        record: PracticeAnswer,
+    ): Promise<PracticeAnswer[] | null> {
+        try {
+            const resp = await fetch("/_anki/appendPracticeAnswer", {
+                method: "POST",
+                // mediasrv's dynamic POST gate requires this literal content-type
+                // for same-origin /_anki/ requests (see qt/aqt/mediasrv.py
+                // _check_dynamic_request_permissions) -- the body is still JSON text.
+                headers: { "Content-Type": "application/binary" },
+                body: JSON.stringify(record),
+            });
+            if (!resp.ok) {
+                return null;
+            }
+            const json = (await resp.json()) as { records: PracticeAnswer[] };
+            return json.records;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function submitAnswer(): Promise<void> {
+        if (!currentQuestion || selectedIndex === null || submitting || submitted) {
+            return;
+        }
+        submitting = true;
+        submitted = true;
+        saveWarning = false;
+
+        const record: PracticeAnswer = {
+            client_answer_id: crypto.randomUUID(),
+            question_id: currentQuestion.id,
+            category: currentQuestion.category,
+            correct: selectedIndex === currentQuestion.answer_index,
+            difficulty_b: currentQuestion.difficulty_b,
+            answered_at: Math.floor(Date.now() / 1000),
+        };
+
+        // Best-effort: try once, then retry once more on failure before
+        // surfacing a warning. Reuse the SAME client_answer_id on the retry --
+        // the server dedupes by that id, so a retry after a successful-but-
+        // unacknowledged save is idempotent and safe.
+        let records = await postAppendPracticeAnswer(record);
+        if (!records) {
+            records = await postAppendPracticeAnswer(record);
+        }
+
+        if (records) {
+            history = records;
+            recomputePerformance();
+        } else {
+            // Never block the reveal/Next flow on this -- just make the
+            // failure visible instead of silently dropping the answer.
+            saveWarning = true;
+        }
+        submitting = false;
+    }
+
+    function nextQuestion(): void {
+        if (!questions) {
+            return;
+        }
+        selectedIndex = null;
+        submitted = false;
+        saveWarning = false;
+        const nextIndex = currentIndex + 1;
+        if (nextIndex >= questions.length) {
+            currentIndex = 0;
+            completedFullSet = true;
+        } else {
+            currentIndex = nextIndex;
+        }
+    }
+
+    function pct(n: number): string {
+        return `${Math.round(n * 100)}%`;
+    }
+</script>
+
+<div class="practice-page">
+    <TitledContainer title="Practice">
+        {#if loadError}
+            <div class="error-banner">
+                <span>Couldn't load practice questions or history.</span>
+                <button class="retry-button" on:click={loadAll}>Retry</button>
+            </div>
+        {:else if !questions || !currentQuestion}
+            <div class="empty">Loading...</div>
+        {:else}
+            {#if completedFullSet}
+                <div class="completed-note">
+                    You've completed the full question set — keep going for more
+                    practice!
+                </div>
+            {/if}
+            <div class="question-meta">
+                Question {currentIndex + 1} of {questions.length}
+            </div>
+            <div class="stem">{currentQuestion.stem}</div>
+            <div class="options" role="radiogroup" aria-label="Answer options">
+                {#each currentQuestion.options as option, i (i)}
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={selectedIndex === i}
+                        class="option"
+                        class:selected={selectedIndex === i}
+                        class:correct={submitted && i === currentQuestion.answer_index}
+                        class:incorrect={submitted &&
+                            selectedIndex === i &&
+                            i !== currentQuestion.answer_index}
+                        disabled={submitted}
+                        on:click={() => selectOption(i)}
+                    >
+                        {option}
+                    </button>
+                {/each}
+            </div>
+
+            {#if !submitted}
+                <button
+                    class="submit-button"
+                    disabled={selectedIndex === null || submitting}
+                    on:click={submitAnswer}
+                >
+                    Submit
+                </button>
+            {:else}
+                <div class="reveal">
+                    <div class="category-chip">
+                        {categoryLabels[currentQuestion.category]}
+                    </div>
+                    <div class="result-label">
+                        {selectedIndex === currentQuestion.answer_index
+                            ? "Correct!"
+                            : "Incorrect"}
+                    </div>
+                    <div class="explanation">{currentQuestion.explanation}</div>
+                    {#if saveWarning}
+                        <div class="save-warning" role="alert">
+                            Couldn't save this answer — your progress may not be
+                            recorded.
+                        </div>
+                    {/if}
+                    <button class="next-button" on:click={nextQuestion}>Next</button>
+                </div>
+            {/if}
+        {/if}
+    </TitledContainer>
+
+    {#if performance}
+        <TitledContainer title="Performance">
+            {#if !performance.overall.enough_data}
+                <div class="not-enough-data">
+                    Not enough data yet — answer at least 5 questions to see your
+                    overall performance.
+                </div>
+            {:else}
+                <div class="overall-performance">
+                    <div class="point">{pct(performance.overall.p)}</div>
+                    <div class="caption">
+                        chance of getting a new question right (based on
+                        {performance.overall.n} answers)
+                    </div>
+                </div>
+            {/if}
+
+            <div class="category-grid">
+                {#each performance.per_category as cat (cat.category)}
+                    <div class="category-card">
+                        <div class="category-name">{categoryLabels[cat.category]}</div>
+                        {#if cat.enough_data}
+                            <div class="category-value">{pct(cat.p)}</div>
+                            <div class="category-caption">{cat.n} answers</div>
+                        {:else}
+                            <div class="category-value dash">Not enough data</div>
+                            <div class="category-caption">
+                                {cat.n} answer{cat.n === 1 ? "" : "s"}
+                            </div>
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+        </TitledContainer>
+    {/if}
+
+    {#if readiness}
+        <TitledContainer title="Readiness">
+            {#if !readiness.enough_data}
+                <div class="not-enough-data">{readiness.note}</div>
+            {:else}
+                <div class="readiness-band">
+                    <div class="score-point">{readiness.score_point}</div>
+                    <div class="score-range">
+                        Likely range: {readiness.score_low} – {readiness.score_high}
+                    </div>
+                    <div class="confidence confidence-{readiness.confidence}">
+                        Confidence: {readiness.confidence}
+                    </div>
+                </div>
+            {/if}
+        </TitledContainer>
+    {/if}
+</div>
+
+<style lang="scss">
+    @use "../../../sass/mcat-tools.scss" as mcat;
+
+    .practice-page {
+        max-width: 46em;
+        margin: 0 auto;
+        padding: 1em;
+        display: flex;
+        flex-direction: column;
+        gap: mcat.$mcat-space-lg;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .empty,
+    .not-enough-data {
+        color: var(--fg-subtle, #666);
+        font-style: italic;
+        padding: 0.75em 0;
+        text-align: center;
+    }
+
+    .error-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: mcat.$mcat-space-md;
+        padding: mcat.$mcat-space-md;
+        border: 1px solid var(--border, #8884);
+        border-radius: 8px;
+        background: color-mix(in srgb, red 8%, transparent);
+    }
+
+    .retry-button {
+        @include mcat.mcat-button-secondary;
+    }
+
+    // Non-blocking, informational -- a warmer/less alarming tone than
+    // .error-banner (which blocks the whole page); this sits alongside a
+    // still-usable reveal, so it should read as a heads-up, not a failure.
+    .save-warning {
+        margin-top: mcat.$mcat-space-sm;
+        padding: mcat.$mcat-space-sm mcat.$mcat-space-md;
+        border-radius: 8px;
+        background: color-mix(in srgb, orange 12%, transparent);
+        border: 1px solid color-mix(in srgb, orange 45%, transparent);
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .completed-note {
+        margin-bottom: mcat.$mcat-space-sm;
+        padding: mcat.$mcat-space-sm mcat.$mcat-space-md;
+        border-radius: 8px;
+        background: mcat.$mcat-accent-soft;
+        border: 1px solid mcat.$mcat-accent-border;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .question-meta {
+        color: var(--fg-subtle, #666);
+        font-size: 0.85em;
+        margin-bottom: mcat.$mcat-space-xs;
+    }
+
+    .stem {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin-bottom: mcat.$mcat-space-md;
+        line-height: 1.4;
+    }
+
+    .options {
+        display: flex;
+        flex-direction: column;
+        gap: mcat.$mcat-space-sm;
+        margin-bottom: mcat.$mcat-space-md;
+    }
+
+    .option {
+        @include mcat.mcat-card;
+        text-align: start;
+        cursor: pointer;
+        font: inherit;
+        color: var(--fg, #000);
+        transition:
+            border-color 150ms ease-out,
+            background 150ms ease-out;
+
+        &:hover:not(:disabled) {
+            border-color: mcat.$mcat-accent-border;
+        }
+
+        &.selected {
+            border-color: mcat.$mcat-accent;
+            background: mcat.$mcat-accent-soft;
+        }
+
+        &.correct {
+            border-color: #2e8b57;
+            background: color-mix(in srgb, #2e8b57 12%, transparent);
+        }
+
+        &.incorrect {
+            border-color: #b23b3b;
+            background: color-mix(in srgb, #b23b3b 12%, transparent);
+        }
+
+        &:disabled {
+            cursor: default;
+        }
+    }
+
+    .submit-button {
+        @include mcat.mcat-button-primary;
+    }
+
+    .reveal {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: mcat.$mcat-space-sm;
+    }
+
+    .category-chip {
+        display: inline-block;
+        padding: 0.25em 0.7em;
+        border-radius: 999px;
+        background: mcat.$mcat-accent-soft;
+        border: 1px solid mcat.$mcat-accent-border;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+
+    .result-label {
+        font-weight: 700;
+        font-size: 1.05em;
+    }
+
+    .explanation {
+        color: var(--fg-subtle, #444);
+        line-height: 1.4;
+    }
+
+    .next-button {
+        @include mcat.mcat-button-primary;
+        margin-top: mcat.$mcat-space-xs;
+    }
+
+    .overall-performance {
+        text-align: center;
+        padding: 0.25em 0 mcat.$mcat-space-md;
+
+        .point {
+            font-size: 2.6em;
+            font-weight: 700;
+            line-height: 1.1;
+            color: mcat.$mcat-accent;
+        }
+
+        .caption {
+            color: var(--fg-subtle, #666);
+            font-size: 0.9em;
+        }
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9.5em, 1fr));
+        gap: mcat.$mcat-space-sm;
+    }
+
+    .category-card {
+        @include mcat.mcat-card;
+        text-align: center;
+
+        .category-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 0.3em;
+        }
+
+        .category-value {
+            font-size: 1.4em;
+            font-weight: 700;
+
+            &.dash {
+                font-size: 0.9em;
+                font-weight: 500;
+                font-style: italic;
+                color: var(--fg-subtle, #999);
+            }
+        }
+
+        .category-caption {
+            font-size: 0.8em;
+            color: var(--fg-subtle, #666);
+        }
+    }
+
+    .readiness-band {
+        text-align: center;
+        padding: 0.25em 0 0.5em;
+
+        .score-point {
+            font-size: 2.6em;
+            font-weight: 700;
+            line-height: 1.1;
+            color: mcat.$mcat-accent;
+        }
+
+        .score-range {
+            color: var(--fg-subtle, #666);
+            font-size: 0.95em;
+        }
+
+        .confidence {
+            margin-top: mcat.$mcat-space-xs;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+    }
+</style>

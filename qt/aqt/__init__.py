@@ -111,7 +111,7 @@ import aqt.forms
 
 
 from aqt import addcards, addons, browser, editcurrent, filtered_deck  # isort:skip
-from aqt import stats, about, preferences, mediasync, mastery, to_learn  # isort:skip
+from aqt import stats, about, preferences, mediasync, mastery, to_learn, read, practice  # isort:skip
 
 
 class DialogManager:
@@ -125,6 +125,8 @@ class DialogManager:
         "NewDeckStats": [stats.NewDeckStats, None],
         "MasteryStats": [mastery.MasteryStats, None],
         "ToLearnStats": [to_learn.ToLearnStats, None],
+        "ReadStats": [read.ReadStats, None],
+        "PracticeStats": [practice.PracticeStats, None],
         "About": [about.show, None],
         "Preferences": [preferences.Preferences, None],
         "sync_log": [mediasync.MediaSyncDialog, None],

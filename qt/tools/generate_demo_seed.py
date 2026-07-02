@@ -88,7 +88,9 @@ def _populate(source: str, out: str) -> None:
     col.import_anki_package(
         ImportAnkiPackageRequest(
             package_path=source,
-            options=ImportAnkiPackageOptions(with_scheduling=False, merge_notetypes=False),
+            options=ImportAnkiPackageOptions(
+                with_scheduling=False, merge_notetypes=False
+            ),
         )
     )
 
@@ -128,15 +130,17 @@ def _populate(source: str, out: str) -> None:
         cids = topic_cards[topic][:]
         random.shuffle(cids)
         count = max(10, len(cids) // 2)
-        for cid in cids[:count]:
+        for cid in cids[:count]:  # type: ignore[assignment]
             card = col.get_card(cid)
             stability = random.uniform(s_lo, s_hi)
             difficulty = random.uniform(3, 8)
             days_ago = random.randint(d_lo, d_hi)
             # Leave card.decay unset so the engine's default FSRS decay applies.
-            card.memory_state = FsrsMemoryState(stability=stability, difficulty=difficulty)
-            card.type = 2  # review
-            card.queue = 2
+            card.memory_state = FsrsMemoryState(
+                stability=stability, difficulty=difficulty
+            )
+            card.type = 2  # type: ignore[assignment]  # review
+            card.queue = 2  # type: ignore[assignment]
             card.ivl = max(1, int(stability))
             card.last_review_time = now - days_ago * 86400
             card.due = today + (int(stability) - days_ago)
@@ -151,7 +155,7 @@ def _populate(source: str, out: str) -> None:
                         max(1, int(stability)),  # ivl
                         max(1, int(stability * 0.7)),  # lastIvl
                         random.randint(3000, 15000),  # time (ms)
-                        1,  # type: review
+                        1,  # revlog kind: review
                     )
                 )
 
@@ -177,7 +181,9 @@ def _report(out: str) -> None:
         probe = os.path.join(tmp, "probe.anki2")
         shutil.copyfile(out, probe)
         col = Collection(probe)
-        resp = col._backend.tag_mastery(group_depth=2, mastered_threshold=0.0, search="")
+        resp = col._backend.tag_mastery(
+            group_depth=2, mastered_threshold=0.0, search=""
+        )
         print(f"seed: {size_kb} KB  ({out})")
         for group in sorted(resp.groups, key=lambda g: g.tag):
             print(

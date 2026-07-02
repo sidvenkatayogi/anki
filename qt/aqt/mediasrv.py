@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import enum
+import json
 import logging
 import mimetypes
 import os
 import re
 import secrets
 import sys
+import tempfile
 import threading
 import traceback
 from collections.abc import Callable
@@ -416,6 +418,8 @@ def is_sveltekit_page(path: str) -> bool:
         "graphs",
         "mastery",
         "to-learn",
+        "read",
+        "practice",
         "congrats",
         "card-info",
         "change-notetype",
@@ -706,6 +710,92 @@ def save_custom_colours() -> bytes:
     return b""
 
 
+def mcat_tools_config() -> Response:
+    data = json.dumps(
+        {
+            "url": aqt.mw.pm.mcat_tools_url(),
+            "token": aqt.mw.pm.mcat_tools_token(),
+        }
+    ).encode("utf-8")
+    return Response(data, mimetype="application/json")
+
+
+def set_mcat_tools_config() -> bytes:
+    body = json.loads(request.get_data() or b"{}")
+    aqt.mw.pm.set_mcat_tools_url(body.get("url", ""))
+    aqt.mw.pm.set_mcat_tools_token(body.get("token", ""))
+    return json.dumps({}).encode("utf-8")
+
+
+_PRACTICE_HISTORY_RECORD_KEYS = (
+    "client_answer_id",
+    "question_id",
+    "category",
+    "correct",
+    "difficulty_b",
+    "answered_at",
+)
+
+
+def _practice_history_path() -> str:
+    return os.path.join(aqt.mw.pm.profileFolder(), "practice-history.json")
+
+
+def _load_practice_history() -> dict:
+    """Tolerant load: missing/unparseable file or malformed entries never raise."""
+    path = _practice_history_path()
+    try:
+        with open(path, encoding="utf-8") as file:
+            raw = json.load(file)
+    except (OSError, ValueError):
+        return {"records": []}
+
+    records = []
+    if isinstance(raw, dict):
+        for entry in raw.get("records", []) or []:
+            if isinstance(entry, dict) and all(
+                key in entry for key in _PRACTICE_HISTORY_RECORD_KEYS
+            ):
+                records.append(
+                    {key: entry[key] for key in _PRACTICE_HISTORY_RECORD_KEYS}
+                )
+    return {"records": records}
+
+
+def _save_practice_history(data: dict) -> None:
+    path = _practice_history_path()
+    directory = os.path.dirname(path)
+    fd, tmp_path = tempfile.mkstemp(
+        dir=directory, prefix="practice-history-", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
+            json.dump(data, file)
+        os.replace(tmp_path, path)
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+
+
+def practice_history() -> Response:
+    data = json.dumps(_load_practice_history()).encode("utf-8")
+    return Response(data, mimetype="application/json")
+
+
+def append_practice_answer() -> bytes:
+    record = json.loads(request.get_data() or b"{}")
+    data = _load_practice_history()
+    existing_ids = {entry["client_answer_id"] for entry in data["records"]}
+    client_answer_id = record.get("client_answer_id")
+    if client_answer_id is not None and client_answer_id not in existing_ids:
+        data["records"].append(
+            {key: record.get(key) for key in _PRACTICE_HISTORY_RECORD_KEYS}
+        )
+        _save_practice_history(data)
+    return json.dumps(data).encode("utf-8")
+
+
 post_handler_list = [
     congrats_info,
     get_deck_configs_for_update,
@@ -722,6 +812,8 @@ post_handler_list = [
     deck_options_require_close,
     deck_options_ready,
     save_custom_colours,
+    set_mcat_tools_config,
+    append_practice_answer,
 ]
 
 
@@ -884,5 +976,9 @@ def _have_api_access() -> bool:
 def _extract_dynamic_get_request(path: str) -> DynamicRequest | None:
     if path == "legacyPageData":
         return legacy_page_data
+    elif path == "mcatToolsConfig":
+        return mcat_tools_config
+    elif path == "practiceHistory":
+        return practice_history
     else:
         return None

@@ -50,8 +50,9 @@ final class ReviewModel {
 
     // MARK: - C3: launch → open backend, open/create collection, import apkg
 
-    /// Full startup: open the backend, stage the bundled sample .apkg into the
-    /// Documents sandbox, open/create a collection there, and import the apkg.
+    /// Full startup: open the backend and collection, then either import the
+    /// bundled demo deck (signed out) or leave the collection for SyncModel to
+    /// populate from the server (signed in — login-and-download model).
     func start() async {
         do {
             phase = .launching
@@ -59,6 +60,24 @@ final class ReviewModel {
             try await engine.open(preferredLangs: ["en"])
 
             let paths = try sandboxPaths()
+
+            // Sync-backed: never wipe or import the demo deck — that would fight
+            // the synced collection. Open whatever is on disk (create an empty
+            // collection on first run); SyncModel pulls the real collection and
+            // then calls reloadAfterSync() to build the queue.
+            if SyncStore.isLoggedIn {
+                statusLine = "Opening collection…"
+                try await engine.openCollection(
+                    collectionPath: paths.collection,
+                    mediaFolderPath: paths.mediaFolder,
+                    mediaDbPath: paths.mediaDB
+                )
+                try? await selectStudyDeck()
+                await advanceToNextCard()
+                return
+            }
+
+            // Signed out: bundled demo-deck experience.
             let deck = try bundledDeck()
             // Import once: only (re)import when this deck hasn't been imported
             // yet, so we don't duplicate cards on every launch. Switching decks
@@ -94,6 +113,16 @@ final class ReviewModel {
             phase = .failed(String(describing: error))
             statusLine = "Error: \(error)"
         }
+    }
+
+    /// Rebuild the study queue after a sync changed the on-disk collection (the
+    /// Rust core has already re-opened the collection in place, so we only need
+    /// to re-select a study deck and re-render the current card).
+    func reloadAfterSync() async {
+        // A full download clears the "imported demo" marker's relevance; the
+        // demo won't be re-imported while signed in.
+        try? await selectStudyDeck()
+        await advanceToNextCard()
     }
 
     // MARK: - C4: review loop

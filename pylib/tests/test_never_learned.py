@@ -22,16 +22,12 @@ def test_never_learned_round_trip():
     b = _add(col, "front b", ["bio::cell::wall"])
     _add(col, "front c", [])  # no topic tag, not part of this topic
 
-    topic_card_ids = set(col.card_ids_of_note(a.id)) | set(
-        col.card_ids_of_note(b.id)
-    )
+    topic_card_ids = set(col.card_ids_of_note(a.id)) | set(col.card_ids_of_note(b.id))
     assert len(topic_card_ids) == 2
     card_id = next(iter(col.card_ids_of_note(a.id)))
 
     # Mark the whole topic as never-learned via a card in it.
-    resp = col._backend.set_never_learned(
-        card_id=card_id, group_depth=2, enabled=True
-    )
+    resp = col._backend.set_never_learned(card_id=card_id, group_depth=2, enabled=True)
     # OpChangesWithCount-shaped: has .count and .changes.
     assert resp.count == len(topic_card_ids)
     assert resp.changes

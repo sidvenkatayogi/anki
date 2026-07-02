@@ -31,7 +31,7 @@ const viteConfig = defineViteConfig({
         fs: {
             // Allow serving files project root and out dir
             allow: [
-                // realpathSync(".."),
+                realpathSync(".."),
                 // "/home/dae/Local/build/anki/node_modules",
                 realpathSync("../out"),
                 // realpathSync("../out/node_modules"),

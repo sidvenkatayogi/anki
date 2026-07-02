@@ -1,6 +1,6 @@
 # Memory Palace (iOS)
 
-A spatial study mode for the Anki MCAT app, built on the *method of loci*: you
+A spatial study mode for the Anki MCAT app, built on the _method of loci_: you
 capture a place you know well (a desk, a kitchen, a room), pin flashcards to
 specific spots in it, and later recall them **by location** — "what card lives
 here?" and "where does this card live?". Every recall grades the underlying card
@@ -23,7 +23,7 @@ It lives in the second tab of the app (**Review** | **Palace**).
      room"** (a built-in illustrated room, no setup needed), then tap spots to
      drop pins. Pins are joined by a numbered **journey route** as you place them.
 2. **Place cards, card-first.** The app shows you a readable, rendered card
-   (front/back); tap the spot it should live in to place *that* card, then the
+   (front/back); tap the spot it should live in to place _that_ card, then the
    next card appears (Skip to get a different one). Tapping a placed spot later
    opens its detail sheet: view the card, write a vivid **memory hook
    (mnemonic)**, mark it recalled, or remove it.
@@ -36,11 +36,12 @@ It lives in the second tab of the app (**Review** | **Palace**).
    - **Locate ("where is it?")** — a card is shown; tap the spot it lives in; see
      if you were right, then grade.
    - **Mixed** — alternates the two.
-   Grading round-trips through the shared Rust scheduler (`answer_card`), updating
-   real FSRS due dates. The session ends on a **visual recap**: an accuracy ring
-   plus your room map with each spot recolored green (recalled) or red (review).
+     Grading round-trips through the shared Rust scheduler (`answer_card`), updating
+     real FSRS due dates. The session ends on a **visual recap**: an accuracy ring
+     plus your room map with each spot recolored green (recalled) or red (review).
 
 ### Visualizations
+
 - **Journey route** — pins connected by an animated numbered path (the loci route
   you "walk"), shown on the capture screen, the palace detail map, and the recap.
 - **Progress rings** — per-palace learned fraction in the list and a large stat
@@ -80,12 +81,14 @@ Sources/AnkiMCAT/
 ```
 
 ### Persistence layout
+
 ```
 Documents/MemoryPalaces/<palace-uuid>/
   palace.json           metadata + loci (card id, label, mnemonic, transform, 2-D point, learned)
   photo.jpg             reference photo / AR snapshot (thumbnail + 2-D fallback)
   worldmap.arworldmap   archived ARWorldMap (device only)
 ```
+
 Card **content** is always fetched live from the engine by card id, so it never
 goes stale. Each locus stores **both** a world transform (AR) and a normalized
 2-D photo point, so a palace can always be reviewed as a flat "snapshot with
@@ -109,6 +112,7 @@ xcodebuild -project ios/AnkiMCAT/AnkiMCAT.xcodeproj -scheme AnkiMCAT \
 ```
 
 Tests (drives the app in a booted simulator, incl. the palace create flow):
+
 ```
 xcodebuild test -project ios/AnkiMCAT/AnkiMCAT.xcodeproj -scheme AnkiMCAT \
   -destination 'id=<booted-sim-id>' -configuration Debug \
@@ -127,10 +131,11 @@ study only runs on a real device. To run on hardware:
 2. **Signing.** Set your development team in Xcode (or via `DEVELOPMENT_TEAM`) to
    install on a device — the repo builds unsigned for the Simulator.
 3. **Camera permission** is already declared (`INFOPLIST_KEY_NSCameraUsageDescription`
-   in `project.yml`). No `arkit` *required-capability* is set, so non-AR devices
+   in `project.yml`). No `arkit` _required-capability_ is set, so non-AR devices
    still install and use the photo path.
 
 ### On-device verification checklist
+
 - [ ] Palace tab → New place → capture screen shows the **live camera** (AR), not the photo prompt.
 - [ ] Tap a surface → a numbered pin anchors in space and stays put as you move.
 - [ ] Pick a card → the pin persists; add several until the room is "full".
@@ -139,6 +144,7 @@ study only runs on a real device. To run on hardware:
 - [ ] Study → Locate: tap the correct pin; grade.
 
 ## Limitations / notes
+
 - **AR is unverified on hardware** in this build (developed against the Simulator,
   which has no camera/ARKit). The AR code compiles and is logically complete; the
   photo path is UI-tested. Verify AR on a device using the checklist above.

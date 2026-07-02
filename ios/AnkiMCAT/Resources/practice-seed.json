@@ -1,0 +1,247 @@
+[
+    {
+        "id": "seed-001",
+        "category": "bio_biochem",
+        "stem": "Which of the following best describes the role of allosteric regulation in enzyme kinetics?",
+        "options": [
+            "It changes the enzyme's substrate specificity permanently",
+            "It modulates enzyme activity via binding at a site distinct from the active site",
+            "It covalently modifies the substrate before catalysis",
+            "It is only relevant to enzymes lacking a quaternary structure"
+        ],
+        "answer_index": 1,
+        "explanation": "Allosteric regulators bind at sites other than the active site, inducing conformational changes that increase or decrease catalytic activity.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "seed-002",
+        "category": "chem_phys",
+        "stem": "A gas is compressed isothermally. Which statement about its internal energy is correct for an ideal gas?",
+        "options": [
+            "Internal energy increases",
+            "Internal energy decreases",
+            "Internal energy is unchanged",
+            "Internal energy becomes negative"
+        ],
+        "answer_index": 2,
+        "explanation": "For an ideal gas, internal energy depends only on temperature; an isothermal process leaves it unchanged.",
+        "difficulty_b": -0.5
+    },
+    {
+        "id": "seed-003",
+        "category": "psych_soc",
+        "stem": "Which theory best explains conformity driven by a desire to be liked or accepted by a group?",
+        "options": [
+            "Informational social influence",
+            "Normative social influence",
+            "Cognitive dissonance theory",
+            "Social identity theory"
+        ],
+        "answer_index": 1,
+        "explanation": "Normative social influence is conformity motivated by the desire for social approval, distinct from informational influence (wanting to be correct).",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "seed-004",
+        "category": "cars",
+        "stem": "In a passage arguing that historical narratives are inherently biased by the narrator's era, the author's main purpose is best described as:",
+        "options": [
+            "Cataloguing specific historical inaccuracies",
+            "Undermining the value of studying history",
+            "Highlighting an epistemic limitation of historiography",
+            "Proposing a new method for verifying historical facts"
+        ],
+        "answer_index": 2,
+        "explanation": "The passage's claim is about a structural limitation on how history is written and understood, not about specific errors or a call to abandon history.",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "seed-005",
+        "category": "bio_biochem",
+        "stem": "Which macromolecule class serves as the primary form of long-term energy storage in human adipocytes?",
+        "options": ["Glycogen", "Triglycerides", "Cellulose", "Structural proteins"],
+        "answer_index": 1,
+        "explanation": "Triglycerides (fats) are the most energy-dense and efficient form of long-term energy storage, stored in adipocytes; glycogen is used for shorter-term storage in liver and muscle.",
+        "difficulty_b": -1.0
+    },
+    {
+        "id": "seed-006",
+        "category": "chem_phys",
+        "stem": "A 0.1 M solution of a strong monoprotic acid (HCl) has a pH of 1. If the solution is diluted tenfold with water, what is the new pH?",
+        "options": ["1", "2", "3", "11"],
+        "answer_index": 1,
+        "explanation": "Diluting HCl tenfold reduces [H+] from 0.1 M to 0.01 M; pH = -log(0.01) = 2.",
+        "difficulty_b": -1.0
+    },
+    {
+        "id": "seed-007",
+        "category": "psych_soc",
+        "stem": "In Pavlov's classic experiment, a bell (originally neutral) was repeatedly paired with the presentation of food until dogs salivated at the sound of the bell alone. After conditioning, the bell is best classified as the:",
+        "options": ["Unconditioned stimulus", "Conditioned stimulus", "Unconditioned response", "Conditioned response"],
+        "answer_index": 1,
+        "explanation": "After repeated pairing with the unconditioned stimulus (food), the previously neutral bell becomes a conditioned stimulus capable of eliciting the conditioned response (salivation) on its own.",
+        "difficulty_b": -1.0
+    },
+    {
+        "id": "seed-008",
+        "category": "cars",
+        "stem": "\"Although critics dismissed the novel as overly sentimental upon its release, subsequent generations of readers have found in it a nuanced meditation on grief that early reviewers, preoccupied with the era's taste for restraint, simply failed to perceive.\" The author most likely believes that the novel's initial critical reception was:",
+        "options": [
+            "Entirely justified by the text's literary flaws",
+            "Shaped by the reviewers' contemporary aesthetic biases",
+            "Unrelated to the novel's actual content",
+            "More accurate than later interpretations"
+        ],
+        "answer_index": 1,
+        "explanation": "The passage attributes the harsh initial reviews to critics' \"preoccupation with the era's taste for restraint\" -- a contemporary aesthetic bias -- not to genuine flaws in the novel.",
+        "difficulty_b": -1.0
+    },
+    {
+        "id": "seed-009",
+        "category": "bio_biochem",
+        "stem": "During DNA replication, the lagging strand is synthesized discontinuously as a series of Okazaki fragments. This discontinuity occurs primarily because:",
+        "options": [
+            "DNA polymerase can only synthesize DNA in the 5' to 3' direction",
+            "DNA helicase unwinds DNA faster on the lagging strand",
+            "The lagging strand template lacks a primer binding site",
+            "DNA ligase is unable to act on the leading strand"
+        ],
+        "answer_index": 0,
+        "explanation": "Because DNA polymerase synthesizes only 5'->3', the lagging strand must be made in short fragments primed repeatedly as the fork opens, later joined by ligase.",
+        "difficulty_b": -0.5
+    },
+    {
+        "id": "seed-010",
+        "category": "chem_phys",
+        "stem": "A buffer solution contains equal molar concentrations of a weak acid and its conjugate base. According to the Henderson-Hasselbalch equation, the pH of this buffer is:",
+        "options": [
+            "Equal to the pKa of the weak acid",
+            "One unit above the pKa",
+            "One unit below the pKa",
+            "Independent of the pKa"
+        ],
+        "answer_index": 0,
+        "explanation": "pH = pKa + log([A-]/[HA]); when [A-] = [HA], the log term equals log(1) = 0, so pH = pKa.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "seed-011",
+        "category": "psych_soc",
+        "stem": "According to Maslow's hierarchy of needs, which need must generally be substantially satisfied before an individual is strongly motivated to pursue self-esteem needs?",
+        "options": ["Self-actualization", "Belongingness and love", "Aesthetic needs", "Cognitive needs"],
+        "answer_index": 1,
+        "explanation": "Maslow's hierarchy places belongingness/love needs below esteem needs; lower-level needs are generally prioritized before higher-level ones like esteem.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "seed-012",
+        "category": "cars",
+        "stem": "\"One hesitates to call the policy a failure outright -- it did, after all, achieve a handful of its more modest aims -- but neither can it be counted among the triumphs its architects once promised.\" The author's tone toward the policy is best described as:",
+        "options": ["Unreservedly enthusiastic", "Measured and qualified", "Openly contemptuous", "Indifferent"],
+        "answer_index": 1,
+        "explanation": "The author acknowledges partial success while denying the policy was a triumph -- a balanced, qualified assessment, not enthusiasm, contempt, or indifference.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "seed-013",
+        "category": "bio_biochem",
+        "stem": "A researcher adds a competitive inhibitor to an enzyme-catalyzed reaction. Compared to the uninhibited reaction, which change in kinetic parameters is expected?",
+        "options": [
+            "Vmax decreases; Km unchanged",
+            "Vmax unchanged; apparent Km increases",
+            "Both Vmax and Km decrease",
+            "Vmax unchanged; Km decreases"
+        ],
+        "answer_index": 1,
+        "explanation": "Competitive inhibitors bind the active site but can be outcompeted by high substrate concentration, so Vmax is unchanged while the apparent Km increases.",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "seed-014",
+        "category": "chem_phys",
+        "stem": "A car of mass m travels at constant speed around a flat, unbanked circular curve of radius r. If the coefficient of static friction between the tires and road is mu, what is the maximum speed at which the car can round the curve without slipping?",
+        "options": ["v_max = mu*g*r", "v_max = sqrt(mu*g*r)", "v_max = mu*g/r", "v_max = sqrt(g/(mu*r))"],
+        "answer_index": 1,
+        "explanation": "Static friction supplies the centripetal force: mu*m*g = m*v^2/r; solving for v gives v_max = sqrt(mu*g*r).",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "seed-015",
+        "category": "psych_soc",
+        "stem": "Social identity theory proposes that individuals derive part of their self-concept from group membership, which tends to produce:",
+        "options": [
+            "Reduced in-group favoritism",
+            "Increased favoritism toward the in-group and bias against out-groups",
+            "Complete elimination of personal identity",
+            "No effect on intergroup behavior"
+        ],
+        "answer_index": 1,
+        "explanation": "Social identity theory holds that categorizing oneself as a group member fosters in-group favoritism and out-group bias as individuals seek positive distinctiveness for their group.",
+        "difficulty_b": -0.5
+    },
+    {
+        "id": "seed-016",
+        "category": "cars",
+        "stem": "\"Because the museum's attendance rose sharply after it began offering free admission on weekends, the museum concluded that price was the primary barrier to attendance.\" This conclusion relies on the unstated assumption that:",
+        "options": [
+            "No other change occurred around the same time that could explain the rise in attendance",
+            "Free admission is financially sustainable for the museum",
+            "Attendance figures were recorded accurately",
+            "Weekend visitors differ from weekday visitors"
+        ],
+        "answer_index": 0,
+        "explanation": "The argument infers a causal role for price from a correlation (attendance rose after the price change); it assumes no confound, such as a new exhibit or marketing campaign, explains the rise instead.",
+        "difficulty_b": -0.5
+    },
+    {
+        "id": "seed-017",
+        "category": "bio_biochem",
+        "stem": "Which step in eukaryotic gene expression is responsible for removing introns from pre-mRNA before the mature transcript is translated?",
+        "options": [
+            "Transcription initiation",
+            "RNA splicing by the spliceosome",
+            "5' capping",
+            "Poly-A tail addition"
+        ],
+        "answer_index": 1,
+        "explanation": "The spliceosome, a complex of snRNPs, excises introns and ligates exons together during RNA splicing, which occurs after transcription and before mature mRNA export/translation.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "seed-018",
+        "category": "chem_phys",
+        "stem": "In a kinetics experiment, doubling the concentration of reactant A (with [B] held constant) quadruples the initial reaction rate. What is the reaction order with respect to A?",
+        "options": ["Zero order", "First order", "Second order", "Third order"],
+        "answer_index": 2,
+        "explanation": "Rate is proportional to [A]^n; doubling [A] causes a 4-fold rate increase, so 2^n = 4, giving n = 2 (second order with respect to A).",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "seed-019",
+        "category": "psych_soc",
+        "stem": "An observer watches a driver cut sharply into her lane and immediately concludes the driver is reckless and inconsiderate, without considering that the driver might be rushing to the hospital. This reasoning error is best described as:",
+        "options": [
+            "The self-serving bias",
+            "The fundamental attribution error",
+            "The actor-observer bias",
+            "Learned helplessness"
+        ],
+        "answer_index": 1,
+        "explanation": "The fundamental attribution error is the tendency to overemphasize dispositional (personality) explanations for others' behavior while underweighting situational factors, exactly the pattern here.",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "seed-020",
+        "category": "cars",
+        "stem": "\"The committee's report claims that the decline in local newspaper readership caused the drop in civic engagement in the county. Yet the report's own data show that civic engagement began declining three years before the newspaper's circulation fell.\" This objection primarily challenges the report's argument by:",
+        "options": [
+            "Questioning the reliability of the civic engagement data",
+            "Showing that the proposed cause postdates the effect it supposedly produced",
+            "Introducing a completely unrelated variable",
+            "Conceding the report's conclusion while disputing its evidence"
+        ],
+        "answer_index": 1,
+        "explanation": "If civic engagement declined before newspaper circulation fell, the newspaper decline cannot be the cause of the earlier drop in engagement; the objection attacks the causal claim via reversed temporal order.",
+        "difficulty_b": 0.5
+    }
+]

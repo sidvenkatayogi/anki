@@ -1,0 +1,96 @@
+// Copyright: Ankitects Pty Ltd and contributors
+// License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
+// Shared design tokens for the MCAT "Read" and "Practice" tool tabs.
+//
+// This file is the single source of truth for the accent colour and spacing
+// scale both tabs should use, so they stay visually cohesive even though
+// they are built by independent workers in parallel. It respects the same
+// theme variables (`--fg`, `--border`, etc.) that `mastery`/`to-learn` use,
+// so it looks correct in both light and dark mode.
+//
+// Chosen accent: a cool teal, distinct from Anki's own chrome but calm
+// enough for long study sessions. Document any change here so the sibling
+// Read-tab page (built in parallel, cannot see this file live) has a single
+// place to eyeball for consistency.
+$mcat-accent: #2f7a78;
+$mcat-accent-fg: #eafaf9; // text colour to use on top of a solid $mcat-accent fill
+$mcat-accent-soft: color-mix(in srgb, #{$mcat-accent} 12%, transparent);
+$mcat-accent-border: color-mix(in srgb, #{$mcat-accent} 45%, transparent);
+
+// Spacing scale (rem-based, matches the ~1em/0.6em/0.35em rhythm already
+// used by mastery/to-learn's inline styles).
+$mcat-space-xs: 0.35rem;
+$mcat-space-sm: 0.6rem;
+$mcat-space-md: 1rem;
+$mcat-space-lg: 1.5rem;
+$mcat-space-xl: 2.25rem;
+
+// Card mixin: a bordered, rounded content block matching TitledContainer's
+// visual language but usable for smaller nested panels (e.g. per-category
+// rows, individual quiz options) that don't warrant a full TitledContainer.
+@mixin mcat-card {
+    background: var(--canvas-elevated, transparent);
+    border: 1px solid var(--border, #8884);
+    border-radius: var(--border-radius-medium, 10px);
+    padding: $mcat-space-md;
+}
+
+// Primary button mixin: solid accent fill, used for the main forward-moving
+// actions (Submit, Next, Retry, New passage).
+@mixin mcat-button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    padding: 0.55em 1.1em;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: $mcat-accent-fg;
+    background: $mcat-accent;
+    border: 1px solid $mcat-accent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        opacity 150ms ease-out,
+        transform 100ms ease-out;
+
+    &:hover:not(:disabled) {
+        opacity: 0.92;
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(1px);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}
+
+// Secondary/outline button mixin: for less prominent actions (skip, cancel).
+@mixin mcat-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    padding: 0.55em 1.1em;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: var(--fg, #000);
+    background: transparent;
+    border: 1px solid var(--border, #8884);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 150ms ease-out;
+
+    &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--fg, #000) 5%, transparent);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}

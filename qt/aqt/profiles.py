@@ -725,6 +725,18 @@ create table if not exists profiles
             self.set_current_sync_url(None)
             self.profile["customSyncUrl"] = url
 
+    def mcat_tools_url(self) -> str:
+        return self.profile.get("mcatToolsUrl") or ""
+
+    def set_mcat_tools_url(self, url: str) -> None:
+        self.profile["mcatToolsUrl"] = url
+
+    def mcat_tools_token(self) -> str:
+        return self.profile.get("mcatToolsToken") or ""
+
+    def set_mcat_tools_token(self, token: str) -> None:
+        self.profile["mcatToolsToken"] = token
+
     def periodic_sync_media_minutes(self) -> int:
         return self.profile.get("autoSyncMediaMinutes", 15)
 

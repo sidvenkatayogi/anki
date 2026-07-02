@@ -53,6 +53,23 @@ enum AnkiService {
     static let deckConfig: UInt32 = 11
     static let getDeckConfigsForUpdate: UInt32 = 6
     static let updateDeckConfigs: UInt32 = 7
+
+    // service 1 = BackendSyncService. Method ids verified against
+    // out/pylib/anki/_backend_generated.py (_run_command(1, N, …)).
+    static let sync: UInt32 = 1
+    static let syncMedia: UInt32 = 0
+    static let mediaSyncStatus: UInt32 = 2
+    static let syncLogin: UInt32 = 3
+    static let syncStatus: UInt32 = 4
+    static let syncCollection: UInt32 = 5
+    static let fullUploadOrDownload: UInt32 = 6
+    static let abortSync: UInt32 = 7
+
+    // service 43 = BackendStatsService. Method id verified against
+    // out/pylib/anki/_backend_generated.py's tag_mastery_raw
+    // (self._run_command(43, 5, ...)).
+    static let stats: UInt32 = 43
+    static let tagMastery: UInt32 = 5
 }
 
 /// Error surfaced across the C ABI seam.
@@ -372,5 +389,88 @@ actor AnkiEngine {
             }
         }
         return html
+    }
+
+    // MARK: - Sync (BackendSyncService, service 1)
+    //
+    // The sync HTTP is performed inside the Rust core (reqwest + its own TLS),
+    // not by Swift URLSession — so these are ordinary anki_command round-trips
+    // and iOS App Transport Security does not apply to the sync traffic. The
+    // whole collection is synced (cards + FSRS memory state, revlog, notes,
+    // decks, deck config/FSRS params); media rides along when `syncMedia` is set.
+
+    /// Exchange username/password for a host key (`hkey`). The returned auth
+    /// (hkey + endpoint) must be persisted and supplied to every later call.
+    func syncLogin(username: String, password: String, endpoint: String?) throws -> Anki_Sync_SyncAuth {
+        var req = Anki_Sync_SyncLoginRequest()
+        req.username = username
+        req.password = password
+        if let endpoint, !endpoint.isEmpty { req.endpoint = endpoint }
+        return try call(service: AnkiService.sync, method: AnkiService.syncLogin,
+                        req, returning: Anki_Sync_SyncAuth.self)
+    }
+
+    /// Lightweight check of what a sync would do (no changes / normal / full),
+    /// without transferring anything.
+    func syncStatus(auth: Anki_Sync_SyncAuth) throws -> Anki_Sync_SyncStatusResponse {
+        try call(service: AnkiService.sync, method: AnkiService.syncStatus,
+                 auth, returning: Anki_Sync_SyncStatusResponse.self)
+    }
+
+    /// Run a normal (incremental) collection sync. When `syncMedia` is true the
+    /// Rust core kicks off a background media sync afterwards (poll it with
+    /// `mediaSyncStatus()`). The response's `required` tells the caller whether a
+    /// full upload/download is needed instead.
+    func syncCollection(auth: Anki_Sync_SyncAuth, syncMedia: Bool) throws -> Anki_Sync_SyncCollectionResponse {
+        var req = Anki_Sync_SyncCollectionRequest()
+        req.auth = auth
+        req.syncMedia = syncMedia
+        return try call(service: AnkiService.sync, method: AnkiService.syncCollection,
+                        req, returning: Anki_Sync_SyncCollectionResponse.self)
+    }
+
+    /// One-way full transfer used when collections have diverged at the schema
+    /// level (or one side is empty — e.g. first login). The Rust core closes and
+    /// re-opens the collection internally, so callers only need to refresh their
+    /// UI afterward. Pass `serverUsn` (from SyncCollectionResponse.serverMediaUsn)
+    /// so a media sync follows the transfer; omit it to skip media.
+    func fullUploadOrDownload(auth: Anki_Sync_SyncAuth, upload: Bool, serverUsn: Int32?) throws {
+        var req = Anki_Sync_FullUploadOrDownloadRequest()
+        req.auth = auth
+        req.upload = upload
+        if let serverUsn { req.serverUsn = serverUsn }
+        _ = try call(service: AnkiService.sync, method: AnkiService.fullUploadOrDownload,
+                     req, returning: Anki_Generic_Empty.self)
+    }
+
+    /// Poll the background media sync started by `syncCollection`/full transfer.
+    /// `active` is false once it has finished; a prior media error is surfaced as
+    /// a thrown backend error on the next call.
+    func mediaSyncStatus() throws -> Anki_Sync_MediaSyncStatusResponse {
+        try call(service: AnkiService.sync, method: AnkiService.mediaSyncStatus,
+                 Anki_Generic_Empty(), returning: Anki_Sync_MediaSyncStatusResponse.self)
+    }
+
+    /// Abort an in-flight collection sync.
+    func abortSync() throws {
+        _ = try call(service: AnkiService.sync, method: AnkiService.abortSync,
+                     Anki_Generic_Empty(), returning: Anki_Generic_Empty.self)
+    }
+
+    // MARK: - Stats (BackendStatsService, service 43)
+
+    /// FSRS mastery/recall rolled up per tag group, used by the Practice tab's
+    /// Readiness computation (see contracts/data-model.md "FsrsCategorySummary").
+    /// `groupDepth` controls how many `::`-separated tag components form each
+    /// returned `Group` (this fork groups at depth 2 — see plan-ios.md's tag
+    /// mapping deviation note).
+    func tagMastery(groupDepth: UInt32, masteredThreshold: Double = 0,
+                    search: String = "") throws -> Anki_Stats_TagMasteryResponse {
+        var req = Anki_Stats_TagMasteryRequest()
+        req.groupDepth = groupDepth
+        req.masteredThreshold = masteredThreshold
+        req.search = search
+        return try call(service: AnkiService.stats, method: AnkiService.tagMastery,
+                        req, returning: Anki_Stats_TagMasteryResponse.self)
     }
 }

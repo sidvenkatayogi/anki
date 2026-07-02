@@ -114,7 +114,21 @@ fn build_data_folder(build: &mut Build) -> Result<()> {
     build_pages(build)?;
     build_icons(build)?;
     copy_sveltekit(build)?;
+    copy_practice_seed(build)?;
     Ok(())
+}
+
+// The Practice tab loads its ~20-question seed bank from a bundled JSON file
+// rather than fetching it over the network; it needs to be copied into the
+// built data folder like the other static web assets above.
+fn copy_practice_seed(build: &mut Build) -> Result<()> {
+    build.add_action(
+        "qt:aqt:data:web:practice_seed",
+        CopyFile {
+            input: "qt/aqt/data/web/practice-seed.json".into(),
+            output: "qt/_aqt/data/web/practice-seed.json",
+        },
+    )
 }
 
 fn copy_sveltekit(build: &mut Build) -> Result<()> {

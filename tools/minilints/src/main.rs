@@ -39,6 +39,11 @@ const IGNORED_FOLDERS: &[&str] = &[
     "./.venv",
     "./qt/installer/windows-template",
     "./qt/installer/mac-template",
+    // gitignored tooling/scratch dirs (Claude Code skills, factory run scratch);
+    // not repo source, so exclude from copyright/header linting.
+    "./.agents",
+    "./.claude",
+    "./.factory",
 ];
 
 fn main() -> Result<()> {

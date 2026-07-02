@@ -182,6 +182,31 @@ complexipy-diff:
 clean *args:
     ./tools/clean {{ args }}
 
+# Run the self-hosted sync server in Docker (the desktop + iOS sync backend).
+# Built from this fork's source so the protocol matches the clients. Override
+# credentials with e.g. `SYNC_USER1=me:secret just sync-server`. See
+# tools/syncserver/README.md for desktop + iOS setup.
+# Also brings up the `mcat-tools` sidecar (Read/Practice tab endpoints), which
+# reads OPENAI_API_KEY/NEWS_API_KEY/MCAT_TOOLS_TOKEN from tools/syncserver/.env
+# (copy tools/syncserver/env.example) or shell-exported overrides.
+sync-server:
+    docker compose -f tools/syncserver/docker-compose.yml up --build
+
+# Stop and remove the Docker sync server (keeps the data volume)
+sync-server-down:
+    docker compose -f tools/syncserver/docker-compose.yml down
+
+# Fast-iteration sync server: runs THIS build's server in-process, no Docker.
+# Requires a prior `just run`/`just build`; data goes to ~/.syncserver. macOS/Linux.
+# OPENAI_API_KEY/NEWS_API_KEY/MCAT_TOOLS_TOKEN are for the Read/Practice tab
+# endpoints (see tools/syncserver/README.md); export them in your shell first.
+# NOTE: this does NOT start the mcat-tools sidecar (port 8081) — that's a
+# separate FastAPI process; see "Run mcat-tools without Docker" in
+# tools/syncserver/README.md, or use `just sync-server` (Docker) which starts
+# both.
+sync-server-dev:
+    SYNC_USER1="${SYNC_USER1:-mcat:mcat}" OPENAI_API_KEY="${OPENAI_API_KEY:-}" NEWS_API_KEY="${NEWS_API_KEY:-}" MCAT_TOOLS_TOKEN="${MCAT_TOOLS_TOKEN:-}" {{ uv }} run python -m aqt --syncserver
+
 # Helpers to get the right commands for the platform
 
 ninja := if os() == "windows" { "tools\\ninja" } else { "./ninja" }

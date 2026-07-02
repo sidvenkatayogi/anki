@@ -105,7 +105,10 @@ class V3CardInfo:
         states = chosen.states
         states.current.custom_data = chosen.card.custom_data
         return V3CardInfo(
-            queued_cards=queued_cards, states=states, context=chosen.context, index=index
+            queued_cards=queued_cards,
+            states=states,
+            context=chosen.context,
+            index=index,
         )
 
     def top_card(self) -> QueuedCards.QueuedCard:

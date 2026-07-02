@@ -61,6 +61,8 @@ class AnkiWebViewKind(Enum):
     IMPORT_ANKI_PACKAGE = "anki package import"
     MASTERY_STATS = "mastery stats"
     TO_LEARN_STATS = "to learn stats"
+    READ_STATS = "read stats"
+    PRACTICE_STATS = "practice stats"
 
 
 class AuthInterceptor(QWebEngineUrlRequestInterceptor):
@@ -146,6 +148,8 @@ class AnkiWebPage(QWebEnginePage):
             AnkiWebViewKind.IMPORT_LOG,
             AnkiWebViewKind.MASTERY_STATS,
             AnkiWebViewKind.TO_LEARN_STATS,
+            AnkiWebViewKind.READ_STATS,
+            AnkiWebViewKind.PRACTICE_STATS,
         )
 
         global _profile_with_api_access, _profile_without_api_access

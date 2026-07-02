@@ -169,9 +169,7 @@ class DeckBrowser:
         (this only changes WHICH new cards fill it, not how many). Idempotent —
         only writes when the order isn't already random."""
         col = self.mw.col
-        random_cards = (
-            DeckConfig.Config.NewCardGatherPriority.NEW_CARD_GATHER_PRIORITY_RANDOM_CARDS
-        )
+        random_cards = DeckConfig.Config.NewCardGatherPriority.NEW_CARD_GATHER_PRIORITY_RANDOM_CARDS
         data = col.decks.get_deck_configs_for_update(deck_id)
         configs = []
         changed = False
@@ -221,7 +219,7 @@ class DeckBrowser:
             "<button onclick=\"pycmd('startflashcards'); return false;\" "
             'style="font-size:15px; font-weight:600; padding:10px 24px; '
             "border-radius:8px; cursor:pointer; border:1px solid var(--border,#8884); "
-            "background:var(--canvas-elevated,#eee); color:var(--fg,#000);\">"
+            'background:var(--canvas-elevated,#eee); color:var(--fg,#000);">'
             f"{tr.studying_start_flashcards()}</button></div>"
         )
 

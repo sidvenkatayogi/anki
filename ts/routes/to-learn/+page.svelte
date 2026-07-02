@@ -34,11 +34,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                     <div class="group">
                         <h2 class="group-title">
                             {group.tag}
-                            <span class="count"
-                                >{tr.statisticsToLearnCount({
+                            <span class="count">
+                                {tr.statisticsToLearnCount({
                                     count: group.cards.length,
-                                })}</span
-                            >
+                                })}
+                            </span>
                         </h2>
                         <ul class="card-list">
                             {#each group.cards as card (card.cardId)}
