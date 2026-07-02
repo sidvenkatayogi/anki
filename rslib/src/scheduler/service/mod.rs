@@ -497,10 +497,65 @@ mod tests {
                 rating: rating as i32,
                 answered_at_millis: TimestampMillis::now().0,
                 milliseconds_taken: 0,
+                skip_queue: false,
             },
         )
         .unwrap();
         card_id
+    }
+
+    #[test]
+    fn skip_queue_grades_a_non_head_card_that_would_otherwise_be_rejected() {
+        let mut col = Collection::new();
+        // Two new cards, so one is guaranteed not to be the queue head.
+        let cid_a = add_basic_card(&mut col);
+        let cid_b = add_basic_card(&mut col);
+
+        // Build the study queue and pick a card that is NOT at its head — this
+        // mirrors the memory palace grading a pinned card that isn't the
+        // reviewer's current card.
+        let queued = SchedulerService::get_queued_cards(
+            &mut col,
+            GetQueuedCardsRequest {
+                fetch_limit: 10,
+                intraday_learning_only: false,
+            },
+        )
+        .unwrap();
+        let head = queued.cards.first().unwrap().card.as_ref().unwrap().id;
+        let non_head = if head == cid_a.0 { cid_b } else { cid_a };
+
+        let states = SchedulerService::get_scheduling_states(
+            &mut col,
+            anki_proto::cards::CardId { cid: non_head.0 },
+        )
+        .unwrap();
+
+        let make_answer = |skip_queue: bool| CardAnswer {
+            card_id: non_head.0,
+            current_state: states.current.clone(),
+            new_state: states.good.clone(),
+            rating: Rating::Good as i32,
+            answered_at_millis: TimestampMillis::now().0,
+            milliseconds_taken: 0,
+            skip_queue,
+        };
+
+        // Without skip_queue the scheduler rejects a non-head card.
+        assert!(
+            SchedulerService::answer_card(&mut col, make_answer(false)).is_err(),
+            "answering a non-head card without skip_queue should be rejected"
+        );
+
+        // With skip_queue it succeeds and actually advances the card's schedule.
+        let _ = SchedulerService::answer_card(&mut col, make_answer(true))
+            .expect("skip_queue should let a pinned card be graded");
+        let card = col.storage.get_card(non_head).unwrap().unwrap();
+        assert_ne!(
+            card.ctype,
+            CardType::New,
+            "a graded card should have left the New state"
+        );
     }
 
     #[test]

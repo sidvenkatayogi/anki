@@ -878,6 +878,18 @@ public struct Anki_Scheduler_CardAnswer: @unchecked Sendable {
     set {_uniqueStorage()._millisecondsTaken = newValue}
   }
 
+  /// When true, the card is graded without being popped from the study queue.
+  /// The scheduler normally requires the answered card to be the queue head
+  /// (it pops it and adjusts counts). Callers that grade a card out of band —
+  /// e.g. the memory palace answering a pinned card that isn't the current
+  /// reviewer card — set this so the full FSRS/revlog update still happens
+  /// without touching the reviewer's queue. Defaults to false to preserve the
+  /// existing reviewer behavior (from_queue = true).
+  public var skipQueue: Bool {
+    get {return _storage._skipQueue}
+    set {_uniqueStorage()._skipQueue = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum Rating: SwiftProtobuf.Enum, Swift.CaseIterable {
@@ -3042,6 +3054,7 @@ extension Anki_Scheduler_CardAnswer: SwiftProtobuf.Message, SwiftProtobuf._Messa
     4: .same(proto: "rating"),
     5: .standard(proto: "answered_at_millis"),
     6: .standard(proto: "milliseconds_taken"),
+    7: .standard(proto: "skip_queue"),
   ]
 
   fileprivate class _StorageClass {
@@ -3051,6 +3064,7 @@ extension Anki_Scheduler_CardAnswer: SwiftProtobuf.Message, SwiftProtobuf._Messa
     var _rating: Anki_Scheduler_CardAnswer.Rating = .again
     var _answeredAtMillis: Int64 = 0
     var _millisecondsTaken: UInt32 = 0
+    var _skipQueue: Bool = false
 
     #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
@@ -3071,6 +3085,7 @@ extension Anki_Scheduler_CardAnswer: SwiftProtobuf.Message, SwiftProtobuf._Messa
       _rating = source._rating
       _answeredAtMillis = source._answeredAtMillis
       _millisecondsTaken = source._millisecondsTaken
+      _skipQueue = source._skipQueue
     }
   }
 
@@ -3095,6 +3110,7 @@ extension Anki_Scheduler_CardAnswer: SwiftProtobuf.Message, SwiftProtobuf._Messa
         case 4: try { try decoder.decodeSingularEnumField(value: &_storage._rating) }()
         case 5: try { try decoder.decodeSingularInt64Field(value: &_storage._answeredAtMillis) }()
         case 6: try { try decoder.decodeSingularUInt32Field(value: &_storage._millisecondsTaken) }()
+        case 7: try { try decoder.decodeSingularBoolField(value: &_storage._skipQueue) }()
         default: break
         }
       }
@@ -3125,6 +3141,9 @@ extension Anki_Scheduler_CardAnswer: SwiftProtobuf.Message, SwiftProtobuf._Messa
       if _storage._millisecondsTaken != 0 {
         try visitor.visitSingularUInt32Field(value: _storage._millisecondsTaken, fieldNumber: 6)
       }
+      if _storage._skipQueue != false {
+        try visitor.visitSingularBoolField(value: _storage._skipQueue, fieldNumber: 7)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -3140,6 +3159,7 @@ extension Anki_Scheduler_CardAnswer: SwiftProtobuf.Message, SwiftProtobuf._Messa
         if _storage._rating != rhs_storage._rating {return false}
         if _storage._answeredAtMillis != rhs_storage._answeredAtMillis {return false}
         if _storage._millisecondsTaken != rhs_storage._millisecondsTaken {return false}
+        if _storage._skipQueue != rhs_storage._skipQueue {return false}
         return true
       }
       if !storagesAreEqual {return false}

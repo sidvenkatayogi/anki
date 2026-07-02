@@ -283,6 +283,14 @@ message CardAnswer {
   Rating rating = 4;
   int64 answered_at_millis = 5;
   uint32 milliseconds_taken = 6;
+  // When true, the card is graded without being popped from the study queue.
+  // The scheduler normally requires the answered card to be the queue head
+  // (it pops it and adjusts counts). Callers that grade a card out of band —
+  // e.g. the memory palace answering a pinned card that isn't the current
+  // reviewer card — set this so the full FSRS/revlog update still happens
+  // without touching the reviewer's queue. Defaults to false to preserve the
+  // existing reviewer behavior (from_queue = true).
+  bool skip_queue = 7;
 }
 
 message CustomStudyRequest {

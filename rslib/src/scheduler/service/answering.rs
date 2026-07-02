@@ -21,7 +21,11 @@ impl From<anki_proto::scheduler::CardAnswer> for CardAnswer {
             answered_at: TimestampMillis(answer.answered_at_millis),
             milliseconds_taken: answer.milliseconds_taken,
             custom_data,
-            from_queue: true,
+            // A card graded out of band (e.g. the memory palace answering a
+            // pinned card that isn't the reviewer's current card) sets
+            // skip_queue so the scheduler doesn't try to pop it from the study
+            // queue head. Unset (the reviewer's normal path) keeps from_queue.
+            from_queue: !answer.skip_queue,
         }
     }
 }

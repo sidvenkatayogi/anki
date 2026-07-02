@@ -34,6 +34,11 @@ enum AnkiService {
     static let scheduler: UInt32 = 13
     static let getQueuedCards: UInt32 = 3
     static let answerCard: UInt32 = 4
+    static let getSchedulingStates: UInt32 = 23
+
+    // service 29 = BackendSearchService
+    static let search: UInt32 = 29
+    static let searchCards: UInt32 = 1
 
     // service 27 = BackendCardRenderingService
     static let cardRendering: UInt32 = 27
@@ -290,6 +295,57 @@ actor AnkiEngine {
         case .easy: return states.easy
         default: return states.good
         }
+    }
+
+    // MARK: - Search / card lookup (memory palace)
+
+    /// Return the card ids matching an Anki search string (same query syntax as
+    /// the desktop browser, e.g. "deck:current", "tag:biochem", or free text).
+    /// An empty query returns every card in the collection. Used by the memory
+    /// palace card picker to let the user choose which card to place at a locus.
+    func searchCards(_ query: String) throws -> [Int64] {
+        var req = Anki_Search_SearchRequest()
+        req.search = query
+        // Default SortOrder is fine — the picker renders its own labels.
+        let resp = try call(service: AnkiService.search, method: AnkiService.searchCards,
+                            req, returning: Anki_Search_SearchResponse.self)
+        return resp.ids
+    }
+
+    // MARK: - Grading an arbitrary card (memory palace → FSRS)
+
+    /// The four candidate next states for a card in its *current* position,
+    /// exactly as the reviewer previews them. Works for any card (new, learning
+    /// or review), not just the ones currently queued — which is what lets the
+    /// memory palace grade a pinned card on demand.
+    func schedulingStates(cardID: Int64) throws -> Anki_Scheduler_SchedulingStates {
+        var req = Anki_Cards_CardId()
+        req.cid = cardID
+        return try call(service: AnkiService.scheduler, method: AnkiService.getSchedulingStates,
+                        req, returning: Anki_Scheduler_SchedulingStates.self)
+    }
+
+    /// Grade any card by id and advance the real scheduler, so memory-palace
+    /// recall counts toward FSRS. Fetches the card's current scheduling states,
+    /// applies the chosen rating, and round-trips answer_card — the same path
+    /// the reviewer takes, generalized to a card that need not be queued.
+    @discardableResult
+    func gradeCard(cardID: Int64,
+                   rating: Anki_Scheduler_CardAnswer.Rating) throws -> Anki_Collection_OpChanges {
+        let states = try schedulingStates(cardID: cardID)
+        var ans = Anki_Scheduler_CardAnswer()
+        ans.cardID = cardID
+        ans.currentState = states.current
+        ans.newState = newState(for: rating, from: states)
+        ans.rating = rating
+        ans.answeredAtMillis = Int64(Date().timeIntervalSince1970 * 1000)
+        ans.millisecondsTaken = 1000
+        // A pinned card usually isn't the reviewer's current queue head, so
+        // skip the queue pop — the scheduler would otherwise reject it with
+        // "not at top of queue". The FSRS/revlog update still happens.
+        ans.skipQueue = true
+        return try call(service: AnkiService.scheduler, method: AnkiService.answerCard,
+                        ans, returning: Anki_Collection_OpChanges.self)
     }
 
     // MARK: - Rendering

@@ -51,4 +51,51 @@ final class ReviewFlowUITests: XCTestCase {
         XCTAssertTrue(done.exists || showAgain.exists,
                       "After grading, the loop should present the next card or finish")
     }
+
+    /// Memory palace: switch to the Palace tab, create a place, and land on the
+    /// capture screen. Proves the new tab, list, creation sheet, navigation, and
+    /// (Simulator) photo-capture fallback are all wired and don't crash.
+    func testMemoryPalaceCreateFlow() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        // Move to the Palace tab (wait for the UI to settle after startup).
+        let palaceTab = app.tabBars.buttons["Palace"]
+        XCTAssertTrue(palaceTab.waitForExistence(timeout: 30), "Palace tab should exist")
+        palaceTab.tap()
+
+        XCTAssertTrue(app.navigationBars["Memory Palace"].waitForExistence(timeout: 5),
+                      "Palace home should show")
+
+        // Create a new palace via the toolbar "+", which is present whether or
+        // not palaces already exist (so the test is order-independent).
+        let add = app.navigationBars.buttons["New place"]
+        XCTAssertTrue(add.waitForExistence(timeout: 5), "Add button should exist")
+        add.tap()
+
+        let nameField = app.textFields.firstMatch
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Name field in new-palace sheet")
+        nameField.tap()
+        nameField.typeText("Test Desk")
+
+        app.buttons["Create"].tap()
+
+        // Sim has no AR, so the capture screen shows the photo-capture fallback.
+        let addCards = app.navigationBars["Add cards"]
+        let choosePhoto = app.buttons["Choose photo"]
+        XCTAssertTrue(addCards.waitForExistence(timeout: 5) || choosePhoto.waitForExistence(timeout: 5),
+                      "Should land on the capture screen (photo fallback in Simulator)")
+
+        // Return to the list and confirm the palace persisted as a row. SwiftUI
+        // List rows surface as cells/buttons (not bare static text), so accept
+        // any of those.
+        let back = app.navigationBars.buttons.element(boundBy: 0)
+        if back.waitForExistence(timeout: 5) { back.tap() }
+        XCTAssertTrue(app.navigationBars["Memory Palace"].waitForExistence(timeout: 5),
+                      "Should return to the palace list")
+        let appears = app.collectionViews.cells.count >= 1
+            || app.staticTexts["Test Desk"].exists
+            || app.buttons["Test Desk"].exists
+        XCTAssertTrue(appears, "Created palace should appear in the list")
+    }
 }

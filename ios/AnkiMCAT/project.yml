@@ -46,6 +46,8 @@ targets:
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_CFBundleDisplayName: Anki MCAT
+        # Memory-palace AR capture uses the camera (ARKit world tracking).
+        INFOPLIST_KEY_NSCameraUsageDescription: "Anki MCAT uses the camera to capture the places you turn into memory palaces and to show your cards anchored in the room."
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         # The xcframework's module map lives in its Headers dir; expose it so

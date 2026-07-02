@@ -22,8 +22,14 @@ enum ReviewPhase: Equatable {
 @MainActor
 @Observable
 final class ReviewModel {
-    // Engine is created once and reused; not observed (it's an actor).
-    @ObservationIgnored private let engine = AnkiEngine()
+    // Engine is created once and reused; not observed (it's an actor). Injected
+    // so the memory-palace feature can share the same opened backend/collection
+    // (a single actor also keeps every backend call serialized per the contract).
+    @ObservationIgnored let engine: AnkiEngine
+
+    init(engine: AnkiEngine = AnkiEngine()) {
+        self.engine = engine
+    }
 
     // UI state.
     private(set) var phase: ReviewPhase = .launching
