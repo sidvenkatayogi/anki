@@ -61,11 +61,22 @@ enum PalaceLogic {
         let collapsed = out
             .split(whereSeparator: { $0 == " " || $0 == "\n" || $0 == "\t" || $0 == "\r" || $0 == "\u{00a0}" })
             .joined(separator: " ")
-        let trimmed = collapsed.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = stripBreadcrumb(collapsed.trimmingCharacters(in: .whitespacesAndNewlines))
         if trimmed.isEmpty { return "(untitled card)" }
         if trimmed.count <= maxLength { return trimmed }
         let end = trimmed.index(trimmed.startIndex, offsetBy: maxLength)
         return String(trimmed[..<end]).trimmingCharacters(in: .whitespaces) + "…"
+    }
+
+    /// Drop a leading deck breadcrumb like "MileDown::General_Chemistry::Atomic".
+    /// Only strips when the part before the last "::" has no spaces (i.e. looks
+    /// like a deck path, not sentence content), so real card text is preserved.
+    static func stripBreadcrumb(_ s: String) -> String {
+        guard let r = s.range(of: "::", options: .backwards) else { return s }
+        let prefix = s[..<r.lowerBound]
+        guard !prefix.contains(" ") else { return s }
+        let after = s[r.upperBound...].trimmingCharacters(in: .whitespaces)
+        return after.isEmpty ? s : after
     }
 
     /// Remove `<tag ...>...</tag>` blocks (case-insensitive), including content.

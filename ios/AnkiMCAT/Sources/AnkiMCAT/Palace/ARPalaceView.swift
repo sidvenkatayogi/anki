@@ -165,15 +165,21 @@ struct ARPalaceView: UIViewRepresentable {
         /// restore), and remove anchors for loci that were deleted.
         func syncLoci() {
             guard let view = sceneView else { return }
-            let restored = Set((view.session.currentFrame?.anchors ?? []).compactMap { $0.name })
+
+            // Always keep the anchor→locus map current (didAdd uses it) — and do
+            // this BEFORE adding any anchor so didAdd can resolve the new node.
+            for locus in parent.loci {
+                if let anchorID = locus.anchorID { anchorToLocus[anchorID] = locus.id }
+            }
+
+            // Study relocalizes into the SAVED ARWorldMap, which re-adds the
+            // anchors itself; adding them again here would create a SECOND node
+            // per locus. So only add/remove anchors while capturing.
+            guard parent.mode == .capture else { return }
 
             for locus in parent.loci {
                 guard let anchorID = locus.anchorID else { continue }
-                anchorToLocus[anchorID] = locus.id
-                // Skip if already added by us or already restored from the map,
-                // so study mode never double-anchors a locus.
-                let alreadyPresent = placedAnchors.contains(anchorID) || restored.contains(anchorID)
-                if !alreadyPresent, let m = PalaceLogic.matrix(from: locus.transform) {
+                if !placedAnchors.contains(anchorID), let m = PalaceLogic.matrix(from: locus.transform) {
                     let anchor = ARAnchor(name: anchorID, transform: m)
                     view.session.add(anchor: anchor)
                     placedAnchors.insert(anchorID)

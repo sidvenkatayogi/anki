@@ -22,9 +22,10 @@ It lives in the second tab of the app (**Review** | **Palace**).
      **room photo**: choose a picture from your library, or tap **"Use a sample
      room"** (a built-in illustrated room, no setup needed), then tap spots to
      drop pins. Pins are joined by a numbered **journey route** as you place them.
-2. **Pick a card per spot.** Tapping a spot opens a searchable picker over your
-   existing MCAT cards (Anki query syntax, e.g. `tag:biochem`). Tapping a placed
-   spot later opens its detail sheet: view the card, write a vivid **memory hook
+2. **Place cards, card-first.** The app shows you a readable, rendered card
+   (front/back); tap the spot it should live in to place *that* card, then the
+   next card appears (Skip to get a different one). Tapping a placed spot later
+   opens its detail sheet: view the card, write a vivid **memory hook
    (mnemonic)**, mark it recalled, or remove it.
 3. **Space runs out.** Each palace holds a bounded number of spots. When it fills
    up, placement is blocked and you're prompted to **capture a new place** — a

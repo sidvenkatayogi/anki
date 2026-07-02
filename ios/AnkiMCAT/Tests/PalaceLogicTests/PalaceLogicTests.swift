@@ -55,6 +55,12 @@ enum PalaceLogicTests {
         check(PalaceLogic.label(fromHTML: "<div></div>") == "(untitled card)", "empty -> placeholder")
         check(PalaceLogic.label(fromHTML: String(repeating: "x", count: 200), maxLength: 10).hasSuffix("…"),
               "truncates with ellipsis")
+        check(PalaceLogic.label(fromHTML: "MileDown::Gen_Chem::Atoms In element notation X")
+              == "Atoms In element notation X", "strips deck breadcrumb")
+        check(PalaceLogic.stripBreadcrumb("A::B::leaf text here") == "leaf text here", "strip helper")
+        check(PalaceLogic.stripBreadcrumb("no breadcrumb here") == "no breadcrumb here", "no-op without ::")
+        check(PalaceLogic.stripBreadcrumb("has space :: y") == "has space :: y",
+              "no strip when prefix has spaces (real content)")
     }
 
     static func testCapacity() {

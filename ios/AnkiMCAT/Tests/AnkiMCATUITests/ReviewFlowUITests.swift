@@ -125,19 +125,16 @@ final class ReviewFlowUITests: XCTestCase {
         let sample = app.buttons["Use a sample room"]
         XCTAssertTrue(sample.waitForExistence(timeout: 5))
         sample.tap()
-        XCTAssertTrue(app.staticTexts["0/7 spots used"].waitForExistence(timeout: 5),
-                      "photo capture surface should appear after picking the sample room")
-
-        // Place two cards by tapping spots on the photo, choosing the first card each time.
-        for offset in [CGVector(dx: 0.4, dy: 0.4), CGVector(dx: 0.62, dy: 0.5)] {
-            app.coordinate(withNormalizedOffset: offset).tap()
-            let picker = app.navigationBars["Choose a card"]
-            XCTAssertTrue(picker.waitForExistence(timeout: 10), "card picker should open")
-            let firstCard = app.cells.firstMatch
-            XCTAssertTrue(firstCard.waitForExistence(timeout: 10), "cards should be listed")
-            firstCard.tap()
-            XCTAssertTrue(picker.waitForNonExistence(timeout: 5), "picker should dismiss after choosing")
-        }
+        // Card-first placement: a card is shown, tap a spot to place THAT card.
+        // Capacity ("N/7 spots used") is our confirmation each card landed.
+        XCTAssertTrue(app.staticTexts["0/7 spots used"].waitForExistence(timeout: 10),
+                      "the card-to-place panel should appear after picking the sample room")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.35)).tap()
+        XCTAssertTrue(app.staticTexts["1/7 spots used"].waitForExistence(timeout: 8),
+                      "first card should be placed by tapping a spot")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.6, dy: 0.42)).tap()
+        XCTAssertTrue(app.staticTexts["2/7 spots used"].waitForExistence(timeout: 8),
+                      "second card should be placed by tapping a spot")
 
         // Back to the palace list (create jumps straight to capture, so there's
         // no detail in the stack yet), open the palace, then study.

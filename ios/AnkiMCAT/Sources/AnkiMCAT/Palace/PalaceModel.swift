@@ -215,6 +215,14 @@ final class PalaceModel {
         }
     }
 
+    /// Cards not yet placed in this palace, in deck order — the queue the
+    /// card-first capture flow presents one at a time.
+    func unplacedCardIDs(forPalace palaceID: UUID) async -> [Int64] {
+        let placed = Set(palace(palaceID)?.loci.map(\.cardID) ?? [])
+        let all = await searchCardIDs("")
+        return all.filter { !placed.contains($0) }
+    }
+
     /// A short label for a card (its rendered question, HTML-stripped). Returns
     /// a placeholder if the card can't be rendered (e.g. deleted since pinning).
     func label(for cardID: Int64) async -> String {
