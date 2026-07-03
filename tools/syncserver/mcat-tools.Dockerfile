@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
-# "mcat-tools" sidecar: FastAPI/uvicorn service hosting the Read/Practice tab
-# HTTP endpoints (/read/passage, /practice/questions, /metrics/compute,
+# "mcat-tools" sidecar: FastAPI/uvicorn service hosting the Practice tab and
+# Palace HTTP endpoints (/practice/questions, /metrics/compute, /palaces,
 # /health, /version — see contracts/api.md in the 2026-07-02-read-practice-tabs
 # factory run). Runs standalone alongside the Rust anki-sync-server, not
 # proxied through mediasrv.

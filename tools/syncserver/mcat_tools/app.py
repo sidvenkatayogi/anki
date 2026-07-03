@@ -1,17 +1,16 @@
 # Copyright: Ankitects Pty Ltd and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-"""FastAPI app exposing the Read/Practice-tab HTTP endpoints.
+"""FastAPI app exposing the Practice-tab and Palace HTTP endpoints.
 
 Routes (see `contracts/api.md` in the 2026-07-02-read-practice-tabs factory
 run for the authoritative shapes):
     GET  /health
     GET  /version
-    GET  /read/passage
     GET  /practice/questions
     POST /metrics/compute
 
 Run standalone (from `tools/syncserver/`):
-    MCAT_TOOLS_TOKEN=... OPENAI_API_KEY=... uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
+    MCAT_TOOLS_TOKEN=... uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
 
 See `mcat_tools/README.md` for full env var docs.
 """
@@ -20,7 +19,6 @@ from __future__ import annotations
 
 import logging
 import subprocess
-import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -30,10 +28,8 @@ from fastapi.responses import JSONResponse, Response
 
 from mcat_tools import metrics, palace_store
 from mcat_tools.auth import require_token
-from mcat_tools.llm import LlmConfigError, LlmError, generate_quiz
 from mcat_tools.practice_seed import load_seed_questions
 from mcat_tools.schemas import MetricsComputeRequest, Palace
-from mcat_tools.sources import SourceError, fetch_passage
 
 logger = logging.getLogger("mcat_tools")
 
@@ -105,51 +101,6 @@ async def health() -> dict:
 @app.get("/version")
 async def version() -> dict:
     return {"version": "1.0.0", "build": _BUILD}
-
-
-VALID_SOURCES = ("wikipedia", "news", "gutenberg")
-
-
-@app.get("/read/passage", dependencies=[Depends(require_token)])
-async def read_passage(
-    source: Optional[str] = None, topic: Optional[str] = None
-) -> dict:
-    if source is not None and source not in VALID_SOURCES:
-        raise HTTPException(
-            status_code=400,
-            detail=_error(
-                "bad_request",
-                f"invalid source {source!r}, expected one of {VALID_SOURCES}",
-            ),
-        )
-
-    try:
-        passage = fetch_passage(source, topic)
-    except SourceError as exc:
-        raise HTTPException(
-            status_code=502, detail=_error("upstream_unavailable", str(exc))
-        ) from exc
-
-    try:
-        quiz = generate_quiz(passage["text"], passage["title"])
-    except LlmConfigError as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=_error("upstream_unavailable", f"llm not configured: {exc}"),
-        ) from exc
-    except LlmError as exc:
-        raise HTTPException(
-            status_code=502, detail=_error("llm_malformed", str(exc))
-        ) from exc
-
-    return {
-        "passage_id": str(uuid.uuid4()),
-        "source": passage["source"],
-        "title": passage["title"],
-        "text": passage["text"],
-        "url": passage["url"],
-        "quiz": quiz,
-    }
 
 
 @app.get("/practice/questions", dependencies=[Depends(require_token)])

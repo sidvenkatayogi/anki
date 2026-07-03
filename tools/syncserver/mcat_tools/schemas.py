@@ -13,7 +13,6 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 
 Category = Literal["bio_biochem", "chem_phys", "psych_soc", "cars"]
-SourceName = Literal["wikipedia", "news", "gutenberg"]
 
 
 class ErrorBody(BaseModel):
@@ -23,23 +22,6 @@ class ErrorBody(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorBody
-
-
-class QuizQuestion(BaseModel):
-    id: str
-    stem: str
-    options: List[str]
-    answer_index: int
-    explanation: str
-
-
-class ReadPassageResponse(BaseModel):
-    passage_id: str
-    source: SourceName
-    title: str
-    text: str
-    url: str
-    quiz: List[QuizQuestion]
 
 
 class SeedQuestion(BaseModel):
@@ -128,7 +110,7 @@ class VersionResponse(BaseModel):
 # The server is a dumb pass-through blob store for these shapes -- field
 # names are wire-exact camelCase (matching iOS Codable + desktop TS types
 # in `contracts/data-model.md`), NOT the snake_case convention used above
-# for the Read/Practice internal API.
+# for the Practice internal API.
 # ---------------------------------------------------------------------------
 
 

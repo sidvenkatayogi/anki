@@ -1,6 +1,6 @@
 # mcat_tools
 
-A small FastAPI sidecar HTTP service implementing the Read/Practice-tab
+A small FastAPI sidecar HTTP service implementing the Practice-tab and Palace
 endpoints from `contracts/api.md` (run `2026-07-02-read-practice-tabs`). It
 runs as a **separate process/container** alongside the existing Rust
 `anki-sync-server` binary in this folder — it does not modify that binary.
@@ -9,7 +9,6 @@ runs as a **separate process/container** alongside the existing Rust
 
 - `GET /health` — no auth
 - `GET /version` — no auth
-- `GET /read/passage?source=&topic=` — auth required
 - `GET /practice/questions` — auth required
 - `POST /metrics/compute` — auth required
 
@@ -22,7 +21,7 @@ From `tools/syncserver/`:
 
 ```bash
 pip install -r requirements-mcat-tools.txt
-MCAT_TOOLS_TOKEN=devtoken OPENAI_API_KEY=sk-... uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
+MCAT_TOOLS_TOKEN=devtoken uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
 ```
 
 (Run from the `tools/syncserver/` directory so `mcat_tools` is importable as
@@ -30,11 +29,9 @@ a top-level package — no `__init__.py`-based install step required.)
 
 ## Environment variables
 
-| Var                | Required                 | Notes                                                                                                                                                             |
-| ------------------ | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MCAT_TOOLS_TOKEN` | Yes                      | Shared secret for `X-Mcat-Token` auth. If unset, all authed routes are effectively locked (401 on every request) rather than auth being silently disabled.        |
-| `OPENAI_API_KEY`   | Only for `/read/passage` | If absent, `/read/passage` returns a clean `502 upstream_unavailable` naming the missing config rather than crashing.                                             |
-| `NEWS_API_KEY`     | Optional                 | Only used if/when the `news` source tier is reached (forced via `?source=news`, or reached in the wikipedia→news→gutenberg fallback chain after wikipedia fails). |
+| Var                | Required | Notes                                                                                                                                                      |
+| ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MCAT_TOOLS_TOKEN` | Yes      | Shared secret for `X-Mcat-Token` auth. If unset, all authed routes are effectively locked (401 on every request) rather than auth being silently disabled. |
 
 ## Notes for devops/testing
 
@@ -42,7 +39,7 @@ a top-level package — no `__init__.py`-based install step required.)
   8080). Not baked into the app itself — pass `--port` to uvicorn / set it in
   the Dockerfile CMD.
 - New pip deps live in `tools/syncserver/requirements-mcat-tools.txt`:
-  `fastapi`, `uvicorn[standard]`, `pydantic`, `httpx`, `openai`.
+  `fastapi`, `uvicorn[standard]`, `pydantic`, `httpx`.
 - CORS: this app sets `Access-Control-Allow-Origin: *` on all routes (via
   `CORSMiddleware`) rather than relying on a `mediasrv` proxy — no frontend
   coordination needed this round.
@@ -54,9 +51,6 @@ a top-level package — no `__init__.py`-based install step required.)
   — that `.factory/` path is git-ignored run-scratch and is never read at
   runtime. If the committed file is absent it returns a graceful
   `404 not_found` rather than crashing.
-- Chosen OpenAI model: `gpt-4o-mini` (see `mcat_tools/llm.py`), using
-  `response_format={"type": "json_object"}` JSON mode with strict
-  post-hoc validation and one retry on malformed output.
 
 ## Tests
 
@@ -66,5 +60,5 @@ From `tools/syncserver/`:
 python3 -m pytest mcat_tools/tests/test_app.py -v
 ```
 
-Network calls (Wikipedia/NewsAPI/Gutenberg/OpenAI) are mocked in tests —
-no real network access is required or performed.
+The tests exercise the app in-process via FastAPI's `TestClient` — no real
+network access is required or performed.

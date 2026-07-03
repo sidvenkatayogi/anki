@@ -92,17 +92,13 @@ history stay in step.
 See also `docs/syncserver/` for the upstream (PyPI-based) Docker example and the
 official env-var reference at <https://docs.ankiweb.net/sync-server.html>.
 
-## Read & Practice tab env vars (mcat-tools)
+## Practice tab env vars (mcat-tools)
 
-The Read and Practice tabs call new HTTP endpoints (`/read/passage`,
-`/practice/questions`, `/metrics/compute`, `/health`, `/version`) hosted by a
+The Practice tab calls new HTTP endpoints (`/practice/questions`,
+`/metrics/compute`, `/health`, `/version`) hosted by a
 separate `mcat-tools` sidecar (see `contracts/api.md` in the
-`2026-07-02-read-practice-tabs` factory run). They need three env vars:
+`2026-07-02-read-practice-tabs` factory run). It needs one env var:
 
-- `OPENAI_API_KEY` — **required**. Used server-side for the Read tab's LLM
-  quiz generation; never shipped to clients.
-- `NEWS_API_KEY` — optional. Only used if the news-API passage-source tier is
-  reached (Wikipedia is tried first). Leave blank to disable that tier.
 - `MCAT_TOOLS_TOKEN` — **required**. A shared bearer secret; clients send it
   as the `X-Mcat-Token` header. This is a **separate secret from
   `SYNC_USER1`** — generate a distinct random value.
@@ -130,7 +126,7 @@ which only starts the Rust sync server and does **not** start mcat-tools):
 ```bash
 cd tools/syncserver
 pip install -r requirements-mcat-tools.txt
-OPENAI_API_KEY=... MCAT_TOOLS_TOKEN=... uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
+MCAT_TOOLS_TOKEN=... uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
 ```
 
 The working directory must be `tools/syncserver/` so `mcat_tools` is

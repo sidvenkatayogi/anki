@@ -15,7 +15,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     // Plain hardcoded English strings are used throughout this page rather
     // than tr.*() Fluent calls - matching the documented deviation in
-    // ts/routes/read/+page.svelte (see domains/frontend/plan.md's "i18n
+    // an earlier MCAT feature (see domains/frontend/plan.md's "i18n
     // decision"), to avoid a full `just` codegen build regenerating the
     // Fluent bindings.
 
@@ -79,7 +79,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     // Inline config form - there's no separate settings dialog for this yet,
     // so this form is intentionally the only way to configure the sync
-    // server URL/token right now. Copied from ts/routes/read/+page.svelte.
+    // server URL/token right now.
     let formUrl = "";
     let formToken = "";
     let savingConfig = false;
@@ -444,9 +444,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         <div class="empty-state">
             <h1>Palace</h1>
             <p class="explain">
-                The Palace tab shows memory palaces synced from your other
-                devices. To use it, set your sync server URL and MCAT tools
-                token below.
+                The Palace tab shows memory palaces synced from your other devices. To
+                use it, set your sync server URL and MCAT tools token below.
             </p>
             <form class="config-form" on:submit|preventDefault={saveConfig}>
                 <label>
@@ -493,8 +492,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         <div class="empty-state">
             <h1>Palace</h1>
             <p class="explain">
-                No memory palaces have been synced yet. Build one in the iOS
-                app and it will show up here.
+                No memory palaces have been synced yet. Build one in the iOS app and it
+                will show up here.
             </p>
             <button class="btn-accent" on:click={loadPalaces}>Refresh</button>
         </div>
@@ -582,12 +581,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                                     class:pin-disabled={unavailableCardIds.has(
                                         locus.cardID,
                                     )}
-                                    disabled={unavailableCardIds.has(
-                                        locus.cardID,
-                                    )}
-                                    title={unavailableCardIds.has(
-                                        locus.cardID,
-                                    )
+                                    disabled={unavailableCardIds.has(locus.cardID)}
+                                    title={unavailableCardIds.has(locus.cardID)
                                         ? "Card unavailable"
                                         : undefined}
                                     on:click={() => openLocus(locus)}
@@ -648,8 +643,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                                         type="button"
                                         class="grade-btn grade-again"
                                         disabled={studyPanel.grading}
-                                        on:click={() =>
-                                            grade(CardAnswer_Rating.AGAIN)}
+                                        on:click={() => grade(CardAnswer_Rating.AGAIN)}
                                     >
                                         Again
                                     </button>
@@ -657,8 +651,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                                         type="button"
                                         class="grade-btn grade-hard"
                                         disabled={studyPanel.grading}
-                                        on:click={() =>
-                                            grade(CardAnswer_Rating.HARD)}
+                                        on:click={() => grade(CardAnswer_Rating.HARD)}
                                     >
                                         Hard
                                     </button>
@@ -666,8 +659,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                                         type="button"
                                         class="grade-btn grade-good"
                                         disabled={studyPanel.grading}
-                                        on:click={() =>
-                                            grade(CardAnswer_Rating.GOOD)}
+                                        on:click={() => grade(CardAnswer_Rating.GOOD)}
                                     >
                                         Good
                                     </button>
@@ -675,8 +667,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                                         type="button"
                                         class="grade-btn grade-easy"
                                         disabled={studyPanel.grading}
-                                        on:click={() =>
-                                            grade(CardAnswer_Rating.EASY)}
+                                        on:click={() => grade(CardAnswer_Rating.EASY)}
                                     >
                                         Easy
                                     </button>
@@ -691,8 +682,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 </div>
 
 <style lang="scss">
-    // Shared design tokens (accent colour, spacing scale) with Read/Practice,
-    // so all three tabs stay visually cohesive.
+    // Shared design tokens (accent colour, spacing scale) with Practice,
+    // so the MCAT tabs stay visually cohesive.
     @use "../../../sass/mcat-tools" as mcat;
     $accent: mcat.$mcat-accent;
     $accent-fg: mcat.$mcat-accent-fg;

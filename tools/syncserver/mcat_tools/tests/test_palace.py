@@ -116,9 +116,7 @@ def test_put_palace_id_mismatch_400(client):
 def test_put_palace_missing_updated_at_400(client):
     palace = _palace()
     del palace["updatedAt"]
-    resp = client.put(
-        f"/palaces/{palace['id']}", headers=auth_headers(), json=palace
-    )
+    resp = client.put(f"/palaces/{palace['id']}", headers=auth_headers(), json=palace)
     assert resp.status_code == 400
     assert resp.json()["error"]["code"] == "bad_request"
 
@@ -159,9 +157,7 @@ def test_get_palace_photo_invalid_id_404(client):
 
 def test_put_palace_invalid_id_400(client):
     palace = _palace(palace_id="not-a-uuid")
-    resp = client.put(
-        "/palaces/not-a-uuid", headers=auth_headers(), json=palace
-    )
+    resp = client.put("/palaces/not-a-uuid", headers=auth_headers(), json=palace)
     assert resp.status_code == 400
     assert resp.json()["error"] == {
         "code": "bad_request",
@@ -256,9 +252,7 @@ def test_last_write_wins_naive_updated_at_does_not_500(client):
     assert resp2.status_code == 200, resp2.text
     assert resp2.json()["name"] == "AwareLater"
 
-    get_resp = client.get(
-        f"/palaces/{naive_then_aware_id}", headers=auth_headers()
-    )
+    get_resp = client.get(f"/palaces/{naive_then_aware_id}", headers=auth_headers())
     assert get_resp.status_code == 200
     assert get_resp.json()["name"] == "AwareLater"
 

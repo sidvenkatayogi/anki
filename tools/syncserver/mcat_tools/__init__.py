@@ -1,6 +1,6 @@
 # Copyright: Ankitects Pty Ltd and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-"""mcat_tools: pure-Python + FastAPI helpers for the Read/Practice tabs.
+"""mcat_tools: pure-Python + FastAPI helpers for the Practice tab and Palace desktop-sync.
 
 `metrics.py` implements the Performance (Rasch/1-PL MAP ability estimate) and
 Readiness (MCAT scaled-score projection) formulas exactly per

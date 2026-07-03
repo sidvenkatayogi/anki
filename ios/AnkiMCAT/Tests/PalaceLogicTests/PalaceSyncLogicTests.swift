@@ -21,7 +21,7 @@
 // hard-coupled to `URLSession.shared` (no injectable session) and to
 // `SyncStore`, a thin Keychain wrapper using service name
 // "net.ankiweb.mcat.sync" -- the SAME service shared by
-// SyncModel/ReadModel/PracticeModel across every MCAT feature, with no
+// SyncModel/PracticeModel across every MCAT feature, with no
 // dependency-injection seam and no test-specific service name. Exercising
 // `SyncStore.save()`, or `PalaceSyncModel.push`/`pushAll`'s network branch,
 // from a committed automated test would write into the real shared system

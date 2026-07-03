@@ -61,7 +61,6 @@ class AnkiWebViewKind(Enum):
     IMPORT_ANKI_PACKAGE = "anki package import"
     MASTERY_STATS = "mastery stats"
     TO_LEARN_STATS = "to learn stats"
-    READ_STATS = "read stats"
     PRACTICE_STATS = "practice stats"
     PALACE_STATS = "palace stats"
 
@@ -149,7 +148,6 @@ class AnkiWebPage(QWebEnginePage):
             AnkiWebViewKind.IMPORT_LOG,
             AnkiWebViewKind.MASTERY_STATS,
             AnkiWebViewKind.TO_LEARN_STATS,
-            AnkiWebViewKind.READ_STATS,
             AnkiWebViewKind.PRACTICE_STATS,
             AnkiWebViewKind.PALACE_STATS,
         )

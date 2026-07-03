@@ -10,8 +10,8 @@
 #   SYNC_USER1=me:secret just sync-server
 #
 # The `mcat-tools` service below runs the FastAPI/uvicorn sidecar
-# (tools/syncserver/mcat_tools/) for the new Read/Practice tab HTTP endpoints
-# (/read/passage, /practice/questions, /metrics/compute, /health, /version —
+# (tools/syncserver/mcat_tools/) for the Practice tab and Palace HTTP endpoints
+# (/practice/questions, /metrics/compute, /palaces, /health, /version —
 # see contracts/api.md in the 2026-07-02-read-practice-tabs factory run) on
 # port 8081. It loads its secrets from an untracked tools/syncserver/.env
 # file — copy tools/syncserver/env.example to get started. See
@@ -38,7 +38,7 @@ services:
       - mcat-sync-data:/anki_data
     restart: unless-stopped
 
-  # Sidecar for the new Read/Practice tab endpoints. Runs the real
+  # Sidecar for the Practice tab and Palace endpoints. Runs the real
   # `mcat_tools` FastAPI app (tools/syncserver/mcat_tools/) via uvicorn on
   # port 8081, built from tools/syncserver/mcat-tools.Dockerfile with deps
   # from tools/syncserver/requirements-mcat-tools.txt. Standalone service,
@@ -56,11 +56,8 @@ services:
       - path: .env
         required: false
     environment:
-      # Required secrets below default to empty so misconfiguration fails
-      # loud rather than silently working with an unset key. NEWS_API_KEY
-      # is optional (only used if the news-API passage tier is reached).
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      NEWS_API_KEY: ${NEWS_API_KEY:-}
+      # Required secret below defaults to empty so misconfiguration fails
+      # loud rather than silently working with an unset key.
       MCAT_TOOLS_TOKEN: ${MCAT_TOOLS_TOKEN:-}
     ports:
       # 8081, distinct from syncserver's 8080.

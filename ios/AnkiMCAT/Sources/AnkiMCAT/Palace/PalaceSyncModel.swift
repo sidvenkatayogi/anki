@@ -3,9 +3,9 @@
 //
 // PalaceSyncModel — pushes memory palaces to the self-hosted mcat_tools sync
 // server (contracts/api.md `PUT /palaces/{id}` + `PUT /palaces/{id}/photo`),
-// mirroring ReadModel's HTTP-client style (URLSession, X-Mcat-Token header,
-// `{"error":{"code","message"}}` envelope, endpoint normalization). Simpler
-// than ReadModel: there's no view-facing phase machine, just a silent,
+// mirroring the HTTP-client style used by the other MCAT tabs (URLSession,
+// X-Mcat-Token header, `{"error":{"code","message"}}` envelope, endpoint
+// normalization). Simpler: there's no view-facing phase machine, just a silent,
 // fire-and-forget push per AC3 — a failed push must never surface an error or
 // block the UI; the next local save (or the next launch's `pushAll`)
 // naturally retries with the latest state.
@@ -180,7 +180,7 @@ final class PalaceSyncModel {
     // MARK: - Internals
 
     /// Accept "host:port" or a bare host and ensure a trailing slash (mirrors
-    /// ReadModel's `normalize`).
+    /// the endpoint normalization used by the other MCAT tabs).
     private func normalize(_ endpoint: String) -> String {
         var e = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !e.isEmpty else { return e }

@@ -418,7 +418,6 @@ def is_sveltekit_page(path: str) -> bool:
         "graphs",
         "mastery",
         "to-learn",
-        "read",
         "practice",
         "congrats",
         "card-info",
