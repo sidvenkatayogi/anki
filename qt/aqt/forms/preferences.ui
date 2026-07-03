@@ -449,6 +449,33 @@
              </widget>
             </item>
             <item>
+             <widget class="QCheckBox" name="auto_grade_enabled">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>preferences_auto_grade_answers</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="auto_grade_key_label">
+              <property name="text">
+               <string>preferences_auto_grade_openai_key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="openai_api_key">
+              <property name="echoMode">
+               <enum>QLineEdit::Password</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="render_latex">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1283,6 +1310,8 @@
   <tabstop>showProgress</tabstop>
   <tabstop>showEstimates</tabstop>
   <tabstop>spacebar_rates_card</tabstop>
+  <tabstop>auto_grade_enabled</tabstop>
+  <tabstop>openai_api_key</tabstop>
   <tabstop>render_latex</tabstop>
   <tabstop>url_schemes</tabstop>
   <tabstop>pastePNG</tabstop>

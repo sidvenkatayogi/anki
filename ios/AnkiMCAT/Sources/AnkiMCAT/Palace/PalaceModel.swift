@@ -33,7 +33,7 @@ struct RenderedCard: Equatable {
 final class PalaceModel {
     @ObservationIgnored private let engine: AnkiEngine
     @ObservationIgnored private let store: PalaceStore
-    @ObservationIgnored private let syncModel: PalaceSyncModel
+    @ObservationIgnored private let collection: PalaceCollectionStore
 
     /// All palaces, newest first.
     private(set) var palaces: [Palace] = []
@@ -44,21 +44,30 @@ final class PalaceModel {
 
     init(
         engine: AnkiEngine = AnkiEngine(),
-        store: PalaceStore = PalaceStore(),
-        syncModel: PalaceSyncModel = PalaceSyncModel()
+        store: PalaceStore = PalaceStore()
     ) {
         self.engine = engine
         self.store = store
-        self.syncModel = syncModel
+        self.collection = PalaceCollectionStore(engine: engine)
         self.palaces = store.loadAll()
     }
 
     // MARK: - Lifecycle
 
-    /// Called after ReviewModel.start() has opened the backend + collection.
+    /// Called after ReviewModel.start() has opened the backend + collection
+    /// (and again after a sync replaces it). Reconciles palaces with the
+    /// collection (pull incoming, push local) then refreshes the list.
     func onEngineReady() {
         ready = true
+        Task { [weak self] in await self?.reconcile() }
+    }
+
+    /// Pull collection palaces newer than local into the on-disk store, push
+    /// local palaces back, then refresh the in-memory list. Best-effort.
+    func reconcile() async {
+        await collection.pull(into: store)
         reload()
+        await collection.pushAll(palaces, photoProvider: { [store] id in store.loadPhotoData(for: id) })
     }
 
     func reload() {
@@ -112,11 +121,15 @@ final class PalaceModel {
         } else {
             palaces.insert(palace, at: 0)
         }
-        // Fire-and-forget cross-device push (AC1). Failures are silent by
-        // design (PalaceSyncModel) and must never affect `lastError`, which
-        // is reserved for local save failures above.
-        let syncModel = syncModel
-        Task { await syncModel.push(palace) }
+        // Fire-and-forget mirror into the collection so the palace syncs (AC1).
+        // Failures are silent by design and must never affect `lastError`,
+        // which is reserved for local save failures above. `localPhoto` lets
+        // the mirror (re)upload the photo bytes when the version changed.
+        let collection = collection
+        let store = store
+        let id = palace.id
+        Task { await collection.push(palace, photoData: nil,
+                                     localPhoto: { store.loadPhotoData(for: id) }) }
     }
 
     // MARK: - Loci
@@ -190,24 +203,12 @@ final class PalaceModel {
             try store.savePhoto(data, for: palaceID)
             palace.hasPhoto = true
             palace.photoVersion = (palace.photoVersion ?? 0) + 1
+            // persist() mirrors the palace (incl. the freshly saved photo, via
+            // its localPhoto provider) into the collection.
             persist(palace)
         } catch {
             lastError = "Couldn't save photo: \(error)"
-            return
         }
-        // Push the freshly saved photo bytes alongside the metadata push that
-        // `persist()` already fired (fire-and-forget, silent-fail).
-        guard let saved = self.palace(palaceID) else { return }
-        let syncModel = syncModel
-        Task { await syncModel.push(saved, photoData: data) }
-    }
-
-    /// Launch-time reconciliation pass (AC2): push every local palace (with
-    /// its current photo bytes, if any) so a server that's behind picks up
-    /// changes made while this device was offline. Fire-and-forget per
-    /// palace; failures are silent (see PalaceSyncModel).
-    func pushAll() async {
-        await syncModel.pushAll(palaces, photoDataProvider: { [store] id in store.loadPhotoData(for: id) })
     }
 
     func photoData(forPalace palaceID: UUID) -> Data? {

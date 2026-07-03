@@ -210,16 +210,8 @@ struct PracticeView: View {
 
     private var performanceCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Performance")
-                    .font(.headline)
-                Spacer()
-                if model.metricsSource == .server {
-                    Label("Server", systemImage: "checkmark.icloud.fill")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text("Performance")
+                .font(.headline)
 
             if let performance = model.performance, performance.overall.enoughData {
                 HStack {
@@ -262,7 +254,7 @@ struct PracticeView: View {
             Text("Readiness")
                 .font(.headline)
 
-            if let readiness = model.readiness, readiness.enoughData {
+            if let readiness = model.readiness, readiness.enoughData, readiness.confidence != .low {
                 HStack(alignment: .firstTextBaseline) {
                     Text("\(readiness.scorePoint)")
                         .font(.system(size: 34, weight: .bold, design: .rounded))
@@ -275,16 +267,25 @@ struct PracticeView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(confidenceColor(readiness.confidence))
             } else {
-                Text("Not enough data yet")
+                Text(readinessAbstainMessage)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Text(model.readiness?.note ?? "Answer more practice questions or review more cards to see a projected score.")
-                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
         .padding(16)
         .cardBackground()
+    }
+
+    /// Shown in place of a Readiness score — either because there isn't enough
+    /// data yet, or because the estimate's confidence is too low to report.
+    private var readinessAbstainMessage: String {
+        if let readiness = model.readiness, readiness.enoughData {
+            return "Keep answering questions and reviewing cards — there isn't enough confidence in a score estimate yet."
+        }
+        let note = model.readiness?.note ?? ""
+        return note.isEmpty
+            ? "Answer more practice questions or review more cards to see a projected score."
+            : note
     }
 
     private func notEnoughDataRow(label: String) -> some View {

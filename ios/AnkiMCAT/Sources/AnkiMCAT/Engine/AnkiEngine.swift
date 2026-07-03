@@ -70,6 +70,38 @@ enum AnkiService {
     // (self._run_command(43, 5, ...)).
     static let stats: UInt32 = 43
     static let tagMastery: UInt32 = 5
+    static let getReviewLogs: UInt32 = 1
+
+    // service 9 = BackendConfigService. Indices verified against
+    // out/pylib/anki/_backend_generated.py (_run_command(9, N, …)).
+    static let config: UInt32 = 9
+    static let getConfigJson: UInt32 = 0
+    static let setConfigJson: UInt32 = 1
+
+    // service 23 = BackendNotetypesService.
+    static let notetypes: UInt32 = 23
+    static let addNotetype: UInt32 = 0
+    static let getNotetypeIdByName: UInt32 = 10
+
+    // service 25 = BackendNotesService.
+    static let notes: UInt32 = 25
+    static let newNote: UInt32 = 0
+    static let addNote: UInt32 = 1
+    static let updateNotes: UInt32 = 5
+    static let getNote: UInt32 = 6
+
+    // service 29 = BackendSearchService (searchNotes; searchCards is above).
+    static let searchNotes: UInt32 = 2
+
+    // service 41 = BackendMediaService.
+    static let media: UInt32 = 41
+    static let addMediaFile: UInt32 = 1
+
+    // service 7 = BackendDecksService (add + lookup; the study-deck helpers
+    // getDeckNames/setCurrentDeck are above).
+    static let newDeck: UInt32 = 0
+    static let addDeck: UInt32 = 1
+    static let getDeckIdByName: UInt32 = 7
 }
 
 /// Error surfaced across the C ABI seam.
@@ -291,14 +323,15 @@ actor AnkiEngine {
     /// then advances the scheduler. Returns the resulting OpChanges.
     @discardableResult
     func answer(card: Anki_Scheduler_QueuedCards.QueuedCard,
-                rating: Anki_Scheduler_CardAnswer.Rating) throws -> Anki_Collection_OpChanges {
+                rating: Anki_Scheduler_CardAnswer.Rating,
+                millisecondsTaken: UInt32 = 1000) throws -> Anki_Collection_OpChanges {
         var ans = Anki_Scheduler_CardAnswer()
         ans.cardID = card.card.id
         ans.currentState = card.states.current
         ans.newState = newState(for: rating, from: card.states)
         ans.rating = rating
         ans.answeredAtMillis = Int64(Date().timeIntervalSince1970 * 1000)
-        ans.millisecondsTaken = 1000
+        ans.millisecondsTaken = millisecondsTaken
         return try call(service: AnkiService.scheduler, method: AnkiService.answerCard,
                         ans, returning: Anki_Collection_OpChanges.self)
     }
@@ -472,5 +505,159 @@ actor AnkiEngine {
         req.search = search
         return try call(service: AnkiService.stats, method: AnkiService.tagMastery,
                         req, returning: Anki_Stats_TagMasteryResponse.self)
+    }
+
+    /// The revlog for one card. Used by the Practice tab to reconstruct answer
+    /// history from the (synced) review log — `buttonChosen >= 3` (Good/Easy)
+    /// counts as a correct answer, `1`/`2` (Again/Hard) as incorrect, and `0`
+    /// (non-answer entries like manual reschedules) is ignored by the caller.
+    func reviewLogs(cardID: Int64) throws -> [Anki_Stats_CardStatsResponse.StatsRevlogEntry] {
+        var req = Anki_Cards_CardId()
+        req.cid = cardID
+        let resp = try call(service: AnkiService.stats, method: AnkiService.getReviewLogs,
+                            req, returning: Anki_Stats_ReviewLogs.self)
+        return resp.entries
+    }
+
+    // MARK: - Config (BackendConfigService, service 9)
+    //
+    // Small synced per-collection scalars (e.g. the practice-bank seed marker)
+    // live in the collection config map, so they ride the same native sync as
+    // cards/notes/media.
+
+    /// Read a JSON config value by key, or nil if unset. A missing key surfaces
+    /// as a backend NotFound error from the core, which we translate to nil.
+    func getConfigJson(key: String) throws -> Data? {
+        var req = Anki_Generic_String()
+        req.val = key
+        do {
+            let resp = try call(service: AnkiService.config, method: AnkiService.getConfigJson,
+                                req, returning: Anki_Generic_Json.self)
+            return resp.json
+        } catch AnkiEngineError.backend(_, _) {
+            return nil
+        }
+    }
+
+    /// Write a JSON config value by key. Not undoable — seeding/config writes
+    /// aren't user actions worth an undo entry.
+    func setConfigJson(key: String, valueJson: Data) throws {
+        var req = Anki_Config_SetConfigJsonRequest()
+        req.key = key
+        req.valueJson = valueJson
+        req.undoable = false
+        _ = try call(service: AnkiService.config, method: AnkiService.setConfigJson,
+                     req, returning: Anki_Collection_OpChanges.self)
+    }
+
+    // MARK: - Notetypes (BackendNotetypesService, service 23)
+
+    /// The notetype id for a name, or nil if no such notetype exists.
+    func notetypeIdByName(_ name: String) throws -> Int64? {
+        var req = Anki_Generic_String()
+        req.val = name
+        do {
+            let resp = try call(service: AnkiService.notetypes,
+                                method: AnkiService.getNotetypeIdByName,
+                                req, returning: Anki_Notetypes_NotetypeId.self)
+            return resp.ntid == 0 ? nil : resp.ntid
+        } catch AnkiEngineError.backend(_, _) {
+            return nil
+        }
+    }
+
+    /// Add a notetype from a fully-specified proto. The core normalizes field/
+    /// template names and computes card requirements itself, so callers only
+    /// need to supply the name, fields, and templates. Returns the new id.
+    @discardableResult
+    func addNotetype(_ notetype: Anki_Notetypes_Notetype) throws -> Int64 {
+        let resp = try call(service: AnkiService.notetypes, method: AnkiService.addNotetype,
+                            notetype, returning: Anki_Collection_OpChangesWithId.self)
+        return resp.id
+    }
+
+    // MARK: - Notes (BackendNotesService, service 25)
+
+    /// A blank note for the given notetype (correct number of empty fields).
+    func newNote(notetypeID: Int64) throws -> Anki_Notes_Note {
+        var req = Anki_Notetypes_NotetypeId()
+        req.ntid = notetypeID
+        return try call(service: AnkiService.notes, method: AnkiService.newNote,
+                        req, returning: Anki_Notes_Note.self)
+    }
+
+    /// Add a note to a deck. Returns the new note id.
+    @discardableResult
+    func addNote(_ note: Anki_Notes_Note, deckID: Int64) throws -> Int64 {
+        var req = Anki_Notes_AddNoteRequest()
+        req.note = note
+        req.deckID = deckID
+        let resp = try call(service: AnkiService.notes, method: AnkiService.addNote,
+                            req, returning: Anki_Notes_AddNoteResponse.self)
+        return resp.noteID
+    }
+
+    /// Update existing notes in place (fields/tags). No undo entry.
+    func updateNotes(_ notes: [Anki_Notes_Note]) throws {
+        var req = Anki_Notes_UpdateNotesRequest()
+        req.notes = notes
+        req.skipUndoEntry = true
+        _ = try call(service: AnkiService.notes, method: AnkiService.updateNotes,
+                     req, returning: Anki_Collection_OpChanges.self)
+    }
+
+    /// Fetch a note by id (fields + tags + notetype id).
+    func getNote(noteID: Int64) throws -> Anki_Notes_Note {
+        var req = Anki_Notes_NoteId()
+        req.nid = noteID
+        return try call(service: AnkiService.notes, method: AnkiService.getNote,
+                        req, returning: Anki_Notes_Note.self)
+    }
+
+    /// Note ids matching an Anki search string (same syntax as `searchCards`).
+    func searchNotes(_ query: String) throws -> [Int64] {
+        var req = Anki_Search_SearchRequest()
+        req.search = query
+        let resp = try call(service: AnkiService.search, method: AnkiService.searchNotes,
+                            req, returning: Anki_Search_SearchResponse.self)
+        return resp.ids
+    }
+
+    // MARK: - Media (BackendMediaService, service 41)
+
+    /// Write a media file into the collection's media folder (synced). Returns
+    /// the actual stored filename, which may differ from `desiredName` on a
+    /// content collision.
+    @discardableResult
+    func addMediaFile(desiredName: String, data: Data) throws -> String {
+        var req = Anki_Media_AddMediaFileRequest()
+        req.desiredName = desiredName
+        req.data = data
+        let resp = try call(service: AnkiService.media, method: AnkiService.addMediaFile,
+                            req, returning: Anki_Generic_String.self)
+        return resp.val
+    }
+
+    // MARK: - Decks (BackendDecksService, service 7)
+
+    /// Get a deck id by full name, creating the deck if it doesn't exist.
+    /// Used to keep the MCAT practice/palace cards in their own decks, out of
+    /// the normal study queue.
+    @discardableResult
+    func ensureDeck(name: String) throws -> Int64 {
+        var lookup = Anki_Generic_String()
+        lookup.val = name
+        if let existing = try? call(service: AnkiService.decks,
+                                    method: AnkiService.getDeckIdByName,
+                                    lookup, returning: Anki_Decks_DeckId.self),
+           existing.did != 0 {
+            return existing.did
+        }
+        var deck = try call(service: AnkiService.decks, method: AnkiService.newDeck,
+                            Anki_Generic_Empty(), returning: Anki_Decks_Deck.self)
+        deck.name = name
+        let resp = try call(service: AnkiService.decks, method: AnkiService.addDeck,
+                            deck, returning: Anki_Collection_OpChangesWithId.self)
+        return resp.id
     }
 }

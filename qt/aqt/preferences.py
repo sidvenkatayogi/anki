@@ -326,6 +326,18 @@ class Preferences(QDialog):
             self.mw.pm.set_spacebar_rates_card,
         )
 
+        self.form.auto_grade_enabled.setChecked(self.mw.pm.auto_grade_enabled())
+        qconnect(
+            self.form.auto_grade_enabled.stateChanged,
+            self.mw.pm.set_auto_grade_enabled,
+        )
+        self.form.openai_api_key.setText(self.mw.pm.openai_api_key())
+        self.form.openai_api_key.setPlaceholderText("sk-...")
+        qconnect(
+            self.form.openai_api_key.textChanged,
+            self.mw.pm.set_openai_api_key,
+        )
+
         hide_choices = [tr.preferences_full_screen_only(), tr.preferences_always()]
 
         self.form.hide_top_bar.setChecked(self.mw.pm.hide_top_bar())

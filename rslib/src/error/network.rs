@@ -68,9 +68,20 @@ impl AnkiError {
 impl From<&reqwest::Error> for AnkiError {
     fn from(err: &reqwest::Error) -> Self {
         let url = err.url().map(|url| url.as_str()).unwrap_or("");
-        let str_err = format!("{err}");
+        let mut str_err = format!("{err}");
+        // Append the underlying cause chain — the useful detail (TLS / connect /
+        // DNS failure) lives in the error's source, not its top-level Display.
+        let mut source = std::error::Error::source(err);
+        while let Some(cause) = source {
+            str_err.push_str(&format!("; caused by: {cause}"));
+            source = cause.source();
+        }
         // strip url from error to avoid exposing keys
-        let info = str_err.replace(url, "");
+        let info = if url.is_empty() {
+            str_err
+        } else {
+            str_err.replace(url, "")
+        };
 
         if err.is_timeout() {
             AnkiError::NetworkError {

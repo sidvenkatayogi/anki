@@ -42,11 +42,11 @@ and `explanation` for these items were derived for this project.
 
 ## Keeping copies in sync
 
-Identical copies of `practice-seed.json` live at:
+Identical copies of `practice-seed.json` live at (each app seeds these into its
+collection on first launch, after which the bank syncs as notes):
 
-- `tools/syncserver/mcat_tools/data/practice-seed.json` (server, authoritative)
-- `qt/aqt/data/web/practice-seed.json` (desktop bundle)
-- `ios/AnkiMCAT/Resources/practice-seed.json` (iOS bundle)
+- `qt/aqt/data/web/practice-seed.json` (desktop bundle; seed source)
+- `ios/AnkiMCAT/Resources/practice-seed.json` (iOS bundle; seed source)
 - `.factory/runs/2026-07-02-read-practice-tabs/contracts/practice-seed.json` (contract; read by tests)
 
-`ts/tests/unit/practiceSeed.test.ts` asserts all copies are byte-identical.
+`ts/tests/unit/practiceSeed.test.ts` asserts these copies are byte-identical.

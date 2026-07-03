@@ -10,11 +10,12 @@ import SwiftUI
 struct SyncView: View {
     @Bindable var model: SyncModel
 
-    // Login form state (server prefilled for local-dev; a physical device needs
-    // the computer's LAN address instead of localhost).
+    // Login form state. The server is optional: blank means the default
+    // AnkiWeb server (SyncModel omits an empty endpoint, so the Rust core
+    // targets AnkiWeb); a value points at a self-hosted server instead.
     @State private var username = ""
     @State private var password = ""
-    @State private var server = "http://localhost:8080/"
+    @State private var server = ""
 
     var body: some View {
         NavigationStack {
@@ -79,16 +80,16 @@ struct SyncView: View {
         VStack(spacing: 16) {
             field(icon: "person.fill", title: "Username") {
                 TextField("username", text: $username)
-                    .textContentType(.username)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
             field(icon: "lock.fill", title: "Password") {
                 SecureField("password", text: $password)
-                    .textContentType(.password)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
             }
-            field(icon: "server.rack", title: "Sync server") {
-                TextField("http://localhost:8080/", text: $server)
+            field(icon: "server.rack", title: "Sync server (optional)") {
+                TextField("Leave blank for AnkiWeb", text: $server)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -105,11 +106,11 @@ struct SyncView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(model.isBusy || username.isEmpty || password.isEmpty || server.isEmpty)
+            .disabled(model.isBusy || username.isEmpty || password.isEmpty)
 
             statusLine
 
-            Text("On a physical device, use your computer's address (e.g. http://192.168.1.20:8080/), not localhost.")
+            Text("Leave the server blank to use your AnkiWeb account, or enter a self-hosted server URL.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

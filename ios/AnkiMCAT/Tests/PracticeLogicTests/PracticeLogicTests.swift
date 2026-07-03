@@ -1,11 +1,12 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 //
-// Standalone assertions for the Practice tab's pure core (MCATMetrics,
-// PracticeStore). Mirrors the fixtures already proven in
+// Standalone assertions for the Practice tab's pure metric core (MCATMetrics).
+// Mirrors the fixtures already proven in
 // `ts/routes/practice/mcatMetrics.test.ts` for cross-platform parity. Run
-// with ./run.sh (compiles the real Practice/*.swift sources + this file with
-// swiftc). No Simulator or Xcode target needed. Exits non-zero on failure.
+// with ./run.sh (compiles the real Practice/MCATMetrics.swift source + this
+// file with swiftc). No Simulator or Xcode target needed. Exits non-zero on
+// failure.
 
 import Foundation
 
@@ -25,7 +26,6 @@ enum PracticeLogicTests {
         testEstimateAbility()
         testComputePerformance()
         testComputeReadiness()
-        testPracticeStore()
 
         print("")
         print(failures == 0 ? "ALL LOGIC TESTS PASSED" : "\(failures) FAILURE(S)")
@@ -116,34 +116,5 @@ enum PracticeLogicTests {
         check(readinessStrong.scoreLow > 500, "strong mastery: score_low > 500")
         check(readinessStrong.scoreHigh <= 528, "strong mastery: score_high <= 528")
         check(readinessStrong.confidence == .high, "strong mastery: confidence == high")
-    }
-
-    static func testPracticeStore() {
-        print("== PracticeStore ==")
-        let tmp = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("PracticeLogicTests-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: tmp) }
-
-        let store = PracticeStore(rootURL: tmp)
-        check(store.loadAll().isEmpty, "fresh store loads empty")
-
-        let record = PracticeRecord(clientAnswerId: "id-1", questionId: "seed-001", category: "bio_biochem",
-                                     correct: true, difficultyB: 0.0, answeredAt: 1_700_000_000)
-        try? store.append(record)
-        check(store.loadAll().count == 1, "append adds one record")
-
-        // Append-if-absent: re-appending the same clientAnswerId is a no-op.
-        try? store.append(record)
-        check(store.loadAll().count == 1, "duplicate clientAnswerId is deduped")
-
-        let record2 = PracticeRecord(clientAnswerId: "id-2", questionId: "seed-002", category: "chem_phys",
-                                      correct: false, difficultyB: 0.5, answeredAt: 1_700_000_100)
-        try? store.append(record2)
-        check(store.loadAll().count == 2, "distinct clientAnswerId appends a second record")
-
-        // Tolerant load: corrupt JSON should not crash, just yield [].
-        try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
-        try? "not valid json".data(using: .utf8)!.write(to: tmp.appendingPathComponent("history.json"))
-        check(store.loadAll().isEmpty, "corrupt history.json is tolerated (loads empty, doesn't crash)")
     }
 }

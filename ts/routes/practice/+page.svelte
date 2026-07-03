@@ -4,7 +4,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 -->
 <script lang="ts">
     import type { TagMasteryResponse } from "@generated/anki/stats_pb";
-    import { tagMastery } from "@generated/backend";
+    import { answerCard, getSchedulingStates, tagMastery } from "@generated/backend";
+    import { CardAnswer_Rating } from "@generated/anki/scheduler_pb";
 
     import TitledContainer from "$lib/components/TitledContainer.svelte";
 
@@ -26,6 +27,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         answer_index: number;
         explanation: string;
         difficulty_b: number;
+        // The collection card whose review log records answers to this
+        // question (a practice answer is a review of this card).
+        card_id: number;
     }
 
     interface PracticeAnswer {
@@ -72,7 +76,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         loadError = false;
         try {
             const [seedResp, historyResp] = await Promise.all([
-                fetch("/_anki/practice-seed.json"),
+                fetch("/_anki/practiceQuestions"),
                 fetch("/_anki/practiceHistory"),
             ]);
             if (!seedResp.ok || !historyResp.ok) {
@@ -83,11 +87,48 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 records: PracticeAnswer[];
             };
             history = historyJson.records ?? [];
+            applyResumePosition();
             recomputePerformance();
         } catch (e) {
             loadError = true;
             questions = null;
             history = null;
+        }
+    }
+
+    // Resume where the (synced) answers left off: jump to the first question
+    // with no recorded answer. Only applied on initial load, so it doesn't
+    // fight the user's own Next progression. Cross-device because the answers
+    // sync via the review log even though the on-screen cursor doesn't.
+    function applyResumePosition(): void {
+        if (!questions || questions.length === 0) {
+            return;
+        }
+        const answered = new Set((history ?? []).map((r) => r.question_id));
+        const idx = questions.findIndex((q) => !answered.has(q.id));
+        selectedIndex = null;
+        submitted = false;
+        if (idx === -1) {
+            currentIndex = 0;
+            completedFullSet = true;
+        } else {
+            currentIndex = idx;
+        }
+    }
+
+    // Re-read the answer history from the collection's review log (called after
+    // grading a question) and recompute Performance.
+    async function loadHistory(): Promise<void> {
+        try {
+            const resp = await fetch("/_anki/practiceHistory");
+            if (!resp.ok) {
+                return;
+            }
+            const json = (await resp.json()) as { records: PracticeAnswer[] };
+            history = json.records ?? [];
+            recomputePerformance();
+        } catch (e) {
+            // Keep the prior history on a transient read failure.
         }
     }
 
@@ -110,7 +151,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             return;
         }
         readiness = computeReadiness(performance, fsrsSummary);
-        maybeFetchServerMetrics();
     }
 
     // Maps a MileDown::<Section> tag (or the "(untagged)" sentinel) to one of
@@ -187,7 +227,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             const data = await tagMastery({
                 groupDepth: fsrsGroupDepth,
                 masteredThreshold: 0,
-                search: "",
+                // Exclude the MCAT practice/palace cards so they never perturb
+                // the Readiness figure (which reflects the study deck only).
+                search: "-tag:mcat_practice -tag:mcat_palace",
             });
             fsrsSummary = buildFsrsSummary(data);
             recomputeReadiness();
@@ -209,57 +251,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         }
     }
 
-    // Optional online overlay: if a sync-server URL/token is configured,
-    // prefer its /metrics/compute numbers over the local calc (spec: server
-    // numbers supersede when available). Silently keeps the local calc on
-    // any failure -- Practice must work fully offline.
-    async function maybeFetchServerMetrics(): Promise<void> {
-        if (!history || !performance || !fsrsSummary) {
-            return;
-        }
-        try {
-            const configResp = await fetch("/_anki/mcatToolsConfig");
-            if (!configResp.ok) {
-                return;
-            }
-            const config = (await configResp.json()) as { url: string; token: string };
-            if (!config.url || !config.token) {
-                return;
-            }
-            const body = {
-                practice_history: history.map((r) => ({
-                    question_id: r.question_id,
-                    category: r.category,
-                    correct: r.correct,
-                    difficulty_b: r.difficulty_b,
-                })),
-                fsrs: fsrsSummary,
-            };
-            const resp = await fetch(
-                `${config.url.replace(/\/$/, "")}/metrics/compute`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Mcat-Token": config.token,
-                    },
-                    body: JSON.stringify(body),
-                },
-            );
-            if (!resp.ok) {
-                return;
-            }
-            const json = (await resp.json()) as {
-                performance: Performance;
-                readiness: Readiness;
-            };
-            performance = json.performance;
-            readiness = json.readiness;
-        } catch (e) {
-            // Offline or unreachable server -- keep the local calc, no error UI.
-        }
-    }
-
     loadAll();
     loadFsrsSummary();
 
@@ -272,28 +263,35 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         selectedIndex = i;
     }
 
-    // Single attempt at persisting one answer record. Returns the endpoint's
-    // full updated record list on success, or null on any failure (network
-    // error or non-OK response) -- never throws.
-    async function postAppendPracticeAnswer(
-        record: PracticeAnswer,
-    ): Promise<PracticeAnswer[] | null> {
+    // Record one answer as a review of the question's card (correct -> Good,
+    // wrong -> Again) via the real scheduler, exactly as the memory-palace
+    // page grades pinned cards. This writes a revlog entry that syncs with the
+    // rest of the collection. Returns false on any failure.
+    async function gradePracticeCard(
+        cardId: number,
+        correct: boolean,
+    ): Promise<boolean> {
+        const rating = correct ? CardAnswer_Rating.GOOD : CardAnswer_Rating.AGAIN;
         try {
-            const resp = await fetch("/_anki/appendPracticeAnswer", {
-                method: "POST",
-                // mediasrv's dynamic POST gate requires this literal content-type
-                // for same-origin /_anki/ requests (see qt/aqt/mediasrv.py
-                // _check_dynamic_request_permissions) -- the body is still JSON text.
-                headers: { "Content-Type": "application/binary" },
-                body: JSON.stringify(record),
-            });
-            if (!resp.ok) {
-                return null;
+            const states = await getSchedulingStates({ cid: BigInt(cardId) });
+            const newState = correct ? states.good : states.again;
+            if (!states.current || !newState) {
+                return false;
             }
-            const json = (await resp.json()) as { records: PracticeAnswer[] };
-            return json.records;
+            await answerCard({
+                cardId: BigInt(cardId),
+                currentState: states.current,
+                newState,
+                rating,
+                answeredAtMillis: BigInt(Date.now()),
+                millisecondsTaken: 1000,
+                // A practice card isn't the reviewer's queue head, so skip the
+                // queue pop; the FSRS/revlog update still happens.
+                skipQueue: true,
+            });
+            return true;
         } catch (e) {
-            return null;
+            return false;
         }
     }
 
@@ -305,27 +303,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         submitted = true;
         saveWarning = false;
 
-        const record: PracticeAnswer = {
-            client_answer_id: crypto.randomUUID(),
-            question_id: currentQuestion.id,
-            category: currentQuestion.category,
-            correct: selectedIndex === currentQuestion.answer_index,
-            difficulty_b: currentQuestion.difficulty_b,
-            answered_at: Math.floor(Date.now() / 1000),
-        };
-
-        // Best-effort: try once, then retry once more on failure before
-        // surfacing a warning. Reuse the SAME client_answer_id on the retry --
-        // the server dedupes by that id, so a retry after a successful-but-
-        // unacknowledged save is idempotent and safe.
-        let records = await postAppendPracticeAnswer(record);
-        if (!records) {
-            records = await postAppendPracticeAnswer(record);
-        }
-
-        if (records) {
-            history = records;
-            recomputePerformance();
+        const correct = selectedIndex === currentQuestion.answer_index;
+        const graded = await gradePracticeCard(currentQuestion.card_id, correct);
+        if (graded) {
+            // Re-read history from the (updated) review log and recompute.
+            await loadHistory();
         } else {
             // Never block the reveal/Next flow on this -- just make the
             // failure visible instead of silently dropping the answer.
@@ -464,8 +446,12 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     {#if readiness}
         <TitledContainer title="Readiness">
-            {#if !readiness.enough_data}
-                <div class="not-enough-data">{readiness.note}</div>
+            {#if !readiness.enough_data || readiness.confidence === "low"}
+                <div class="not-enough-data">
+                    {readiness.enough_data
+                        ? "Keep answering questions and reviewing cards — there isn't enough confidence in a score estimate yet."
+                        : readiness.note}
+                </div>
             {:else}
                 <div class="readiness-band">
                     <div class="score-point">{readiness.score_point}</div>

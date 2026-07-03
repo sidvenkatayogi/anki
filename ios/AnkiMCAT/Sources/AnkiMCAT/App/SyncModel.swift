@@ -53,12 +53,25 @@ final class SyncModel {
     private var pendingServerUsn: Int32 = 0
     private var inFlight = false
 
+    /// The default AnkiWeb sync server, used when the user leaves the server
+    /// field blank. We send this explicit URL rather than an empty endpoint:
+    /// the Rust core only substitutes the AnkiWeb default for a *truly absent*
+    /// endpoint, and relying on that has proven fragile on device (it surfaced
+    /// as "error sending request for url ()"). An explicit, valid URL is
+    /// accepted by both login and the collection sync.
+    static let ankiWebEndpoint = "https://sync.ankiweb.net/"
+
     // MARK: - Login / logout
 
     /// Authenticate, persist the host key, then run the first sync (which
     /// adopts the server's collection on this device).
     func login(username: String, password: String, endpoint: String) async {
-        let endpoint = normalize(endpoint)
+        var endpoint = normalize(endpoint)
+        if endpoint.isEmpty { endpoint = Self.ankiWebEndpoint }
+        // Trim surrounding whitespace/newlines the iOS keyboard or AutoFill can
+        // slip in; auth is sha1(user:pass), so a stray space fails a correct login.
+        let username = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let password = password.trimmingCharacters(in: .whitespacesAndNewlines)
         phase = .working("Signing in…")
         do {
             let auth = try await engine.syncLogin(
@@ -94,11 +107,17 @@ final class SyncModel {
         inFlight = true
         defer { inFlight = false }
 
-        let auth = makeAuth(creds)
         phase = .working("Syncing…")
         mediaProgress = nil
         do {
-            let resp = try await engine.syncCollection(auth: auth, syncMedia: true)
+            let resp = try await engine.syncCollection(auth: makeAuth(creds), syncMedia: true)
+            // AnkiWeb load-balances accounts across sync hosts and returns the
+            // shard to use for the (separate) full transfer + future syncs.
+            // Adopt + persist it, or the full download/upload hits the base host
+            // and fails (HTTP 303 -> "missing original size"). This mirrors what
+            // desktop does with set_current_sync_url(out.new_endpoint).
+            adoptNewEndpoint(resp)
+            let auth = makeAuth(self.creds ?? creds)
             switch resp.required {
             case .noChanges, .normalSync:
                 break  // the (incremental) sync already applied in the call above
@@ -187,8 +206,22 @@ final class SyncModel {
     private func makeAuth(_ c: SyncCredentials) -> Anki_Sync_SyncAuth {
         var a = Anki_Sync_SyncAuth()
         a.hkey = c.hkey
-        if !c.endpoint.isEmpty { a.endpoint = c.endpoint }
+        // Always send a concrete endpoint; fall back to AnkiWeb for empty
+        // (e.g. credentials stored before we defaulted blank -> AnkiWeb).
+        a.endpoint = c.endpoint.isEmpty ? Self.ankiWebEndpoint : c.endpoint
         return a
+    }
+
+    /// Persist the shard endpoint the collection sync handed back (AnkiWeb
+    /// spreads accounts across sync hosts), so the full transfer and later
+    /// syncs target it directly instead of the base host.
+    private func adoptNewEndpoint(_ resp: Anki_Sync_SyncCollectionResponse) {
+        guard resp.hasNewEndpoint, !resp.newEndpoint.isEmpty,
+              var updated = creds, updated.endpoint != resp.newEndpoint
+        else { return }
+        updated.endpoint = resp.newEndpoint
+        creds = updated
+        SyncStore.save(updated)
     }
 
     /// Accept "host:port" or a bare host and coerce to a URL the core accepts.

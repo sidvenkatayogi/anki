@@ -559,6 +559,18 @@ create table if not exists profiles
     def set_spacebar_rates_card(self, on: bool) -> None:
         self.meta["spacebar_rates_card"] = on
 
+    def auto_grade_enabled(self) -> bool:
+        return self.meta.get("auto_grade_enabled", False)
+
+    def set_auto_grade_enabled(self, on: bool) -> None:
+        self.meta["auto_grade_enabled"] = on
+
+    def openai_api_key(self) -> str:
+        return self.meta.get("openai_api_key", "")
+
+    def set_openai_api_key(self, key: str) -> None:
+        self.meta["openai_api_key"] = key
+
     def get_answer_key(self, ease: int) -> str | None:
         return self.meta.setdefault("answer_keys", self.default_answer_keys).get(ease)
 
@@ -724,18 +736,6 @@ create table if not exists profiles
         if url != self.custom_sync_url():
             self.set_current_sync_url(None)
             self.profile["customSyncUrl"] = url
-
-    def mcat_tools_url(self) -> str:
-        return self.profile.get("mcatToolsUrl") or ""
-
-    def set_mcat_tools_url(self, url: str) -> None:
-        self.profile["mcatToolsUrl"] = url
-
-    def mcat_tools_token(self) -> str:
-        return self.profile.get("mcatToolsToken") or ""
-
-    def set_mcat_tools_token(self, token: str) -> None:
-        self.profile["mcatToolsToken"] = token
 
     def periodic_sync_media_minutes(self) -> int:
         return self.profile.get("autoSyncMediaMinutes", 15)

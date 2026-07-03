@@ -10,38 +10,19 @@
 import Foundation
 
 /// The credentials needed to run a sync: the bearer `hkey`, plus the `username`
-/// and server `endpoint` we show in the UI and re-send on login refresh.
-///
-/// `mcatToolsToken` is a later addition (the shared `X-Mcat-Token` secret for
-/// the Read/Practice tabs' sync-server routes, see contracts/api.md). It has a
-/// manual `init(from:)` below (rather than relying on Codable's synthesized
-/// default-value support, which only applies when a key is *present but
-/// null* — not when the key is missing entirely) so JSON persisted before
-/// this field existed still decodes cleanly, with `mcatToolsToken` defaulting
-/// to "".
+/// and server `endpoint` we show in the UI and re-send on login refresh. An
+/// empty `endpoint` means the default AnkiWeb server. (Older builds also stored
+/// a since-removed `mcatToolsToken`; extra keys in previously-persisted JSON
+/// are simply ignored on decode.)
 struct SyncCredentials: Codable, Equatable {
     var hkey: String
     var username: String
     var endpoint: String
-    var mcatToolsToken: String = ""
 
-    init(hkey: String, username: String, endpoint: String, mcatToolsToken: String = "") {
+    init(hkey: String, username: String, endpoint: String) {
         self.hkey = hkey
         self.username = username
         self.endpoint = endpoint
-        self.mcatToolsToken = mcatToolsToken
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case hkey, username, endpoint, mcatToolsToken
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        hkey = try container.decode(String.self, forKey: .hkey)
-        username = try container.decode(String.self, forKey: .username)
-        endpoint = try container.decode(String.self, forKey: .endpoint)
-        mcatToolsToken = try container.decodeIfPresent(String.self, forKey: .mcatToolsToken) ?? ""
     }
 }
 
@@ -88,22 +69,5 @@ enum SyncStore {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
-    }
-}
-
-extension SyncStore {
-    /// Update just the sync-server URL + `mcatToolsToken`, preserving any
-    /// other stored fields (hkey/username survive if the user is also logged
-    /// into sync). If nothing is stored yet, starts from a logged-out
-    /// credential shell so the Read/Practice tabs' inline config form works
-    /// even when the user has never signed into collection sync — mirrors the
-    /// web round's "no separate settings dialog" precedent.
-    static func saveToolsToken(_ token: String, endpoint: String? = nil) {
-        var creds = load() ?? SyncCredentials(hkey: "", username: "", endpoint: endpoint ?? "")
-        if let endpoint, !endpoint.isEmpty {
-            creds.endpoint = endpoint
-        }
-        creds.mcatToolsToken = token
-        save(creds)
     }
 }

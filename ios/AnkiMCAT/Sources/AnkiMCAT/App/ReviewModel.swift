@@ -26,9 +26,18 @@ final class ReviewModel {
     // so the memory-palace feature can share the same opened backend/collection
     // (a single actor also keeps every backend call serialized per the contract).
     @ObservationIgnored let engine: AnkiEngine
+    // Per-device automatic-grading settings (enabled flag + OpenAI key).
+    @ObservationIgnored let settings: SettingsModel
 
-    init(engine: AnkiEngine = AnkiEngine()) {
+    /// Live on-device speech recognizer used for spoken answers.
+    let voice = VoiceAnswerRecorder()
+
+    init(engine: AnkiEngine = AnkiEngine(),
+         settings: SettingsModel? = nil) {
         self.engine = engine
+        // Constructed here (inside the main-actor init) rather than as a default
+        // argument, which would run in a nonisolated context and not compile.
+        self.settings = settings ?? SettingsModel()
     }
 
     // UI state.
@@ -47,6 +56,11 @@ final class ReviewModel {
     private(set) var newCount: UInt32 = 0
     private(set) var learningCount: UInt32 = 0
     private(set) var reviewCount: UInt32 = 0
+
+    // Automatic-grading UI state.
+    private(set) var autoGrading = false          // LLM request in flight
+    private(set) var autoGradeMessage: String?    // verdict / error to surface
+    @ObservationIgnored private var cardShownAt: Date?  // for response timing
 
     // MARK: - C3: launch → open backend, open/create collection, import apkg
 
@@ -134,12 +148,84 @@ final class ReviewModel {
     func answer(_ rating: Anki_Scheduler_CardAnswer.Rating) async {
         guard let card = currentCard else { return }
         do {
-            _ = try await engine.answer(card: card, rating: rating)
+            _ = try await engine.answer(
+                card: card,
+                rating: rating,
+                millisecondsTaken: UInt32(clamping: elapsedMillis())
+            )
             await advanceToNextCard()
         } catch {
             phase = .failed(String(describing: error))
             statusLine = "Answer failed: \(error)"
         }
+    }
+
+    // MARK: - C4: automatic (voice + AI) grading
+
+    /// Start listening for a spoken answer.
+    func startVoiceInput() async {
+        await voice.start()
+    }
+
+    /// The automatic-grading equivalent of "press enter": stop listening, reveal
+    /// the answer, have the LLM judge the transcript, and apply the rating —
+    /// Again if wrong, otherwise Hard/Good/Easy by how fast they answered.
+    /// Falls back to manual grading (answer shown, buttons available) when
+    /// there's nothing to grade or the LLM call fails.
+    func submitVoiceAnswer() async {
+        guard let card = currentCard else { return }
+        let spoken = voice.stop().trimmingCharacters(in: .whitespacesAndNewlines)
+        let elapsed = elapsedMillis()
+        showingAnswer = true
+
+        guard !spoken.isEmpty else {
+            autoGradeMessage = "Didn't catch an answer — grade it yourself."
+            return
+        }
+
+        autoGrading = true
+        autoGradeMessage = nil
+        let question = Self.plainText(questionHTML)
+        let expected = Self.plainText(answerHTML)
+
+        do {
+            let verdict = try await LLMGrader.grade(
+                question: question,
+                expected: expected,
+                provided: spoken,
+                apiKey: settings.openAIKey
+            )
+            let rating: Anki_Scheduler_CardAnswer.Rating =
+                verdict.correct ? LLMGrader.ease(fromElapsed: elapsed) : .again
+            autoGrading = false
+            _ = try await engine.answer(
+                card: card,
+                rating: rating,
+                millisecondsTaken: UInt32(clamping: elapsed)
+            )
+            await advanceToNextCard()
+        } catch {
+            autoGrading = false
+            autoGradeMessage = "Auto-grade unavailable: \(error.localizedDescription)"
+            // answer stays revealed; the view shows manual buttons as a fallback
+        }
+    }
+
+    private func elapsedMillis() -> Int {
+        guard let shown = cardShownAt else { return 1000 }
+        return max(0, Int(Date().timeIntervalSince(shown) * 1000))
+    }
+
+    /// Reduce card HTML to readable text for the grader.
+    static func plainText(_ html: String) -> String {
+        html
+            .replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Fetch the next queued card (or finish), and render its Q/A.
@@ -165,6 +251,11 @@ final class ReviewModel {
             cardCSS = rendered.css
             showingAnswer = false
             phase = .reviewing
+            // Reset per-card automatic-grading state and start the response timer.
+            cardShownAt = Date()
+            autoGrading = false
+            autoGradeMessage = nil
+            voice.reset()
         } catch {
             phase = .failed(String(describing: error))
             statusLine = "Failed to load next card: \(error)"
@@ -177,9 +268,12 @@ final class ReviewModel {
     /// to whatever deck exists.
     private func selectStudyDeck() async throws {
         let names = try await engine.deckNames()  // Default already excluded
-        guard !names.isEmpty else { return }
-        let topLevel = names.first(where: { !$0.name.contains("::") })
-        let chosen = topLevel ?? names[0]
+        // Exclude the MCAT practice/palace decks — their cards are graded only
+        // from the Practice/Palace tabs and must never enter the study queue.
+        let studyable = names.filter { $0.name != "MCAT" && !$0.name.hasPrefix("MCAT::") }
+        guard !studyable.isEmpty else { return }
+        let topLevel = studyable.first(where: { !$0.name.contains("::") })
+        let chosen = topLevel ?? studyable[0]
         try await engine.setCurrentDeck(chosen.id)
         // Spread new cards across every category instead of draining one subdeck
         // first (matches the desktop "Start Flashcards" interleaving).

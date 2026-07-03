@@ -1352,9 +1352,6 @@ title="{}" {}>{}</button>""".format(
     def onPractice(self) -> None:
         aqt.dialogs.open("PracticeStats", self)
 
-    def onPalace(self) -> None:
-        aqt.dialogs.open("PalaceStats", self)
-
     def onPrefs(self) -> None:
         aqt.dialogs.open("Preferences", self)
 

@@ -11,7 +11,6 @@ import os
 import re
 import secrets
 import sys
-import tempfile
 import threading
 import traceback
 from collections.abc import Callable
@@ -709,90 +708,176 @@ def save_custom_colours() -> bytes:
     return b""
 
 
-def mcat_tools_config() -> Response:
-    data = json.dumps(
-        {
-            "url": aqt.mw.pm.mcat_tools_url(),
-            "token": aqt.mw.pm.mcat_tools_token(),
-        }
-    ).encode("utf-8")
-    return Response(data, mimetype="application/json")
+# --- MCAT collection-native practice bank ----------------------------------
+#
+# The MCAT fork keeps its practice questions/answers in the collection itself,
+# so they sync with the cards + FSRS state instead of living in a separate
+# server. The authoritative schema mirrors
+# ios/AnkiMCAT/.../Engine/McatCollection.swift (field order matters — both
+# sides address fields positionally). These handlers seed + read that data for
+# the SvelteKit Practice page; a practice *answer* is just a review of the
+# question's card, graded by the page via the exposed `answer_card` RPC.
+#
+# (Memory palaces are an iOS-only feature. The iOS app still stores them in the
+# collection so they sync across iOS devices, but there is no desktop viewer.)
+
+_MCQ_NOTETYPE = "MCAT MCQ"
+_MCQ_FIELDS = [
+    "QuestionId",
+    "Stem",
+    "Options",
+    "AnswerIndex",
+    "Explanation",
+    "Category",
+    "DifficultyB",
+]
+_PRACTICE_DECK = "MCAT::Practice Bank"
+_PRACTICE_TAG = "mcat_practice"
+_PRACTICE_SEED_KEY = "mcat.practiceSeedVersion"
+_PRACTICE_SEED_VERSION = 1
 
 
-def set_mcat_tools_config() -> bytes:
-    body = json.loads(request.get_data() or b"{}")
-    aqt.mw.pm.set_mcat_tools_url(body.get("url", ""))
-    aqt.mw.pm.set_mcat_tools_token(body.get("token", ""))
-    return json.dumps({}).encode("utf-8")
+def _mcat_ensure_mcq_notetype():
+    col = aqt.mw.col
+    existing = col.models.by_name(_MCQ_NOTETYPE)
+    if existing:
+        return existing
+    notetype = col.models.new(_MCQ_NOTETYPE)
+    for name in _MCQ_FIELDS:
+        col.models.add_field(notetype, col.models.new_field(name))
+    template = col.models.new_template("Card 1")
+    template["qfmt"] = "{{Stem}}"
+    template["afmt"] = "{{FrontSide}}<hr>{{Explanation}}"
+    col.models.add_template(notetype, template)
+    notetype["css"] = ".card{font-family:-apple-system,system-ui,sans-serif;}"
+    col.models.add(notetype)
+    return col.models.by_name(_MCQ_NOTETYPE)
 
 
-_PRACTICE_HISTORY_RECORD_KEYS = (
-    "client_answer_id",
-    "question_id",
-    "category",
-    "correct",
-    "difficulty_b",
-    "answered_at",
-)
-
-
-def _practice_history_path() -> str:
-    return os.path.join(aqt.mw.pm.profileFolder(), "practice-history.json")
-
-
-def _load_practice_history() -> dict:
-    """Tolerant load: missing/unparseable file or malformed entries never raise."""
-    path = _practice_history_path()
+def _mcat_load_bundled_seed() -> list:
     try:
-        with open(path, encoding="utf-8") as file:
-            raw = json.load(file)
-    except (OSError, ValueError):
-        return {"records": []}
-
-    records = []
-    if isinstance(raw, dict):
-        for entry in raw.get("records", []) or []:
-            if isinstance(entry, dict) and all(
-                key in entry for key in _PRACTICE_HISTORY_RECORD_KEYS
-            ):
-                records.append(
-                    {key: entry[key] for key in _PRACTICE_HISTORY_RECORD_KEYS}
-                )
-    return {"records": records}
-
-
-def _save_practice_history(data: dict) -> None:
-    path = _practice_history_path()
-    directory = os.path.dirname(path)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=directory, prefix="practice-history-", suffix=".tmp"
-    )
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as file:
-            json.dump(data, file)
-        os.replace(tmp_path, path)
+        return json.loads(_builtin_data("data/web/practice-seed.json"))
     except Exception:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-        raise
+        return []
+
+
+def _mcat_seed_practice_if_needed() -> None:
+    """Idempotently seed the practice bank into the collection. Guarded by a
+    synced config marker AND an existence check, so it never duplicates the
+    bank whether re-run here or after a sync brought it from another device."""
+    col = aqt.mw.col
+    try:
+        already = int(col.get_config(_PRACTICE_SEED_KEY, 0) or 0)
+    except (TypeError, ValueError):
+        already = 0
+    if already >= _PRACTICE_SEED_VERSION:
+        return
+
+    if not col.find_notes(f'note:"{_MCQ_NOTETYPE}"'):
+        questions = _mcat_load_bundled_seed()
+        deck_id = col.decks.id(_PRACTICE_DECK)
+        if questions and deck_id is not None:
+            notetype = _mcat_ensure_mcq_notetype()
+            for q in questions:
+                note = col.new_note(notetype)
+                note.guid = "mcat-practice::" + str(q.get("id", ""))
+                note.fields = [
+                    str(q.get("id", "")),
+                    str(q.get("stem", "")),
+                    json.dumps(q.get("options", [])),
+                    str(q.get("answer_index", 0)),
+                    str(q.get("explanation", "")),
+                    str(q.get("category", "")),
+                    str(q.get("difficulty_b", 0.0)),
+                ]
+                note.tags = [_PRACTICE_TAG]
+                col.add_note(note, deck_id)
+
+    col.set_config(_PRACTICE_SEED_KEY, _PRACTICE_SEED_VERSION)
+
+
+def _mcat_int(value: str) -> int:
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return 0
+
+
+def _mcat_float(value: str) -> float:
+    try:
+        return float(str(value).strip())
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _mcat_options(value: str) -> list:
+    try:
+        parsed = json.loads(value) if value else []
+        return parsed if isinstance(parsed, list) else []
+    except ValueError:
+        return []
+
+
+def practice_questions() -> Response:
+    """The practice bank, read from the collection (seeded on first access).
+    Each question carries the `card_id` whose review log records its answers.
+    Ordered by note id (assigned in seed order, identical across synced
+    devices) so the sequence — and the resume position — is stable everywhere."""
+    _mcat_seed_practice_if_needed()
+    col = aqt.mw.col
+    questions = []
+    for nid in sorted(col.find_notes(f'note:"{_MCQ_NOTETYPE}"')):
+        note = col.get_note(nid)
+        fields = note.fields
+        card_ids = note.card_ids()
+        if len(fields) < 7 or not card_ids:
+            continue
+        questions.append(
+            {
+                "id": fields[0],
+                "stem": fields[1],
+                "options": _mcat_options(fields[2]),
+                "answer_index": _mcat_int(fields[3]),
+                "explanation": fields[4],
+                "category": fields[5],
+                "difficulty_b": _mcat_float(fields[6]),
+                "card_id": int(card_ids[0]),
+            }
+        )
+    return Response(json.dumps(questions).encode("utf-8"), mimetype="application/json")
 
 
 def practice_history() -> Response:
-    data = json.dumps(_load_practice_history()).encode("utf-8")
-    return Response(data, mimetype="application/json")
-
-
-def append_practice_answer() -> bytes:
-    record = json.loads(request.get_data() or b"{}")
-    data = _load_practice_history()
-    existing_ids = {entry["client_answer_id"] for entry in data["records"]}
-    client_answer_id = record.get("client_answer_id")
-    if client_answer_id is not None and client_answer_id not in existing_ids:
-        data["records"].append(
-            {key: record.get(key) for key in _PRACTICE_HISTORY_RECORD_KEYS}
-        )
-        _save_practice_history(data)
-    return json.dumps(data).encode("utf-8")
+    """Reconstruct the flat answer history from the practice cards' review log
+    (button_chosen >= 3 = correct), in the same `{records: [...]}` shape the
+    page's metrics code already consumes."""
+    col = aqt.mw.col
+    records = []
+    for nid in col.find_notes(f'note:"{_MCQ_NOTETYPE}"'):
+        note = col.get_note(nid)
+        fields = note.fields
+        if len(fields) < 7:
+            continue
+        question_id = fields[0]
+        category = fields[5]
+        difficulty_b = _mcat_float(fields[6])
+        for cid in note.card_ids():
+            for entry in col._backend.get_review_logs(cid=cid):
+                if entry.button_chosen < 1:
+                    continue
+                records.append(
+                    {
+                        "client_answer_id": f"{cid}:{entry.time}",
+                        "question_id": question_id,
+                        "category": category,
+                        "correct": entry.button_chosen >= 3,
+                        "difficulty_b": difficulty_b,
+                        "answered_at": entry.time,
+                    }
+                )
+    return Response(
+        json.dumps({"records": records}).encode("utf-8"), mimetype="application/json"
+    )
 
 
 post_handler_list = [
@@ -811,8 +896,6 @@ post_handler_list = [
     deck_options_require_close,
     deck_options_ready,
     save_custom_colours,
-    set_mcat_tools_config,
-    append_practice_answer,
 ]
 
 
@@ -860,7 +943,8 @@ exposed_backend_list = [
     # DeckConfigService
     "get_ignored_before_count",
     "get_retention_workload",
-    # CardRenderingService / SchedulerService (Palace tab)
+    # SchedulerService — grading practice answers (get states, then answer).
+    # render_existing_card is kept available for card rendering by web pages.
     "render_existing_card",
     "get_scheduling_states",
     "answer_card",
@@ -979,8 +1063,8 @@ def _have_api_access() -> bool:
 def _extract_dynamic_get_request(path: str) -> DynamicRequest | None:
     if path == "legacyPageData":
         return legacy_page_data
-    elif path == "mcatToolsConfig":
-        return mcat_tools_config
+    elif path == "practiceQuestions":
+        return practice_questions
     elif path == "practiceHistory":
         return practice_history
     else:

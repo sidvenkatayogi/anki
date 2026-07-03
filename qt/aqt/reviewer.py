@@ -7,13 +7,16 @@ import json
 import random
 import re
 from collections.abc import Callable, Generator, Sequence
+from concurrent.futures import Future
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 from typing import Any, Literal, Match, Union, cast
+from urllib.parse import unquote
 
 import aqt
 import aqt.browser
+import aqt.llm_grade
 import aqt.operations
 from anki.cards import Card, CardId
 from anki.collection import Config, OpChanges, OpChangesWithCount
@@ -29,7 +32,7 @@ from anki.scheduler.v3 import (
 from anki.scheduler.v3 import Scheduler as V3Scheduler
 from anki.tags import MARKED_TAG, NEVER_LEARNED_TAG
 from anki.types import assert_exhaustive
-from anki.utils import is_mac
+from anki.utils import is_mac, strip_html
 from aqt import AnkiQt, gui_hooks
 from aqt.browser.card_info import PreviousReviewerCardInfo, ReviewerCardInfo
 from aqt.deckoptions import confirm_deck_then_display_options
@@ -163,6 +166,7 @@ class Reviewer:
         self.previous_card: Card | None = None
         self._answeredIds: list[CardId] = []
         self._recordedAudio: str | None = None
+        self._autograde_in_progress = False
         self._combining: bool = True
         self.typeCorrect: str | None = None  # web init happens before this is set
         self.state: Literal["question", "answer", "transition"] | None = None
@@ -350,6 +354,9 @@ class Reviewer:
 <div id="_flag" hidden>&#x2691;</div>
 {fade}
 <div id="qa" dir="auto"></div>
+<div id="autograde" hidden style="text-align:center; margin:1em auto;">
+<input id="autograde-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Type your answer, then press Enter" style="width:80%; max-width:40em; font-size:16px; padding:6px 8px; box-sizing:border-box;" onkeydown="if(event.key==='Enter'){{event.preventDefault();event.stopPropagation();pycmd('autograde_submit:'+encodeURIComponent(this.value));}}">
+</div>
 {extra}
 """
 
@@ -419,6 +426,7 @@ class Reviewer:
         # user hook
         gui_hooks.reviewer_did_show_question(c)
         self._auto_advance_to_answer_if_enabled()
+        self._maybe_prepare_autograde()
 
     def _auto_advance_to_answer_if_enabled(self) -> None:
         self._clear_auto_advance_timers()
@@ -478,6 +486,7 @@ class Reviewer:
             # showing resetRequired screen; ignore space
             return
         self.state = "answer"
+        self._hide_autograde_input()
         c = self.card
         a = c.answer()
         # play audio?
@@ -583,6 +592,85 @@ class Reviewer:
         self._answeredIds.append(self.card.id)
         if not self.check_timebox():
             self.nextCard()
+
+    # Automatic AI grading
+    ##########################################################################
+
+    def _auto_grade_active(self) -> bool:
+        "Whether the answer should be typed and graded by the LLM."
+        return bool(self.mw.pm.auto_grade_enabled()) and bool(
+            self.mw.pm.openai_api_key().strip()
+        )
+
+    def _maybe_prepare_autograde(self) -> None:
+        "Show and focus the typing box on the question side when enabled."
+        self._autograde_in_progress = False
+        if self._auto_grade_active():
+            self.web.eval(
+                "(function(){var c=document.getElementById('autograde');"
+                "var i=document.getElementById('autograde-input');"
+                "if(c&&i){i.value='';c.hidden=false;i.focus();}})();"
+            )
+        else:
+            self._hide_autograde_input()
+
+    def _hide_autograde_input(self) -> None:
+        self.web.eval(
+            "(function(){var c=document.getElementById('autograde');"
+            "if(c){c.hidden=true;}})();"
+        )
+
+    def _auto_grade_submit(self, typed: str) -> None:
+        "Reveal the answer, ask the LLM to grade it, then rate automatically."
+        if self._autograde_in_progress or self.state != "question":
+            return
+        if not self._auto_grade_active() or self.card is None:
+            return
+        self._autograde_in_progress = True
+        typed = (typed or "").strip()
+        self._hide_autograde_input()
+        if not typed:
+            # nothing entered: reveal the answer and let the user grade manually
+            self._autograde_in_progress = False
+            self._showAnswer()
+            return
+
+        elapsed_ms = self.card.time_taken()
+        question = strip_html(self.card.question())
+        expected = strip_html(self.card.answer())
+        api_key = self.mw.pm.openai_api_key()
+        # reveal the answer right away; the ease buttons stay as a fallback
+        self._showAnswer()
+
+        def task() -> tuple[bool, str]:
+            return aqt.llm_grade.grade_answer(
+                question=question,
+                expected=expected,
+                provided=typed,
+                api_key=api_key,
+            )
+
+        def on_done(fut: Future) -> None:
+            self._autograde_in_progress = False
+            try:
+                correct, feedback = fut.result()
+            except Exception as exc:
+                tooltip(f"Auto-grade unavailable: {exc}", period=3000)
+                return
+            if self.state != "answer" or self.card is None:
+                return
+            ease = (
+                aqt.llm_grade.ease_from_elapsed(elapsed_ms)
+                if correct
+                else aqt.llm_grade.AGAIN
+            )
+            tooltip(
+                feedback or ("Correct" if correct else "Incorrect"),
+                period=2000,
+            )
+            self._answerCard(cast(Literal[1, 2, 3, 4], ease))
+
+        self.mw.taskman.run_in_background(task, on_done, uses_collection=False)
 
     # Handlers
     ############################################################
@@ -706,6 +794,8 @@ class Reviewer:
             self.web.update()
         elif url == "statesMutated":
             self._states_mutated = True
+        elif url.startswith("autograde_submit:"):
+            self._auto_grade_submit(unquote(url[len("autograde_submit:") :]))
         else:
             print("unrecognized anki link:", url)
 

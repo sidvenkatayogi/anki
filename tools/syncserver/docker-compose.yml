@@ -1,4 +1,4 @@
-# Local-dev sync backend for MCAT (desktop + iOS).
+# Self-hosted sync backend for MCAT (desktop + iOS).
 #
 #   Bring up:  just sync-server
 #              (docker compose -f tools/syncserver/docker-compose.yml up --build)
@@ -9,13 +9,10 @@
 # Override credentials without editing this file:
 #   SYNC_USER1=me:secret just sync-server
 #
-# The `mcat-tools` service below runs the FastAPI/uvicorn sidecar
-# (tools/syncserver/mcat_tools/) for the Practice tab and Palace HTTP endpoints
-# (/practice/questions, /metrics/compute, /palaces, /health, /version —
-# see contracts/api.md in the 2026-07-02-read-practice-tabs factory run) on
-# port 8081. It loads its secrets from an untracked tools/syncserver/.env
-# file — copy tools/syncserver/env.example to get started. See
-# tools/syncserver/README.md for details.
+# This runs only Anki's native sync server (collection + FSRS state + media).
+# All the MCAT "extra" data (practice questions/answers, memory palaces) is now
+# stored in the collection itself, so it syncs here too — there is no separate
+# sidecar to run. Prefer AnkiWeb for a zero-infra setup; use this to self-host.
 name: mcat-syncserver
 
 services:
@@ -36,32 +33,6 @@ services:
       - "8080:8080"
     volumes:
       - mcat-sync-data:/anki_data
-    restart: unless-stopped
-
-  # Sidecar for the Practice tab and Palace endpoints. Runs the real
-  # `mcat_tools` FastAPI app (tools/syncserver/mcat_tools/) via uvicorn on
-  # port 8081, built from tools/syncserver/mcat-tools.Dockerfile with deps
-  # from tools/syncserver/requirements-mcat-tools.txt. Standalone service,
-  # not proxied through qt/aqt/mediasrv.py.
-  mcat-tools:
-    build:
-      context: ../..
-      dockerfile: tools/syncserver/mcat-tools.Dockerfile
-    image: mcat-tools:local
-    container_name: mcat-tools
-    env_file:
-      # `required: false` so `docker compose config`/`up` doesn't hard-fail
-      # when tools/syncserver/.env hasn't been created yet (e.g. CI, or a
-      # dev relying solely on shell-exported vars below).
-      - path: .env
-        required: false
-    environment:
-      # Required secret below defaults to empty so misconfiguration fails
-      # loud rather than silently working with an unset key.
-      MCAT_TOOLS_TOKEN: ${MCAT_TOOLS_TOKEN:-}
-    ports:
-      # 8081, distinct from syncserver's 8080.
-      - "8081:8081"
     restart: unless-stopped
 
 volumes:

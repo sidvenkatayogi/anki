@@ -1,26 +1,25 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 //
-// PracticeModel — drives the Practice tab: a bundled offline question bank
-// (`Resources/practice-seed.json`), one-question-at-a-time flow, local
-// answer history (`PracticeStore`), and Performance/Readiness metrics.
+// PracticeModel — drives the Practice tab. The question bank and answer
+// history are collection-native (see McatCollection.swift): questions are
+// "MCAT MCQ" notes seeded once from the bundled `practice-seed.json`, and each
+// answer is a review of that note's card, so the whole thing syncs with the
+// rest of the collection (no separate server).
 //
-// Metrics are always computed locally first (offline-safe, contracts/
-// data-model.md formulas via `MCATMetrics`, using FSRS mastery pulled from
-// the shared collection via `engine.tagMastery`). If the self-hosted sync
-// server is reachable, `POST {endpoint}metrics/compute` is tried afterwards
-// and its numbers -- if they come back -- supersede the local calculation.
-// A network failure here must never block or error the UI (AC21): the local
-// numbers set by `recomputeMetrics()` simply remain in effect.
+// Metrics (Performance/Readiness) are computed locally from the review log
+// (contracts/data-model.md formulas via `MCATMetrics`) plus FSRS mastery
+// pulled from the collection via `engine.tagMastery`. The tagMastery query is
+// scoped to exclude the `mcat_practice`/`mcat_palace` tags so the practice and
+// palace cards never perturb the Readiness figure.
 //
 // Tag-mapping deviation (must match the web round's documented deviation so
 // both platforms compute identical FsrsSummary from the same collection):
 // this fork's real tags are single-rooted under `MileDown::`, so
 // `group_depth=1` collapses everything into one bucket. Uses `group_depth=2`
-// (matches `qt/aqt/focus_category.py`'s proven precedent) plus substring
-// tag-name -> category mapping, checked bio_biochem -> chem_phys ->
-// psych_soc -> cars (in that order, to avoid "Biochemistry" matching "chem"
-// first). Untagged/unmatched groups are excluded from all 4 categories.
+// plus substring tag-name -> category mapping, checked bio_biochem ->
+// chem_phys -> psych_soc -> cars (in that order, to avoid "Biochemistry"
+// matching "chem" first). Untagged/unmatched groups are excluded.
 
 import Foundation
 import SwiftUI
@@ -47,10 +46,9 @@ struct SeedQuestion: Codable, Equatable, Identifiable {
 @Observable
 final class PracticeModel {
     @ObservationIgnored private let engine: AnkiEngine
-    @ObservationIgnored private let store: PracticeStore
 
-    /// The full bundled question bank, decoded once at init (offline, no
-    /// loading state needed per spec).
+    /// The current question bank, read from the collection once the engine is
+    /// ready. Empty until then (the UI shows nothing rather than a spinner).
     private(set) var questions: [SeedQuestion] = []
     private(set) var loadError: String?
 
@@ -65,26 +63,19 @@ final class PracticeModel {
     private(set) var performance: Performance?
     private(set) var readiness: Readiness?
 
-    /// Which numbers are currently in effect -- lets the UI show a subtle
-    /// "server" vs "on this device" indicator.
-    private(set) var metricsSource: MetricsSource = .local
+    /// True once every question has been visited (used to show a "you've
+    /// gone through the deck" wrap-up rather than looping silently).
+    private(set) var finished = false
 
-    enum MetricsSource: String {
-        case local
-        case server
-    }
+    /// Practice questions joined to the collection card recording their
+    /// answers. Populated by `reload()`; drives grading + metrics.
+    @ObservationIgnored private var practiceCards: [McatPracticeCard] = []
+    /// Bundled question bank, used only as the one-time seed source.
+    @ObservationIgnored private let bundledSeed: [SeedQuestion]
 
-    init(engine: AnkiEngine = AnkiEngine(), store: PracticeStore = PracticeStore()) {
+    init(engine: AnkiEngine = AnkiEngine()) {
         self.engine = engine
-        self.store = store
-        self.questions = Self.loadSeedQuestions()
-        if questions.isEmpty {
-            loadError = "No practice questions are bundled with this build."
-        }
-        Task { [weak self] in
-            await self?.recomputeMetrics()
-            await self?.refreshServerMetrics()
-        }
+        self.bundledSeed = Self.loadBundledSeed()
     }
 
     var currentQuestion: SeedQuestion? {
@@ -92,13 +83,57 @@ final class PracticeModel {
         return questions[currentIndex]
     }
 
-    /// True once every question has been visited (used to show a "you've
-    /// gone through the deck" wrap-up rather than looping silently).
-    private(set) var finished = false
+    // MARK: - Loading (collection-native)
 
-    // MARK: - Loading the bundled seed
+    /// Called once the shared collection is open (and again after a sync
+    /// replaces it). Seeds the bank if needed, then loads questions + metrics
+    /// from the collection.
+    func onEngineReady() {
+        Task { [weak self] in await self?.reload() }
+    }
 
-    private static func loadSeedQuestions() -> [SeedQuestion] {
+    /// Seed (idempotently) then read the question bank + metrics from the
+    /// collection. Safe to call repeatedly.
+    func reload() async {
+        do {
+            try await engine.seedPracticeBankIfNeeded(bundledSeed)
+            let cards = try await engine.loadPracticeCards()
+            practiceCards = cards
+            questions = cards.map(\.question)
+            loadError = questions.isEmpty
+                ? "No practice questions are available yet."
+                : nil
+            // Resume where the (synced) answers left off — the first question
+            // with no review-log entry — so progress carries across devices
+            // even though only the answers sync, not the on-screen cursor.
+            let history = await engine.practiceHistory(cards: cards)
+            applyResumePosition(answeredIDs: Set(history.map(\.questionId)))
+            await recomputeMetrics()
+        } catch {
+            loadError = "Couldn't load practice questions."
+        }
+    }
+
+    /// Move the cursor to the first unanswered question (or the end, flagged
+    /// finished, if every question has an answer). Resets per-question state.
+    private func applyResumePosition(answeredIDs: Set<String>) {
+        selectedOption = nil
+        submitted = false
+        guard !questions.isEmpty else {
+            currentIndex = 0
+            finished = false
+            return
+        }
+        if let resume = questions.firstIndex(where: { !answeredIDs.contains($0.id) }) {
+            currentIndex = resume
+            finished = false
+        } else {
+            currentIndex = questions.count - 1
+            finished = true
+        }
+    }
+
+    private static func loadBundledSeed() -> [SeedQuestion] {
         guard let url = Bundle.main.url(forResource: "practice-seed", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let questions = try? JSONDecoder().decode([SeedQuestion].self, from: data)
@@ -119,29 +154,24 @@ final class PracticeModel {
         !submitted && selectedOption != nil && currentQuestion != nil
     }
 
-    /// Records the answer once (guarded against double taps), reveals the
-    /// correct answer/explanation, then recomputes metrics -- local first
-    /// (synchronous/offline-safe), then an async, non-blocking overlay from
-    /// the sync server if one is configured and reachable.
+    /// Records the answer as a review of the question's card (correct → Good,
+    /// wrong → Again), which writes a revlog entry that syncs with the rest of
+    /// the collection, then recomputes metrics from the (updated) revlog.
     func submit() {
         guard canSubmit, let question = currentQuestion, let selectedOption else { return }
-        // Disable immediately so a second tap (or a retried gesture) can
-        // never generate a second client_answer_id for the same answer.
+        // Disable immediately so a second tap can't double-grade.
         submitted = true
 
-        let record = PracticeRecord(
-            clientAnswerId: UUID().uuidString,
-            questionId: question.id,
-            category: question.category,
-            correct: selectedOption == question.answerIndex,
-            difficultyB: question.difficultyB,
-            answeredAt: Int64(Date().timeIntervalSince1970)
-        )
-        try? store.append(record)
+        let correct = selectedOption == question.answerIndex
+        let cardID = practiceCards.first { $0.question.id == question.id }?.cardID
+        let rating: Anki_Scheduler_CardAnswer.Rating = correct ? .good : .again
 
         Task { [weak self] in
-            await self?.recomputeMetrics()
-            await self?.refreshServerMetrics()
+            guard let self else { return }
+            if let cardID {
+                _ = try? await self.engine.gradeCard(cardID: cardID, rating: rating)
+            }
+            await self.recomputeMetrics()
         }
     }
 
@@ -151,9 +181,7 @@ final class PracticeModel {
     }
 
     /// Advances to the next question, resetting per-question state. Stops
-    /// (and flags `finished`) at the end of the bank rather than wrapping,
-    /// so the "you've gone through everything" state is visible; the user
-    /// can still review Performance/Readiness below.
+    /// (and flags `finished`) at the end of the bank rather than wrapping.
     func next() {
         guard !questions.isEmpty else { return }
         if currentIndex + 1 < questions.count {
@@ -173,35 +201,26 @@ final class PracticeModel {
         finished = false
     }
 
-    // MARK: - Metrics (local, always available offline)
+    // MARK: - Metrics (local, from the collection)
 
-    /// Recomputes Performance + Readiness from the full local history plus a
-    /// fresh FSRS pull. Always local/offline-safe; `refreshServerMetrics()`
-    /// may overlay server numbers afterwards.
+    /// Recomputes Performance + Readiness from the practice cards' review log
+    /// plus a fresh FSRS pull. Offline-safe; a failing engine call degrades to
+    /// an empty summary rather than erroring.
     func recomputeMetrics() async {
-        let history: [PracticeHistoryItem] = store.loadAll().compactMap { record in
-            guard let category = MCATCategory(rawValue: record.category) else { return nil }
-            return PracticeHistoryItem(
-                questionId: record.questionId,
-                category: category,
-                correct: record.correct,
-                difficultyB: record.difficultyB
-            )
-        }
-
+        let history = await engine.practiceHistory(cards: practiceCards)
         let perf = MCATMetrics.computePerformance(history)
         let fsrs = await buildFsrsSummary()
         let ready = MCATMetrics.computeReadiness(perf, fsrs)
 
         performance = perf
         readiness = ready
-        metricsSource = .local
     }
 
     /// Aggregates `engine.tagMastery(groupDepth: 2, ...)` groups into the 4
-    /// canonical categories via the substring rule (see file header). If the
-    /// engine call throws (e.g. the collection isn't open yet), returns an
-    /// all-"not enough data" empty summary rather than failing the caller.
+    /// canonical categories via the substring rule (see file header). The
+    /// query excludes the MCAT practice/palace tags so those cards never
+    /// perturb Readiness. Returns an all-"not enough data" summary if the
+    /// engine call throws (e.g. the collection isn't open yet).
     func buildFsrsSummary() async -> FsrsSummary {
         let emptyPerCategory = MCATCategory.allCases.map {
             FsrsCategorySummary(category: $0, averageRecall: 0, masteredFraction: 0,
@@ -209,7 +228,9 @@ final class PracticeModel {
         }
         let empty = FsrsSummary(perCategory: emptyPerCategory, overallMeanRecall: 0)
 
-        guard let response = try? await engine.tagMastery(groupDepth: 2, masteredThreshold: 0, search: "")
+        guard let response = try? await engine.tagMastery(
+            groupDepth: 2, masteredThreshold: 0,
+            search: "-tag:\(McatSchema.practiceTag) -tag:\(McatSchema.palaceTag)")
         else {
             return empty
         }
@@ -260,10 +281,9 @@ final class PracticeModel {
     }
 
     /// Maps a raw tag string (e.g. `"MileDown::Biochemistry::Enzymes"`) onto
-    /// one of the 4 canonical categories via substring match, checked in
-    /// this fixed order to avoid "Biochemistry" matching "chem" first. Nil
-    /// if the tag doesn't match any of the 4 -- such groups are excluded
-    /// entirely, never folded into a category.
+    /// one of the 4 canonical categories via substring match, checked in this
+    /// fixed order to avoid "Biochemistry" matching "chem" first. Nil if the
+    /// tag doesn't match any of the 4 — such groups are excluded entirely.
     private static func category(forTag tag: String) -> MCATCategory? {
         let lower = tag.lowercased()
         if lower.contains("bio_biochem") || lower.contains("biochem") || lower.contains("bio") {
@@ -279,164 +299,5 @@ final class PracticeModel {
             return .cars
         }
         return nil
-    }
-
-    // MARK: - Server overlay (optional, non-blocking)
-
-    private struct MetricsComputeRequest: Encodable {
-        struct HistoryItem: Encodable {
-            let questionId: String
-            let category: String
-            let correct: Bool
-            let difficultyB: Double
-
-            enum CodingKeys: String, CodingKey {
-                case questionId = "question_id"
-                case category, correct
-                case difficultyB = "difficulty_b"
-            }
-        }
-        struct FsrsCategoryWire: Encodable {
-            let category: String
-            let averageRecall: Double
-            let masteredFraction: Double
-            let enoughData: Bool
-            let gradedReviews: Int
-
-            enum CodingKeys: String, CodingKey {
-                case category
-                case averageRecall = "average_recall"
-                case masteredFraction = "mastered_fraction"
-                case enoughData = "enough_data"
-                case gradedReviews = "graded_reviews"
-            }
-        }
-        struct FsrsWire: Encodable {
-            let perCategory: [FsrsCategoryWire]
-            let overallMeanRecall: Double
-
-            enum CodingKeys: String, CodingKey {
-                case perCategory = "per_category"
-                case overallMeanRecall = "overall_mean_recall"
-            }
-        }
-        let practiceHistory: [HistoryItem]
-        let fsrs: FsrsWire
-
-        enum CodingKeys: String, CodingKey {
-            case practiceHistory = "practice_history"
-            case fsrs
-        }
-    }
-
-    private struct MetricsComputeResponse: Decodable {
-        struct OverallWire: Decodable {
-            let p: Double
-            let enoughData: Bool
-            let n: Int
-            enum CodingKeys: String, CodingKey { case p; case enoughData = "enough_data"; case n }
-        }
-        struct PerCategoryWire: Decodable {
-            let category: String
-            let p: Double
-            let enoughData: Bool
-            let n: Int
-            enum CodingKeys: String, CodingKey {
-                case category, p
-                case enoughData = "enough_data"
-                case n
-            }
-        }
-        struct PerformanceWire: Decodable {
-            let overall: OverallWire
-            let perCategory: [PerCategoryWire]
-            enum CodingKeys: String, CodingKey { case overall; case perCategory = "per_category" }
-        }
-        struct ReadinessWire: Decodable {
-            let scorePoint: Int
-            let scoreLow: Int
-            let scoreHigh: Int
-            let confidence: String
-            let note: String
-            let enoughData: Bool
-            enum CodingKeys: String, CodingKey {
-                case scorePoint = "score_point"
-                case scoreLow = "score_low"
-                case scoreHigh = "score_high"
-                case confidence, note
-                case enoughData = "enough_data"
-            }
-        }
-        let performance: PerformanceWire
-        let readiness: ReadinessWire
-    }
-
-    /// Best-effort `POST {endpoint}metrics/compute` overlay. Silently keeps
-    /// the local numbers already set by `recomputeMetrics()` on any failure
-    /// (not configured, offline, non-2xx, bad JSON) -- never surfaces an
-    /// error or blocks the UI (AC21).
-    func refreshServerMetrics() async {
-        guard let creds = SyncStore.load(), !creds.endpoint.isEmpty, !creds.mcatToolsToken.isEmpty
-        else { return }
-
-        let history: [PracticeHistoryItem] = store.loadAll().compactMap { record in
-            guard let category = MCATCategory(rawValue: record.category) else { return nil }
-            return PracticeHistoryItem(questionId: record.questionId, category: category,
-                                        correct: record.correct, difficultyB: record.difficultyB)
-        }
-        let fsrs = await buildFsrsSummary()
-
-        let body = MetricsComputeRequest(
-            practiceHistory: history.map {
-                .init(questionId: $0.questionId, category: $0.category.rawValue,
-                      correct: $0.correct, difficultyB: $0.difficultyB)
-            },
-            fsrs: .init(
-                perCategory: fsrs.perCategory.map {
-                    .init(category: $0.category.rawValue, averageRecall: $0.averageRecall,
-                          masteredFraction: $0.masteredFraction, enoughData: $0.enoughData,
-                          gradedReviews: $0.gradedReviews)
-                },
-                overallMeanRecall: fsrs.overallMeanRecall
-            )
-        )
-
-        var base = creds.endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !base.hasSuffix("/") { base += "/" }
-        guard let url = URL(string: base + "metrics/compute") else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(creds.mcatToolsToken, forHTTPHeaderField: "X-Mcat-Token")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        guard let encoded = try? JSONEncoder().encode(body) else { return }
-        request.httpBody = encoded
-
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
-              let http = response as? HTTPURLResponse,
-              (200..<300).contains(http.statusCode),
-              let decoded = try? JSONDecoder().decode(MetricsComputeResponse.self, from: data)
-        else {
-            return
-        }
-
-        let overallCategory = decoded.performance.perCategory.compactMap { wire -> PerformanceCategory? in
-            guard let category = MCATCategory(rawValue: wire.category) else { return nil }
-            return PerformanceCategory(category: category, p: wire.p, enoughData: wire.enoughData, n: wire.n)
-        }
-        performance = Performance(
-            overall: (p: decoded.performance.overall.p, enoughData: decoded.performance.overall.enoughData,
-                      n: decoded.performance.overall.n),
-            perCategory: overallCategory
-        )
-        readiness = Readiness(
-            scorePoint: decoded.readiness.scorePoint,
-            scoreLow: decoded.readiness.scoreLow,
-            scoreHigh: decoded.readiness.scoreHigh,
-            confidence: Confidence(rawValue: decoded.readiness.confidence) ?? .low,
-            note: decoded.readiness.note,
-            enoughData: decoded.readiness.enoughData
-        )
-        metricsSource = .server
     }
 }

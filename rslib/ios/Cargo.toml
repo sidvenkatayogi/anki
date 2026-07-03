@@ -15,4 +15,7 @@ path = "src/lib.rs"
 test = false
 
 [dependencies]
-anki.workspace = true
+# Enable a TLS backend (rustls + bundled roots) so the sync client can make
+# HTTPS requests (e.g. to AnkiWeb). Without this, reqwest is built with no TLS
+# and rejects https:// URLs with "invalid URL, scheme is not http".
+anki = { workspace = true, features = ["rustls-webpki"] }

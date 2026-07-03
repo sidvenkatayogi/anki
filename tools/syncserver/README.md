@@ -8,6 +8,16 @@ decks, and **deck config / FSRS params** — plus **media**. Both apps embed the
 same Rust core, so the FSRS algorithm is identical on each end; syncing the FSRS
 _state_ is what makes scheduling consistent across devices.
 
+**All** MCAT data now lives in the collection — the practice question bank and
+answer history (stored as notes + their review log) and the memory palaces
+(stored as notes + media). There is **no separate `mcat-tools` service** to run;
+everything syncs through this one server.
+
+**You don't have to self-host.** Because the clients use standard Anki sync,
+they can sync to **AnkiWeb** (free web signup at <https://ankiweb.net>) instead
+— leave the sync-server field blank on both desktop and iOS to use it. Self-host
+with the steps below when you want to run your own server.
+
 This image is built from **this fork's source** (not the published PyPI package),
 so the sync protocol always matches the desktop + iOS clients.
 
@@ -65,12 +75,15 @@ collection and media sync.
 
 Open the app → **Account** tab → sign in:
 
-- **Username / Password**: the `SYNC_USER1` credentials.
-- **Sync server**:
-  - iOS **Simulator** on this Mac → `http://localhost:8080/`.
-  - Physical **device** on the same network → `http://<your-Mac-LAN-IP>:8080/`
-    (e.g. `http://192.168.1.20:8080/`). No App Transport Security exception is
-    needed: the sync HTTP is performed by the Rust core, not URLSession.
+- **Username / Password**: your AnkiWeb login, or the `SYNC_USER1` credentials
+  for a self-hosted server.
+- **Sync server** (optional):
+  - Leave **blank** to use **AnkiWeb** (the default).
+  - Self-hosted, iOS **Simulator** on this Mac → `http://localhost:8080/`.
+  - Self-hosted, physical **device** on the same network →
+    `http://<your-Mac-LAN-IP>:8080/` (e.g. `http://192.168.1.20:8080/`). No App
+    Transport Security exception is needed: the sync HTTP is performed by the
+    Rust core, not URLSession.
 
 The first sign-in **downloads** the collection from the server (replacing the
 bundled demo deck). After that, tap **Sync Now** (or relaunch) to sync
@@ -89,45 +102,11 @@ history stay in step.
 - Self-hosted auth is `sha1(user:pass)` — fine for a private server, not a
   public multi-tenant deployment.
 
+- The practice bank is **seeded once** into the collection (guarded by a synced
+  `mcat.practiceSeedVersion` config marker) from the bundled `practice-seed.json`,
+  then syncs like any other notes. Memory palaces are an **iOS-only** feature —
+  the iOS app stores them as notes + media so they sync across iOS devices, but
+  there is no desktop viewer.
+
 See also `docs/syncserver/` for the upstream (PyPI-based) Docker example and the
 official env-var reference at <https://docs.ankiweb.net/sync-server.html>.
-
-## Practice tab env vars (mcat-tools)
-
-The Practice tab calls new HTTP endpoints (`/practice/questions`,
-`/metrics/compute`, `/health`, `/version`) hosted by a
-separate `mcat-tools` sidecar (see `contracts/api.md` in the
-`2026-07-02-read-practice-tabs` factory run). It needs one env var:
-
-- `MCAT_TOOLS_TOKEN` — **required**. A shared bearer secret; clients send it
-  as the `X-Mcat-Token` header. This is a **separate secret from
-  `SYNC_USER1`** — generate a distinct random value.
-
-Set these either by copying `tools/syncserver/env.example` to
-`tools/syncserver/.env` (git-ignored) and filling in real values, or by
-exporting them in your shell before running `just sync-server` /
-`just sync-server-dev`.
-
-The sidecar is built from `tools/syncserver/mcat-tools.Dockerfile`, running
-the real `mcat_tools.app:app` FastAPI app via uvicorn on port 8081, with
-dependencies installed from `tools/syncserver/requirements-mcat-tools.txt`.
-
-Check health:
-
-```bash
-curl http://localhost:8081/health
-```
-
-### Run mcat-tools without Docker
-
-For fast iteration without Docker (e.g. alongside `just sync-server-dev`,
-which only starts the Rust sync server and does **not** start mcat-tools):
-
-```bash
-cd tools/syncserver
-pip install -r requirements-mcat-tools.txt
-MCAT_TOOLS_TOKEN=... uvicorn mcat_tools.app:app --host 0.0.0.0 --port 8081
-```
-
-The working directory must be `tools/syncserver/` so `mcat_tools` is
-importable as a top-level package.

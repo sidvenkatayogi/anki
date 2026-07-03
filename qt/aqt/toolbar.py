@@ -390,12 +390,6 @@ class Toolbar:
                 self._practiceLinkHandler,
                 id="practice",
             ),
-            self.create_link(
-                "palace",
-                "Palace",
-                self._palaceLinkHandler,
-                id="palace",
-            ),
         ]
 
         links.append(self._create_sync_link())
@@ -482,9 +476,6 @@ class Toolbar:
 
     def _practiceLinkHandler(self) -> None:
         self.mw.onPractice()
-
-    def _palaceLinkHandler(self) -> None:
-        self.mw.onPalace()
 
     def _syncLinkHandler(self) -> None:
         self.mw.on_sync_button_clicked()

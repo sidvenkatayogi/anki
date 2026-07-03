@@ -11,6 +11,8 @@ import SwiftUI
 struct ReviewView: View {
     // Received from the app; owns backend state and drives the loop.
     @Bindable var model: ReviewModel
+    // Per-device settings; decides whether the voice + AI flow is shown.
+    var settings: SettingsModel
 
     var body: some View {
         NavigationStack {
@@ -54,20 +56,135 @@ struct ReviewView: View {
 
             Divider()
 
-            if model.showingAnswer {
-                gradingButtons
+            controls
+        }
+    }
+
+    // MARK: - Controls (automatic vs manual grading)
+
+    @ViewBuilder
+    private var controls: some View {
+        if settings.autoGradeActive {
+            autoGradeControls
+        } else {
+            manualControls
+        }
+    }
+
+    @ViewBuilder
+    private var manualControls: some View {
+        if model.showingAnswer {
+            gradingButtons
+        } else {
+            showAnswerButton
+        }
+    }
+
+    private var showAnswerButton: some View {
+        Button {
+            model.revealAnswer()
+        } label: {
+            Text("Show Answer")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+        }
+        .buttonStyle(.borderedProminent)
+        .padding()
+        .accessibilityLabel("Show answer")
+    }
+
+    // Voice input on the question side; when the answer is shown we either wait
+    // for the grade, or (on error/no speech) fall back to manual buttons.
+    @ViewBuilder
+    private var autoGradeControls: some View {
+        if model.showingAnswer {
+            if model.autoGrading {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Grading…").foregroundStyle(.secondary)
+                }
+                .padding()
             } else {
+                VStack(spacing: 8) {
+                    if let message = model.autoGradeMessage {
+                        Text(message)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    gradingButtons
+                }
+                .padding(.bottom, 4)
+            }
+        } else {
+            voiceInput
+        }
+    }
+
+    private var voiceInput: some View {
+        VStack(spacing: 12) {
+            Text(model.voice.transcript.isEmpty
+                ? "Tap Speak, say your answer, then Submit"
+                : model.voice.transcript)
+                .font(.body)
+                .foregroundStyle(model.voice.transcript.isEmpty ? .secondary : .primary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .padding(.horizontal)
+
+            voiceStatus
+
+            HStack(spacing: 12) {
                 Button {
-                    model.revealAnswer()
+                    Task {
+                        if model.voice.isRecording {
+                            _ = model.voice.stop()
+                        } else {
+                            await model.startVoiceInput()
+                        }
+                    }
                 } label: {
-                    Text("Show Answer")
+                    Label(
+                        model.voice.isRecording ? "Stop" : "Speak",
+                        systemImage: model.voice.isRecording
+                            ? "stop.circle.fill" : "mic.circle.fill"
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                }
+                .buttonStyle(.bordered)
+                .tint(model.voice.isRecording ? .red : .blue)
+                .accessibilityLabel(model.voice.isRecording ? "Stop recording" : "Start recording")
+
+                Button {
+                    Task { await model.submitVoiceAnswer() }
+                } label: {
+                    Text("Submit")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 6)
                 }
                 .buttonStyle(.borderedProminent)
-                .padding()
-                .accessibilityLabel("Show answer")
+                .disabled(
+                    model.voice.transcript.trimmingCharacters(in: .whitespaces).isEmpty
+                )
+                .accessibilityLabel("Submit spoken answer")
             }
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private var voiceStatus: some View {
+        switch model.voice.state {
+        case let .denied(message), let .failed(message):
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(.orange)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        case .idle, .recording:
+            EmptyView()
         }
     }
 
