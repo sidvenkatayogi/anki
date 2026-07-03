@@ -98,6 +98,14 @@ struct Palace: Codable, Identifiable, Equatable {
     /// the decoded image can tell when to reload. Optional so palaces saved
     /// before this field existed still decode.
     var photoVersion: Int?
+    /// Last-modified instant, bumped by `PalaceModel.persist()` on every
+    /// rename/locus add/remove/edit/mnemonic/learned-toggle and photo save.
+    /// Drives cross-device last-write-wins sync (contracts/data-model.md).
+    /// **Back-compat**: pre-feature `palace.json` files on disk have no
+    /// `updatedAt` key, so decoding defaults it to this palace's own
+    /// `createdAt` (see the custom `init(from:)` below) — safe and monotonic,
+    /// since desktop never writes palaces directly.
+    var updatedAt: Date
 
     init(
         id: UUID = UUID(),
@@ -107,7 +115,8 @@ struct Palace: Codable, Identifiable, Equatable {
         loci: [Locus] = [],
         hasPhoto: Bool = false,
         hasWorldMap: Bool = false,
-        photoVersion: Int? = nil
+        photoVersion: Int? = nil,
+        updatedAt: Date = Date()
     ) {
         self.id = id
         self.name = name
@@ -117,6 +126,37 @@ struct Palace: Codable, Identifiable, Equatable {
         self.hasPhoto = hasPhoto
         self.hasWorldMap = hasWorldMap
         self.photoVersion = photoVersion
+        self.updatedAt = updatedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, createdAt, capacity, loci, hasPhoto, hasWorldMap, photoVersion, updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        capacity = try container.decode(Int.self, forKey: .capacity)
+        loci = try container.decode([Locus].self, forKey: .loci)
+        hasPhoto = try container.decode(Bool.self, forKey: .hasPhoto)
+        hasWorldMap = try container.decode(Bool.self, forKey: .hasWorldMap)
+        photoVersion = try container.decodeIfPresent(Int.self, forKey: .photoVersion)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? createdAt
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(capacity, forKey: .capacity)
+        try container.encode(loci, forKey: .loci)
+        try container.encode(hasPhoto, forKey: .hasPhoto)
+        try container.encode(hasWorldMap, forKey: .hasWorldMap)
+        try container.encodeIfPresent(photoVersion, forKey: .photoVersion)
+        try container.encode(updatedAt, forKey: .updatedAt)
     }
 
     /// True when no more cards can be placed — the trigger to capture a new place.

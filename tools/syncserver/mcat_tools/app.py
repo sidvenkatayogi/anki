@@ -24,15 +24,15 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
-from mcat_tools import metrics
+from mcat_tools import metrics, palace_store
 from mcat_tools.auth import require_token
 from mcat_tools.llm import LlmConfigError, LlmError, generate_quiz
 from mcat_tools.practice_seed import load_seed_questions
-from mcat_tools.schemas import MetricsComputeRequest
+from mcat_tools.schemas import MetricsComputeRequest, Palace
 from mcat_tools.sources import SourceError, fetch_passage
 
 logger = logging.getLogger("mcat_tools")
@@ -46,7 +46,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -183,3 +183,158 @@ async def metrics_compute(request: Request) -> dict:
     readiness = metrics.compute_readiness(performance, fsrs)
 
     return {"performance": performance, "readiness": readiness}
+
+
+# ---------------------------------------------------------------------------
+# Palace desktop-sync (2026-07-02-palace-desktop-sync factory run).
+# See `contracts/api.md` / `contracts/data-model.md` in that run for the
+# authoritative shapes. Server is a dumb blob store keyed by
+# `X-Mcat-User` (optional, defaults to "default", sanitized).
+# ---------------------------------------------------------------------------
+
+_MAX_PHOTO_BYTES = 5 * 1024 * 1024
+
+
+def _resolve_user_key(x_mcat_user: Optional[str]) -> str:
+    return palace_store.sanitize_user_key(x_mcat_user)
+
+
+def _require_valid_palace_id_or_404(palace_id: str, message: str) -> None:
+    """`palace_id` is guaranteed (per `contracts/data-model.md`) to be a
+    UUID string. Reject anything else with the same 404 body the route
+    already raises for a legitimately-missing-but-valid id, so a caller
+    can't distinguish "invalid id" from "missing palace" -- and, more
+    importantly, so a malformed id (e.g. `../../etc/passwd`) never reaches
+    `palace_store`'s filesystem-path helpers."""
+    if not palace_store.is_valid_palace_id(palace_id):
+        raise HTTPException(status_code=404, detail=_error("not_found", message))
+
+
+def _require_valid_palace_id_or_400(palace_id: str) -> None:
+    """Same validation as `_require_valid_palace_id_or_404`, but for the PUT
+    routes, where `id` is part of the request's body contract -- an invalid
+    path id is reported the same way as any other malformed-body 400."""
+    if not palace_store.is_valid_palace_id(palace_id):
+        raise HTTPException(
+            status_code=400, detail=_error("bad_request", "malformed palace body")
+        )
+
+
+@app.get("/palaces", dependencies=[Depends(require_token)])
+async def list_palaces(x_mcat_user: Optional[str] = Header(default=None)) -> dict:
+    user_key = _resolve_user_key(x_mcat_user)
+    return {"palaces": palace_store.list_summaries(user_key)}
+
+
+@app.get("/palaces/{palace_id}", dependencies=[Depends(require_token)])
+async def get_palace(
+    palace_id: str, x_mcat_user: Optional[str] = Header(default=None)
+) -> dict:
+    _require_valid_palace_id_or_404(palace_id, "palace not found")
+    user_key = _resolve_user_key(x_mcat_user)
+    palace = palace_store.get_palace(user_key, palace_id)
+    if palace is None:
+        raise HTTPException(
+            status_code=404, detail=_error("not_found", "palace not found")
+        )
+    return palace
+
+
+@app.put("/palaces/{palace_id}", dependencies=[Depends(require_token)])
+async def put_palace(
+    palace_id: str,
+    request: Request,
+    x_mcat_user: Optional[str] = Header(default=None),
+) -> dict:
+    _require_valid_palace_id_or_400(palace_id)
+    user_key = _resolve_user_key(x_mcat_user)
+    try:
+        body = await request.json()
+        Palace.model_validate(body)
+    except Exception as exc:
+        logger.info("malformed PUT /palaces/%s body: %s", palace_id, exc)
+        raise HTTPException(
+            status_code=400, detail=_error("bad_request", "malformed palace body")
+        ) from exc
+
+    if not isinstance(body, dict) or body.get("id") != palace_id:
+        raise HTTPException(
+            status_code=400, detail=_error("bad_request", "malformed palace body")
+        )
+    if not body.get("updatedAt"):
+        raise HTTPException(
+            status_code=400, detail=_error("bad_request", "malformed palace body")
+        )
+
+    try:
+        winner = palace_store.upsert_palace(user_key, palace_id, body)
+    except ValueError as exc:
+        logger.info("malformed updatedAt for palace %s: %s", palace_id, exc)
+        raise HTTPException(
+            status_code=400, detail=_error("bad_request", "malformed palace body")
+        ) from exc
+
+    return winner
+
+
+@app.get("/palaces/{palace_id}/photo", dependencies=[Depends(require_token)])
+async def get_palace_photo(
+    palace_id: str, x_mcat_user: Optional[str] = Header(default=None)
+) -> Response:
+    _require_valid_palace_id_or_404(palace_id, "no photo for this palace")
+    user_key = _resolve_user_key(x_mcat_user)
+    data = palace_store.get_photo(user_key, palace_id)
+    if data is None:
+        raise HTTPException(
+            status_code=404,
+            detail=_error("not_found", "no photo for this palace"),
+        )
+    return Response(content=data, media_type="image/jpeg")
+
+
+@app.put("/palaces/{palace_id}/photo", dependencies=[Depends(require_token)])
+async def put_palace_photo(
+    palace_id: str,
+    request: Request,
+    x_mcat_user: Optional[str] = Header(default=None),
+) -> dict:
+    _require_valid_palace_id_or_400(palace_id)
+    user_key = _resolve_user_key(x_mcat_user)
+
+    content_type = request.headers.get("content-type", "")
+    if not content_type.startswith("image/jpeg"):
+        raise HTTPException(
+            status_code=415,
+            detail=_error("unsupported_media_type", "expected image/jpeg"),
+        )
+
+    # Reject via the declared Content-Length before buffering the full body
+    # (contract requirement). A missing/non-numeric/within-cap header falls
+    # through to the post-read check below, which also covers chunked
+    # transfer or a lying Content-Length.
+    declared_length = request.headers.get("content-length")
+    if declared_length is not None:
+        try:
+            declared_bytes = int(declared_length)
+        except ValueError:
+            declared_bytes = None
+        if declared_bytes is not None and declared_bytes > _MAX_PHOTO_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=_error("payload_too_large", "photo exceeds 5MB limit"),
+            )
+
+    body = await request.body()
+    if len(body) > _MAX_PHOTO_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=_error("payload_too_large", "photo exceeds 5MB limit"),
+        )
+
+    new_version = palace_store.put_photo(user_key, palace_id, body)
+    if new_version is None:
+        raise HTTPException(
+            status_code=404, detail=_error("not_found", "palace not found")
+        )
+
+    return {"photoVersion": new_version}

@@ -8,7 +8,7 @@ Shapes match `contracts/api.md` and `contracts/data-model.md` from the
 
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -120,3 +120,58 @@ class HealthResponse(BaseModel):
 class VersionResponse(BaseModel):
     version: str
     build: str
+
+
+# ---------------------------------------------------------------------------
+# Palace desktop-sync (2026-07-02-palace-desktop-sync factory run).
+#
+# The server is a dumb pass-through blob store for these shapes -- field
+# names are wire-exact camelCase (matching iOS Codable + desktop TS types
+# in `contracts/data-model.md`), NOT the snake_case convention used above
+# for the Read/Practice internal API.
+# ---------------------------------------------------------------------------
+
+
+class PalacePoint(BaseModel):
+    x: float
+    y: float
+
+
+class Locus(BaseModel):
+    id: str
+    cardID: int
+    label: str
+    mnemonic: str
+    transform: Optional[List[float]] = None
+    anchorID: Optional[str] = None
+    point: PalacePoint
+    learned: bool
+
+
+class Palace(BaseModel):
+    id: str
+    name: str
+    createdAt: str
+    updatedAt: str
+    capacity: int
+    loci: List[Locus] = Field(default_factory=list)
+    hasPhoto: bool
+    hasWorldMap: bool
+    photoVersion: Optional[int] = None
+
+
+class PalaceSummary(BaseModel):
+    id: str
+    name: str
+    updatedAt: str
+    lociCount: int
+    hasPhoto: bool
+    photoVersion: Optional[int] = None
+
+
+class PalaceListResponse(BaseModel):
+    palaces: List[PalaceSummary]
+
+
+class PhotoVersionResponse(BaseModel):
+    photoVersion: int

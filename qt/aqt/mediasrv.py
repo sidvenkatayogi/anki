@@ -861,6 +861,10 @@ exposed_backend_list = [
     # DeckConfigService
     "get_ignored_before_count",
     "get_retention_workload",
+    # CardRenderingService / SchedulerService (Palace tab)
+    "render_existing_card",
+    "get_scheduling_states",
+    "answer_card",
 ]
 
 

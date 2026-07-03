@@ -33,6 +33,7 @@ struct RenderedCard: Equatable {
 final class PalaceModel {
     @ObservationIgnored private let engine: AnkiEngine
     @ObservationIgnored private let store: PalaceStore
+    @ObservationIgnored private let syncModel: PalaceSyncModel
 
     /// All palaces, newest first.
     private(set) var palaces: [Palace] = []
@@ -41,9 +42,14 @@ final class PalaceModel {
     /// Last non-fatal error, surfaced unobtrusively in the UI.
     var lastError: String?
 
-    init(engine: AnkiEngine = AnkiEngine(), store: PalaceStore = PalaceStore()) {
+    init(
+        engine: AnkiEngine = AnkiEngine(),
+        store: PalaceStore = PalaceStore(),
+        syncModel: PalaceSyncModel = PalaceSyncModel()
+    ) {
         self.engine = engine
         self.store = store
+        self.syncModel = syncModel
         self.palaces = store.loadAll()
     }
 
@@ -93,6 +99,8 @@ final class PalaceModel {
     /// Only updates the in-memory list if the disk write succeeded, so the UI
     /// never shows data as saved that never reached disk.
     private func persist(_ palace: Palace) {
+        var palace = palace
+        palace.updatedAt = Date()
         do {
             try store.save(palace)
         } catch {
@@ -104,6 +112,11 @@ final class PalaceModel {
         } else {
             palaces.insert(palace, at: 0)
         }
+        // Fire-and-forget cross-device push (AC1). Failures are silent by
+        // design (PalaceSyncModel) and must never affect `lastError`, which
+        // is reserved for local save failures above.
+        let syncModel = syncModel
+        Task { await syncModel.push(palace) }
     }
 
     // MARK: - Loci
@@ -180,7 +193,21 @@ final class PalaceModel {
             persist(palace)
         } catch {
             lastError = "Couldn't save photo: \(error)"
+            return
         }
+        // Push the freshly saved photo bytes alongside the metadata push that
+        // `persist()` already fired (fire-and-forget, silent-fail).
+        guard let saved = self.palace(palaceID) else { return }
+        let syncModel = syncModel
+        Task { await syncModel.push(saved, photoData: data) }
+    }
+
+    /// Launch-time reconciliation pass (AC2): push every local palace (with
+    /// its current photo bytes, if any) so a server that's behind picks up
+    /// changes made while this device was offline. Fire-and-forget per
+    /// palace; failures are silent (see PalaceSyncModel).
+    func pushAll() async {
+        await syncModel.pushAll(palaces, photoDataProvider: { [store] id in store.loadPhotoData(for: id) })
     }
 
     func photoData(forPalace palaceID: UUID) -> Data? {

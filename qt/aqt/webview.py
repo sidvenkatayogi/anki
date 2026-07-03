@@ -63,6 +63,7 @@ class AnkiWebViewKind(Enum):
     TO_LEARN_STATS = "to learn stats"
     READ_STATS = "read stats"
     PRACTICE_STATS = "practice stats"
+    PALACE_STATS = "palace stats"
 
 
 class AuthInterceptor(QWebEngineUrlRequestInterceptor):
@@ -150,6 +151,7 @@ class AnkiWebPage(QWebEnginePage):
             AnkiWebViewKind.TO_LEARN_STATS,
             AnkiWebViewKind.READ_STATS,
             AnkiWebViewKind.PRACTICE_STATS,
+            AnkiWebViewKind.PALACE_STATS,
         )
 
         global _profile_with_api_access, _profile_without_api_access

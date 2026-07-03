@@ -38,6 +38,11 @@ struct AnkiMCATApp: App {
                     }
                     await review.start()
                     palace.onEngineReady()
+                    // Launch-time palace sync reconciliation (AC2). Run in the
+                    // background rather than awaited inline so a slow/absent
+                    // sync server never delays startup; failures are silent
+                    // (see PalaceSyncModel) and the next save or launch retries.
+                    Task { await palace.pushAll() }
                     // Pull the latest on launch when signed in.
                     if sync.isLoggedIn {
                         await sync.sync()
