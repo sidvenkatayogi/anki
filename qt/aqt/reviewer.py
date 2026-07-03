@@ -785,6 +785,8 @@ class Reviewer:
             self.mw.onEditCurrent()
         elif url == "more":
             self.showContextMenu()
+        elif url == "neverlearned":
+            self.toggle_never_learned_on_current_topic()
         elif url.startswith("play:"):
             play_clicked_audio(url, self.card)
         elif url.startswith("updateToolbar"):
@@ -920,7 +922,8 @@ class Reviewer:
 <table id=innertable width=100%% cellspacing=0 cellpadding=0>
 <tr>
 <td align=start valign=top class=stat>
-<button title="%(editkey)s" onclick="pycmd('edit');">%(edit)s</button></td>
+<button title="%(editkey)s" onclick="pycmd('edit');">%(edit)s</button>
+<button title="%(didntlearntip)s (%(didntlearnkey)s)" onclick="pycmd('neverlearned');">%(didntlearn)s</button></td>
 <td align=center valign=top id=middle>
 </td>
 <td align=end valign=top class=stat>
@@ -939,6 +942,9 @@ timerStopped = false;
 """ % dict(
             edit=tr.studying_edit(),
             editkey=tr.actions_shortcut_key(val="E"),
+            didntlearn=tr.studying_didnt_learn(),
+            didntlearntip=tr.studying_didnt_learn_tooltip(),
+            didntlearnkey=tr.actions_shortcut_key(val="N"),
             more=tr.studying_more(),
             morekey=tr.actions_shortcut_key(val="M"),
             downArrow=downArrow(),

@@ -160,6 +160,43 @@ final class ReviewModel {
         }
     }
 
+    /// Surfaces the result of a "Didn't Learn" action (e.g. "Suspended 20
+    /// cards") or an error, mirroring `autoGradeMessage`.
+    private(set) var didntLearnMessage: String?
+
+    /// Mark the current card's topic(s) as never learned — tags + suspends every
+    /// card in the topic and moves them to the To Learn list, then advances.
+    /// Topic-level and destructive, so the view confirms before calling this.
+    func markDidntLearn() async {
+        guard let card = currentCard else { return }
+        do {
+            let changes = try await engine.setNeverLearned(cardID: card.card.id)
+            didntLearnMessage = changes.count == 1
+                ? "Moved 1 card to To Learn"
+                : "Moved \(changes.count) cards to To Learn"
+            await advanceToNextCard()
+        } catch {
+            didntLearnMessage = "Couldn't mark as not learned: \(error.localizedDescription)"
+        }
+    }
+
+    /// True when a spoken transcript is the "didn't learn" voice command rather
+    /// than an answer to grade. Matched before the LLM grader so the phrase never
+    /// gets scored as a (wrong) answer.
+    static func isDidntLearnPhrase(_ spoken: String) -> Bool {
+        let normalized = spoken
+            .lowercased()
+            .replacingOccurrences(of: "[^a-z ]", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+        let phrases = [
+            "didnt learn", "did not learn", "didn t learn",
+            "never learned", "havent learned", "have not learned",
+            "to learn",
+        ]
+        return phrases.contains(normalized)
+    }
+
     // MARK: - C4: automatic (voice + AI) grading
 
     /// Start listening for a spoken answer.
@@ -180,6 +217,14 @@ final class ReviewModel {
 
         guard !spoken.isEmpty else {
             autoGradeMessage = "Didn't catch an answer — grade it yourself."
+            return
+        }
+
+        // Voice command: saying "didn't learn" marks the topic as never learned
+        // instead of grading the transcript. Reuses the AI-grading voice path, so
+        // it's active whenever automatic grading is.
+        if Self.isDidntLearnPhrase(spoken) {
+            await markDidntLearn()
             return
         }
 

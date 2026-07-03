@@ -102,6 +102,11 @@ enum AnkiService {
     static let newDeck: UInt32 = 0
     static let addDeck: UInt32 = 1
     static let getDeckIdByName: UInt32 = 7
+
+    // service 45 = BackendTagsService. Method id verified against
+    // out/pylib/anki/_backend_generated.py (_run_command(45, 12, …)).
+    static let tags: UInt32 = 45
+    static let setNeverLearned: UInt32 = 12
 }
 
 /// Error surfaced across the C ABI seam.
@@ -396,6 +401,25 @@ actor AnkiEngine {
         ans.skipQueue = true
         return try call(service: AnkiService.scheduler, method: AnkiService.answerCard,
                         ans, returning: Anki_Collection_OpChanges.self)
+    }
+
+    // MARK: - "Didn't Learn" (never-learned topic → To Learn)
+
+    /// Mark the card's topic(s) as "never learned": the Rust core derives every
+    /// depth-`groupDepth` `::` topic the card belongs to, then tags + suspends
+    /// all cards in those topics so they surface in the To Learn list. Mirrors
+    /// the desktop reviewer's `set_never_learned(group_depth=2)`. Topic-level and
+    /// destructive by design, so callers should confirm before invoking.
+    @discardableResult
+    func setNeverLearned(cardID: Int64,
+                         groupDepth: UInt32 = 2,
+                         enabled: Bool = true) throws -> Anki_Collection_OpChangesWithCount {
+        var req = Anki_Tags_SetNeverLearnedRequest()
+        req.cardID = cardID
+        req.groupDepth = groupDepth
+        req.enabled = enabled
+        return try call(service: AnkiService.tags, method: AnkiService.setNeverLearned,
+                        req, returning: Anki_Collection_OpChangesWithCount.self)
     }
 
     // MARK: - Rendering

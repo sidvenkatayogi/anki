@@ -13,6 +13,9 @@ struct ReviewView: View {
     @Bindable var model: ReviewModel
     // Per-device settings; decides whether the voice + AI flow is shown.
     var settings: SettingsModel
+    // Gates the "Didn't Learn" confirmation — the action is topic-level and
+    // suspends every card in the topic, so we confirm before running it.
+    @State private var confirmDidntLearn = false
 
     var body: some View {
         NavigationStack {
@@ -57,7 +60,51 @@ struct ReviewView: View {
             Divider()
 
             controls
+
+            didntLearnBar
         }
+        .confirmationDialog(
+            "Mark this topic as not yet learned?",
+            isPresented: $confirmDidntLearn,
+            titleVisibility: .visible
+        ) {
+            Button("Move topic to To Learn", role: .destructive) {
+                Task { await model.markDidntLearn() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Suspends every card in this card's topic and moves them to the To Learn list.")
+        }
+    }
+
+    // Always-available "Didn't Learn" action (both question and answer phases,
+    // manual or voice modes). Mirrors the desktop reviewer's persistent button.
+    @ViewBuilder
+    private var didntLearnBar: some View {
+        VStack(spacing: 4) {
+            if let message = model.didntLearnMessage {
+                Text(message)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            Button {
+                confirmDidntLearn = true
+            } label: {
+                Label("Didn't Learn", systemImage: "questionmark.circle")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.bordered)
+            .tint(.secondary)
+            .disabled(model.currentCard == nil)
+            .help("Mark this topic as not yet learned — suspends its cards and moves them to To Learn")
+            .accessibilityLabel("Didn't learn this topic")
+            .accessibilityHint("Suspends every card in this topic and moves them to the To Learn list")
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Controls (automatic vs manual grading)
@@ -134,6 +181,15 @@ struct ReviewView: View {
                 .padding(.horizontal)
 
             voiceStatus
+
+            // Tooltip for the voice "didn't learn" command — spoken control that
+            // moves the topic to To Learn instead of grading the answer.
+            Text("Tip: say \u{201C}didn't learn\u{201D} to move this topic to To Learn")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+                .help("Speak \u{201C}didn't learn\u{201D} to mark this topic as not yet learned")
 
             HStack(spacing: 12) {
                 Button {
