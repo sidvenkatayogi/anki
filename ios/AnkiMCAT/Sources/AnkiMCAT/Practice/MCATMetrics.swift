@@ -48,12 +48,14 @@ struct FsrsSummary {
 struct PerformanceCategory {
     var category: MCATCategory
     var p: Double // [0,1]
+    var pLow: Double // [0,1] -- 90% CI lower bound (0 when !enoughData)
+    var pHigh: Double // [0,1] -- 90% CI upper bound (0 when !enoughData)
     var enoughData: Bool
     var n: Int
 }
 
 struct Performance {
-    var overall: (p: Double, enoughData: Bool, n: Int)
+    var overall: (p: Double, pLow: Double, pHigh: Double, enoughData: Bool, n: Int)
     var perCategory: [PerformanceCategory]
 }
 
@@ -73,6 +75,9 @@ struct Readiness {
 enum MCATMetrics {
     /// Minimum number of records required before a Performance figure is shown.
     private static let minN = 5
+
+    /// z-score for a 90% interval (matches the Memory dashboard's 90% CI).
+    private static let z90 = 1.645
 
     /// MAP ability estimate (Rasch / 1-PL), N(0,1) prior, Newton-Raphson.
     ///
@@ -112,29 +117,57 @@ enum MCATMetrics {
         1 / (1 + exp(-theta))
     }
 
+    /// Posterior standard error of the MAP ability estimate. The N(0,1) prior
+    /// contributes precision 1; each item contributes Fisher information
+    /// p_i(1-p_i) at the estimate. SE = 1 / sqrt(precision), so the Performance
+    /// range narrows as more questions are answered.
+    private static func abilityStdError(_ records: [(correct: Bool, difficultyB: Double)],
+                                        _ theta: Double) -> Double {
+        var precision = 1.0
+        for (_, difficultyB) in records {
+            let p = 1 / (1 + exp(-(theta - difficultyB)))
+            precision += p * (1 - p)
+        }
+        return 1 / sqrt(precision)
+    }
+
+    /// The point estimate plus a 90% interval for P(correct on a new b=0 item),
+    /// obtained by pushing the ability CI (theta +/- z*SE) through the logistic.
+    private static func performanceEstimate(_ records: [(correct: Bool, difficultyB: Double)])
+        -> (p: Double, pLow: Double, pHigh: Double) {
+        let theta = estimateAbility(records)
+        let se = abilityStdError(records, theta)
+        return (
+            probabilityAtZeroDifficulty(theta),
+            probabilityAtZeroDifficulty(theta - z90 * se),
+            probabilityAtZeroDifficulty(theta + z90 * se)
+        )
+    }
+
     /// Computes overall and per-category Performance from the full practice
     /// history. Each of overall/per-category is gated independently by the
     /// `N >= 5` minimum -- e.g. a category with 0 answers always shows
     /// "not enough data" even if the overall history is large.
     static func computePerformance(_ history: [PracticeHistoryItem]) -> Performance {
         let overallN = history.count
-        var overall: (p: Double, enoughData: Bool, n: Int)
+        var overall: (p: Double, pLow: Double, pHigh: Double, enoughData: Bool, n: Int)
         if overallN >= minN {
-            let theta = estimateAbility(history.map { ($0.correct, $0.difficultyB) })
-            overall = (probabilityAtZeroDifficulty(theta), true, overallN)
+            let est = performanceEstimate(history.map { ($0.correct, $0.difficultyB) })
+            overall = (est.p, est.pLow, est.pHigh, true, overallN)
         } else {
-            overall = (0, false, overallN)
+            overall = (0, 0, 0, false, overallN)
         }
 
         let perCategory: [PerformanceCategory] = MCATCategory.allCases.map { category in
             let records = history.filter { $0.category == category }
             let n = records.count
             if n >= minN {
-                let theta = estimateAbility(records.map { ($0.correct, $0.difficultyB) })
-                return PerformanceCategory(category: category, p: probabilityAtZeroDifficulty(theta),
-                                            enoughData: true, n: n)
+                let est = performanceEstimate(records.map { ($0.correct, $0.difficultyB) })
+                return PerformanceCategory(category: category, p: est.p, pLow: est.pLow,
+                                            pHigh: est.pHigh, enoughData: true, n: n)
             }
-            return PerformanceCategory(category: category, p: 0, enoughData: false, n: n)
+            return PerformanceCategory(category: category, p: 0, pLow: 0, pHigh: 0,
+                                        enoughData: false, n: n)
         }
 
         return Performance(overall: overall, perCategory: perCategory)
@@ -192,7 +225,8 @@ enum MCATMetrics {
     static func computeReadiness(_ performance: Performance, _ fsrs: FsrsSummary) -> Readiness {
         let sections: [SectionResult] = MCATCategory.allCases.map { category in
             let perf = performance.perCategory.first { $0.category == category }
-                ?? PerformanceCategory(category: category, p: 0, enoughData: false, n: 0)
+                ?? PerformanceCategory(category: category, p: 0, pLow: 0, pHigh: 0,
+                                        enoughData: false, n: 0)
             let fsrsCat = fsrs.perCategory.first { $0.category == category }
                 ?? FsrsCategorySummary(category: category, averageRecall: 0, masteredFraction: 0,
                                         enoughData: false, gradedReviews: 0)

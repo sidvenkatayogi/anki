@@ -418,6 +418,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             {:else}
                 <div class="overall-performance">
                     <div class="point">{pct(performance.overall.p)}</div>
+                    <div class="range">
+                        Likely range: {pct(performance.overall.p_low)} – {pct(
+                            performance.overall.p_high,
+                        )}
+                    </div>
                     <div class="caption">
                         chance of getting a new question right (based on
                         {performance.overall.n} answers)
@@ -431,6 +436,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                         <div class="category-name">{categoryLabels[cat.category]}</div>
                         {#if cat.enough_data}
                             <div class="category-value">{pct(cat.p)}</div>
+                            <div class="category-range">
+                                {pct(cat.p_low)} – {pct(cat.p_high)}
+                            </div>
                             <div class="category-caption">{cat.n} answers</div>
                         {:else}
                             <div class="category-value dash">Not enough data</div>
@@ -630,6 +638,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             color: mcat.$mcat-accent;
         }
 
+        .range {
+            color: var(--fg-subtle, #666);
+            font-size: 0.95em;
+        }
+
         .caption {
             color: var(--fg-subtle, #666);
             font-size: 0.9em;
@@ -662,6 +675,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 font-style: italic;
                 color: var(--fg-subtle, #999);
             }
+        }
+
+        .category-range {
+            font-size: 0.8em;
+            color: var(--fg-subtle, #666);
         }
 
         .category-caption {

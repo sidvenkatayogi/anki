@@ -15,6 +15,7 @@ struct AnkiMCATApp: App {
     @State private var palace: PalaceModel
     @State private var sync: SyncModel
     @State private var practice: PracticeModel
+    @State private var memory: MemoryModel
     @State private var settings: SettingsModel
 
     init() {
@@ -24,6 +25,7 @@ struct AnkiMCATApp: App {
         _palace = State(initialValue: PalaceModel(engine: engine))
         _sync = State(initialValue: SyncModel(engine: engine))
         _practice = State(initialValue: PracticeModel(engine: engine))
+        _memory = State(initialValue: MemoryModel(engine: engine))
         _settings = State(initialValue: settings)
     }
 
@@ -34,24 +36,27 @@ struct AnkiMCATApp: App {
                 palace: palace,
                 sync: sync,
                 practice: practice,
+                memory: memory,
                 settings: settings
             )
                 .task {
                     // A sync that replaces the collection must rebuild the
-                    // reviewer's queue and re-read the palace + practice data
-                    // (which now lives in the synced collection).
-                    sync.onCollectionChanged = { [review, palace, practice] in
+                    // reviewer's queue and re-read the palace + practice +
+                    // memory data (which now lives in the synced collection).
+                    sync.onCollectionChanged = { [review, palace, practice, memory] in
                         await review.reloadAfterSync()
                         palace.onEngineReady()
                         practice.onEngineReady()
+                        memory.onEngineReady()
                     }
                     await review.start()
-                    // Seed (once) + load the practice bank, and reconcile the
-                    // memory palaces with the collection. Both are idempotent
-                    // and best-effort; onEngineReady kicks off background work
-                    // rather than blocking startup.
+                    // Seed (once) + load the practice bank, reconcile the
+                    // memory palaces, and load the mastery dashboard. All are
+                    // idempotent and best-effort; onEngineReady kicks off
+                    // background work rather than blocking startup.
                     palace.onEngineReady()
                     practice.onEngineReady()
+                    memory.onEngineReady()
                     // Pull the latest on launch when signed in.
                     if sync.isLoggedIn {
                         await sync.sync()
@@ -61,14 +66,15 @@ struct AnkiMCATApp: App {
     }
 }
 
-/// Four tabs on the shared engine: the classic review loop, the spatial memory
-/// palace, practice questions, and the account/sync
+/// Tabs on the shared engine: the classic review loop, the spatial memory
+/// palace, the Memory dashboard, practice questions, and the account/sync
 /// screen — all backed by one opened collection.
 struct RootView: View {
     @Bindable var review: ReviewModel
     let palace: PalaceModel
     let sync: SyncModel
     let practice: PracticeModel
+    let memory: MemoryModel
     let settings: SettingsModel
 
     var body: some View {
@@ -78,6 +84,9 @@ struct RootView: View {
 
             PalaceListView(model: palace)
                 .tabItem { Label("Palace", systemImage: "building.columns") }
+
+            MemoryView(model: memory)
+                .tabItem { Label("Memory", systemImage: "brain.head.profile") }
 
             PracticeView(model: practice)
                 .tabItem { Label("Practice", systemImage: "pencil.and.list.clipboard") }

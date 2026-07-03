@@ -48,12 +48,14 @@ export interface FsrsSummary {
 export interface PerformanceCategory {
     category: Category;
     p: number; // [0,1]
+    p_low: number; // [0,1] -- 90% CI lower bound (0 when !enough_data)
+    p_high: number; // [0,1] -- 90% CI upper bound (0 when !enough_data)
     enough_data: boolean;
     n: number;
 }
 
 export interface Performance {
-    overall: { p: number; enough_data: boolean; n: number };
+    overall: { p: number; p_low: number; p_high: number; enough_data: boolean; n: number };
     per_category: PerformanceCategory[];
 }
 
@@ -70,6 +72,9 @@ export interface Readiness {
 
 /** Minimum number of records required before a Performance figure is shown. */
 const MIN_N = 5;
+
+/** z-score for a 90% interval (matches the Memory dashboard's 90% CI). */
+const Z_90 = 1.645;
 
 /**
  * MAP ability estimate (Rasch / 1-PL), N(0,1) prior, Newton-Raphson.
@@ -113,6 +118,40 @@ function probabilityAtZeroDifficulty(theta: number): number {
 }
 
 /**
+ * Posterior standard error of the MAP ability estimate. The N(0,1) prior
+ * contributes precision 1; each item contributes Fisher information
+ * p_i(1-p_i) at the estimate. SE = 1 / sqrt(precision), which shrinks as more
+ * questions are answered -- so the Performance range narrows with evidence.
+ */
+function abilityStdError(
+    records: { correct: boolean; difficulty_b: number }[],
+    theta: number,
+): number {
+    let precision = 1;
+    for (const { difficulty_b } of records) {
+        const p = 1 / (1 + Math.exp(-(theta - difficulty_b)));
+        precision += p * (1 - p);
+    }
+    return 1 / Math.sqrt(precision);
+}
+
+/**
+ * The point estimate plus a 90% interval for P(correct on a new b=0 item),
+ * obtained by pushing the ability CI (theta +/- z*SE) through the logistic.
+ */
+function performanceEstimate(
+    records: { correct: boolean; difficulty_b: number }[],
+): { p: number; p_low: number; p_high: number } {
+    const theta = estimateAbility(records);
+    const se = abilityStdError(records, theta);
+    return {
+        p: probabilityAtZeroDifficulty(theta),
+        p_low: probabilityAtZeroDifficulty(theta - Z_90 * se),
+        p_high: probabilityAtZeroDifficulty(theta + Z_90 * se),
+    };
+}
+
+/**
  * Computes overall and per-category Performance from the full practice
  * history. Each of overall/per-category is gated independently by the
  * `N >= 5` minimum -- e.g. a category with 0 answers always shows
@@ -120,22 +159,20 @@ function probabilityAtZeroDifficulty(theta: number): number {
  */
 export function computePerformance(history: PracticeHistoryItem[]): Performance {
     const overallN = history.length;
-    let overall: { p: number; enough_data: boolean; n: number };
+    let overall: { p: number; p_low: number; p_high: number; enough_data: boolean; n: number };
     if (overallN >= MIN_N) {
-        const theta = estimateAbility(history);
-        overall = { p: probabilityAtZeroDifficulty(theta), enough_data: true, n: overallN };
+        overall = { ...performanceEstimate(history), enough_data: true, n: overallN };
     } else {
-        overall = { p: 0, enough_data: false, n: overallN };
+        overall = { p: 0, p_low: 0, p_high: 0, enough_data: false, n: overallN };
     }
 
     const per_category: PerformanceCategory[] = CATEGORIES.map((category) => {
         const records = history.filter((r) => r.category === category);
         const n = records.length;
         if (n >= MIN_N) {
-            const theta = estimateAbility(records);
-            return { category, p: probabilityAtZeroDifficulty(theta), enough_data: true, n };
+            return { category, ...performanceEstimate(records), enough_data: true, n };
         }
-        return { category, p: 0, enough_data: false, n };
+        return { category, p: 0, p_low: 0, p_high: 0, enough_data: false, n };
     });
 
     return { overall, per_category };
@@ -201,6 +238,8 @@ export function computeReadiness(performance: Performance, fsrs: FsrsSummary): R
         const perf = performance.per_category.find((p) => p.category === category) ?? {
             category,
             p: 0,
+            p_low: 0,
+            p_high: 0,
             enough_data: false,
             n: 0,
         };

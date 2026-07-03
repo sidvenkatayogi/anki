@@ -199,6 +199,11 @@ struct PracticeView: View {
         categoryLabel(category.rawValue)
     }
 
+    /// A probability in [0,1] as a whole-number percent.
+    private static func pct(_ p: Double) -> Int {
+        Int((p * 100).rounded())
+    }
+
     // MARK: - Metrics section
 
     private var metricsSection: some View {
@@ -218,10 +223,10 @@ struct PracticeView: View {
                     Text("Overall")
                         .font(.subheadline)
                     Spacer()
-                    Text("\(Int((performance.overall.p * 100).rounded()))%")
+                    Text("\(Self.pct(performance.overall.p))%")
                         .font(.subheadline.weight(.semibold))
                 }
-                Text("\(performance.overall.n) answered")
+                Text("Likely range: \(Self.pct(performance.overall.pLow))–\(Self.pct(performance.overall.pHigh))% · \(performance.overall.n) answered")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else {
@@ -233,12 +238,17 @@ struct PracticeView: View {
             ForEach(MCATCategory.allCases, id: \.self) { category in
                 if let row = model.performance?.perCategory.first(where: { $0.category == category }),
                    row.enoughData {
-                    HStack {
+                    HStack(alignment: .firstTextBaseline) {
                         Text(Self.categoryLabel(category))
                             .font(.subheadline)
                         Spacer()
-                        Text("\(Int((row.p * 100).rounded()))%")
-                            .font(.subheadline.weight(.semibold))
+                        VStack(alignment: .trailing, spacing: 1) {
+                            Text("\(Self.pct(row.p))%")
+                                .font(.subheadline.weight(.semibold))
+                            Text("\(Self.pct(row.pLow))–\(Self.pct(row.pHigh))%")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 } else {
                     notEnoughDataRow(label: Self.categoryLabel(category))
