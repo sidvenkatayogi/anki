@@ -1,10 +1,14 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-// Acceptance-criteria coverage: AC7 (20 seeded questions across 4 categories), AC8 (question
+// Acceptance-criteria coverage: AC7 (seeded questions across all 4 categories), AC8 (question
 // shape: stem/4 options/answer/explanation/category), AC9 (bundled data source, not inlined in
 // view code — verified here by asserting the desktop, iOS, and contract copies of the JSON bank
 // are all identical).
+//
+// The bank was replaced with open-licensed questions (OpenStax, CC BY-NC-SA 4.0) for the three
+// science categories plus user-provided CARS passages; see data/ATTRIBUTION.md. Counts below
+// track that bank (31 total: 7/7/7 science + 10 CARS) rather than the original 5-per-category.
 //
 // This test intentionally reads the JSON files straight off disk (Node fs), rather than importing
 // through any view/component code, precisely to prove the seed bank is a standalone data artifact.
@@ -74,12 +78,19 @@ describe("practice-seed.json bundle (AC9: bundled data source)", () => {
 describe("practice-seed.json content/shape (AC7, AC8)", () => {
     const seed = loadJson(DESKTOP_SEED_PATH) as SeedQuestion[];
 
-    it("is a valid JSON array of exactly 20 entries", () => {
+    it("is a valid JSON array of exactly 31 entries", () => {
         expect(Array.isArray(seed)).toBe(true);
-        expect(seed.length).toBe(20);
+        expect(seed.length).toBe(31);
     });
 
-    it("has exactly 5 entries per canonical category, and no other category values", () => {
+    it("has the expected per-category counts, and no other category values", () => {
+        const EXPECTED_COUNTS: Record<(typeof CANONICAL_CATEGORIES)[number], number> = {
+            bio_biochem: 7,
+            chem_phys: 7,
+            psych_soc: 7,
+            cars: 10,
+        };
+
         const counts: Record<string, number> = {};
         for (const q of seed) {
             counts[q.category] = (counts[q.category] ?? 0) + 1;
@@ -89,7 +100,7 @@ describe("practice-seed.json content/shape (AC7, AC8)", () => {
         expect(seenCategories).toEqual([...CANONICAL_CATEGORIES].sort());
 
         for (const category of CANONICAL_CATEGORIES) {
-            expect(counts[category]).toBe(5);
+            expect(counts[category]).toBe(EXPECTED_COUNTS[category]);
         }
     });
 

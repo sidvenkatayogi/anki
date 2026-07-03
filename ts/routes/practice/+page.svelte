@@ -551,6 +551,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         font-weight: 600;
         margin-bottom: mcat.$mcat-space-md;
         line-height: 1.4;
+        // CARS questions embed a multi-paragraph reading passage in the stem;
+        // preserve its line breaks (science stems are single-line, so this is a no-op for them).
+        white-space: pre-line;
     }
 
     .options {

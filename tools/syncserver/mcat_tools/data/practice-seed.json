@@ -1,247 +1,436 @@
 [
     {
-        "id": "seed-001",
+        "id": "os-bio-01",
         "category": "bio_biochem",
-        "stem": "Which of the following best describes the role of allosteric regulation in enzyme kinetics?",
+        "stem": "During the breakdown of polymers, which of the following reactions takes place?",
         "options": [
-            "It changes the enzyme's substrate specificity permanently",
-            "It modulates enzyme activity via binding at a site distinct from the active site",
-            "It covalently modifies the substrate before catalysis",
-            "It is only relevant to enzymes lacking a quaternary structure"
-        ],
-        "answer_index": 1,
-        "explanation": "Allosteric regulators bind at sites other than the active site, inducing conformational changes that increase or decrease catalytic activity.",
-        "difficulty_b": 0.0
-    },
-    {
-        "id": "seed-002",
-        "category": "chem_phys",
-        "stem": "A gas is compressed isothermally. Which statement about its internal energy is correct for an ideal gas?",
-        "options": [
-            "Internal energy increases",
-            "Internal energy decreases",
-            "Internal energy is unchanged",
-            "Internal energy becomes negative"
-        ],
-        "answer_index": 2,
-        "explanation": "For an ideal gas, internal energy depends only on temperature; an isothermal process leaves it unchanged.",
-        "difficulty_b": -0.5
-    },
-    {
-        "id": "seed-003",
-        "category": "psych_soc",
-        "stem": "Which theory best explains conformity driven by a desire to be liked or accepted by a group?",
-        "options": [
-            "Informational social influence",
-            "Normative social influence",
-            "Cognitive dissonance theory",
-            "Social identity theory"
-        ],
-        "answer_index": 1,
-        "explanation": "Normative social influence is conformity motivated by the desire for social approval, distinct from informational influence (wanting to be correct).",
-        "difficulty_b": 0.5
-    },
-    {
-        "id": "seed-004",
-        "category": "cars",
-        "stem": "In a passage arguing that historical narratives are inherently biased by the narrator's era, the author's main purpose is best described as:",
-        "options": [
-            "Cataloguing specific historical inaccuracies",
-            "Undermining the value of studying history",
-            "Highlighting an epistemic limitation of historiography",
-            "Proposing a new method for verifying historical facts"
-        ],
-        "answer_index": 2,
-        "explanation": "The passage's claim is about a structural limitation on how history is written and understood, not about specific errors or a call to abandon history.",
-        "difficulty_b": 1.0
-    },
-    {
-        "id": "seed-005",
-        "category": "bio_biochem",
-        "stem": "Which macromolecule class serves as the primary form of long-term energy storage in human adipocytes?",
-        "options": ["Glycogen", "Triglycerides", "Cellulose", "Structural proteins"],
-        "answer_index": 1,
-        "explanation": "Triglycerides (fats) are the most energy-dense and efficient form of long-term energy storage, stored in adipocytes; glycogen is used for shorter-term storage in liver and muscle.",
-        "difficulty_b": -1.0
-    },
-    {
-        "id": "seed-006",
-        "category": "chem_phys",
-        "stem": "A 0.1 M solution of a strong monoprotic acid (HCl) has a pH of 1. If the solution is diluted tenfold with water, what is the new pH?",
-        "options": ["1", "2", "3", "11"],
-        "answer_index": 1,
-        "explanation": "Diluting HCl tenfold reduces [H+] from 0.1 M to 0.01 M; pH = -log(0.01) = 2.",
-        "difficulty_b": -1.0
-    },
-    {
-        "id": "seed-007",
-        "category": "psych_soc",
-        "stem": "In Pavlov's classic experiment, a bell (originally neutral) was repeatedly paired with the presentation of food until dogs salivated at the sound of the bell alone. After conditioning, the bell is best classified as the:",
-        "options": ["Unconditioned stimulus", "Conditioned stimulus", "Unconditioned response", "Conditioned response"],
-        "answer_index": 1,
-        "explanation": "After repeated pairing with the unconditioned stimulus (food), the previously neutral bell becomes a conditioned stimulus capable of eliciting the conditioned response (salivation) on its own.",
-        "difficulty_b": -1.0
-    },
-    {
-        "id": "seed-008",
-        "category": "cars",
-        "stem": "\"Although critics dismissed the novel as overly sentimental upon its release, subsequent generations of readers have found in it a nuanced meditation on grief that early reviewers, preoccupied with the era's taste for restraint, simply failed to perceive.\" The author most likely believes that the novel's initial critical reception was:",
-        "options": [
-            "Entirely justified by the text's literary flaws",
-            "Shaped by the reviewers' contemporary aesthetic biases",
-            "Unrelated to the novel's actual content",
-            "More accurate than later interpretations"
-        ],
-        "answer_index": 1,
-        "explanation": "The passage attributes the harsh initial reviews to critics' \"preoccupation with the era's taste for restraint\" -- a contemporary aesthetic bias -- not to genuine flaws in the novel.",
-        "difficulty_b": -1.0
-    },
-    {
-        "id": "seed-009",
-        "category": "bio_biochem",
-        "stem": "During DNA replication, the lagging strand is synthesized discontinuously as a series of Okazaki fragments. This discontinuity occurs primarily because:",
-        "options": [
-            "DNA polymerase can only synthesize DNA in the 5' to 3' direction",
-            "DNA helicase unwinds DNA faster on the lagging strand",
-            "The lagging strand template lacks a primer binding site",
-            "DNA ligase is unable to act on the leading strand"
+            "hydrolysis",
+            "dehydration",
+            "condensation",
+            "covalent bond"
         ],
         "answer_index": 0,
-        "explanation": "Because DNA polymerase synthesizes only 5'->3', the lagging strand must be made in short fragments primed repeatedly as the fork opens, later joined by ligase.",
-        "difficulty_b": -0.5
+        "explanation": "Polymers are broken into monomers by hydrolysis, which adds a molecule of water to cleave the bond between monomers. Dehydration/condensation is the reverse (polymer-building) reaction.",
+        "difficulty_b": 0.0
     },
     {
-        "id": "seed-010",
-        "category": "chem_phys",
-        "stem": "A buffer solution contains equal molar concentrations of a weak acid and its conjugate base. According to the Henderson-Hasselbalch equation, the pH of this buffer is:",
+        "id": "os-bio-02",
+        "category": "bio_biochem",
+        "stem": "Cellulose and starch are examples of:",
         "options": [
-            "Equal to the pKa of the weak acid",
-            "One unit above the pKa",
-            "One unit below the pKa",
-            "Independent of the pKa"
+            "monosaccharides",
+            "disaccharides",
+            "lipids",
+            "polysaccharides"
+        ],
+        "answer_index": 3,
+        "explanation": "Both cellulose and starch are long chains of glucose monomers, making them polysaccharides. They differ in the glycosidic linkage between glucose units.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-bio-03",
+        "category": "bio_biochem",
+        "stem": "Phospholipids are important components of __________.",
+        "options": [
+            "the plasma membrane of cells",
+            "the ring structure of steroids",
+            "the waxy covering on leaves",
+            "the double bond in hydrocarbon chains"
         ],
         "answer_index": 0,
-        "explanation": "pH = pKa + log([A-]/[HA]); when [A-] = [HA], the log term equals log(1) = 0, so pH = pKa.",
+        "explanation": "Phospholipids, with their hydrophilic heads and hydrophobic tails, form the bilayer that is the structural basis of the plasma membrane.",
         "difficulty_b": 0.0
     },
     {
-        "id": "seed-011",
-        "category": "psych_soc",
-        "stem": "According to Maslow's hierarchy of needs, which need must generally be substantially satisfied before an individual is strongly motivated to pursue self-esteem needs?",
-        "options": ["Self-actualization", "Belongingness and love", "Aesthetic needs", "Cognitive needs"],
-        "answer_index": 1,
-        "explanation": "Maslow's hierarchy places belongingness/love needs below esteem needs; lower-level needs are generally prioritized before higher-level ones like esteem.",
-        "difficulty_b": 0.0
-    },
-    {
-        "id": "seed-012",
-        "category": "cars",
-        "stem": "\"One hesitates to call the policy a failure outright -- it did, after all, achieve a handful of its more modest aims -- but neither can it be counted among the triumphs its architects once promised.\" The author's tone toward the policy is best described as:",
-        "options": ["Unreservedly enthusiastic", "Measured and qualified", "Openly contemptuous", "Indifferent"],
-        "answer_index": 1,
-        "explanation": "The author acknowledges partial success while denying the policy was a triumph -- a balanced, qualified assessment, not enthusiasm, contempt, or indifference.",
-        "difficulty_b": 0.0
-    },
-    {
-        "id": "seed-013",
+        "id": "os-bio-04",
         "category": "bio_biochem",
-        "stem": "A researcher adds a competitive inhibitor to an enzyme-catalyzed reaction. Compared to the uninhibited reaction, which change in kinetic parameters is expected?",
+        "stem": "The monomers that make up proteins are called __________.",
         "options": [
-            "Vmax decreases; Km unchanged",
-            "Vmax unchanged; apparent Km increases",
-            "Both Vmax and Km decrease",
-            "Vmax unchanged; Km decreases"
+            "nucleotides",
+            "disaccharides",
+            "amino acids",
+            "chaperones"
         ],
-        "answer_index": 1,
-        "explanation": "Competitive inhibitors bind the active site but can be outcompeted by high substrate concentration, so Vmax is unchanged while the apparent Km increases.",
-        "difficulty_b": 1.0
-    },
-    {
-        "id": "seed-014",
-        "category": "chem_phys",
-        "stem": "A car of mass m travels at constant speed around a flat, unbanked circular curve of radius r. If the coefficient of static friction between the tires and road is mu, what is the maximum speed at which the car can round the curve without slipping?",
-        "options": ["v_max = mu*g*r", "v_max = sqrt(mu*g*r)", "v_max = mu*g/r", "v_max = sqrt(g/(mu*r))"],
-        "answer_index": 1,
-        "explanation": "Static friction supplies the centripetal force: mu*m*g = m*v^2/r; solving for v gives v_max = sqrt(mu*g*r).",
-        "difficulty_b": 1.0
-    },
-    {
-        "id": "seed-015",
-        "category": "psych_soc",
-        "stem": "Social identity theory proposes that individuals derive part of their self-concept from group membership, which tends to produce:",
-        "options": [
-            "Reduced in-group favoritism",
-            "Increased favoritism toward the in-group and bias against out-groups",
-            "Complete elimination of personal identity",
-            "No effect on intergroup behavior"
-        ],
-        "answer_index": 1,
-        "explanation": "Social identity theory holds that categorizing oneself as a group member fosters in-group favoritism and out-group bias as individuals seek positive distinctiveness for their group.",
-        "difficulty_b": -0.5
-    },
-    {
-        "id": "seed-016",
-        "category": "cars",
-        "stem": "\"Because the museum's attendance rose sharply after it began offering free admission on weekends, the museum concluded that price was the primary barrier to attendance.\" This conclusion relies on the unstated assumption that:",
-        "options": [
-            "No other change occurred around the same time that could explain the rise in attendance",
-            "Free admission is financially sustainable for the museum",
-            "Attendance figures were recorded accurately",
-            "Weekend visitors differ from weekday visitors"
-        ],
-        "answer_index": 0,
-        "explanation": "The argument infers a causal role for price from a correlation (attendance rose after the price change); it assumes no confound, such as a new exhibit or marketing campaign, explains the rise instead.",
-        "difficulty_b": -0.5
-    },
-    {
-        "id": "seed-017",
-        "category": "bio_biochem",
-        "stem": "Which step in eukaryotic gene expression is responsible for removing introns from pre-mRNA before the mature transcript is translated?",
-        "options": [
-            "Transcription initiation",
-            "RNA splicing by the spliceosome",
-            "5' capping",
-            "Poly-A tail addition"
-        ],
-        "answer_index": 1,
-        "explanation": "The spliceosome, a complex of snRNPs, excises introns and ligates exons together during RNA splicing, which occurs after transcription and before mature mRNA export/translation.",
-        "difficulty_b": 0.5
-    },
-    {
-        "id": "seed-018",
-        "category": "chem_phys",
-        "stem": "In a kinetics experiment, doubling the concentration of reactant A (with [B] held constant) quadruples the initial reaction rate. What is the reaction order with respect to A?",
-        "options": ["Zero order", "First order", "Second order", "Third order"],
         "answer_index": 2,
-        "explanation": "Rate is proportional to [A]^n; doubling [A] causes a 4-fold rate increase, so 2^n = 4, giving n = 2 (second order with respect to A).",
+        "explanation": "Proteins are polymers of amino acids joined by peptide bonds. Nucleotides are the monomers of nucleic acids.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-bio-05",
+        "category": "bio_biochem",
+        "stem": "The α-helix and the β-pleated sheet are part of which protein structure?",
+        "options": [
+            "primary",
+            "secondary",
+            "tertiary",
+            "quaternary"
+        ],
+        "answer_index": 1,
+        "explanation": "Secondary structure refers to local folding (α-helices and β-pleated sheets) stabilized by hydrogen bonds along the polypeptide backbone.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-bio-06",
+        "category": "bio_biochem",
+        "stem": "A nucleotide of DNA may contain __________.",
+        "options": [
+            "ribose, uracil, and a phosphate group",
+            "deoxyribose, uracil, and a phosphate group",
+            "deoxyribose, thymine, and a phosphate group",
+            "ribose, thymine, and a phosphate group"
+        ],
+        "answer_index": 2,
+        "explanation": "DNA nucleotides contain deoxyribose (not ribose) and use thymine (not uracil, which is found in RNA), along with a phosphate group.",
         "difficulty_b": 0.5
     },
     {
-        "id": "seed-019",
-        "category": "psych_soc",
-        "stem": "An observer watches a driver cut sharply into her lane and immediately concludes the driver is reckless and inconsiderate, without considering that the driver might be rushing to the hospital. This reasoning error is best described as:",
+        "id": "os-bio-07",
+        "category": "bio_biochem",
+        "stem": "Saturated fats have all of the following characteristics except:",
         "options": [
-            "The self-serving bias",
-            "The fundamental attribution error",
-            "The actor-observer bias",
-            "Learned helplessness"
+            "they are solid at room temperature",
+            "they have single bonds within the carbon chain",
+            "they are usually obtained from animal sources",
+            "they tend to dissolve in water easily"
+        ],
+        "answer_index": 3,
+        "explanation": "Fats are hydrophobic and do not dissolve in water. Saturated fats do have single bonds, tend to be solid at room temperature, and commonly come from animal sources.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "os-phys-01",
+        "category": "chem_phys",
+        "stem": "What is 1 radian approximately in degrees?",
+        "options": [
+            "57.3°",
+            "360°",
+            "π°",
+            "2π°"
+        ],
+        "answer_index": 0,
+        "explanation": "A full circle is 2π radians = 360°, so 1 radian = 360°/(2π) ≈ 57.3°.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-phys-02",
+        "category": "chem_phys",
+        "stem": "Which of these quantities impact centripetal force?",
+        "options": [
+            "Mass and speed only",
+            "Mass and radius only",
+            "Speed and radius only",
+            "Mass, speed, and radius all impact centripetal force"
+        ],
+        "answer_index": 3,
+        "explanation": "Centripetal force F = mv²/r depends on mass (m), speed (v), and radius (r), so all three quantities affect it.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "os-phys-03",
+        "category": "chem_phys",
+        "stem": "The work–energy theorem states that the change in the kinetic energy of an object is equal to what?",
+        "options": [
+            "The work done on the object",
+            "The force applied to the object",
+            "The loss of the object's potential energy",
+            "The object's total mechanical energy minus its kinetic energy"
+        ],
+        "answer_index": 0,
+        "explanation": "The work–energy theorem states that the net work done on an object equals its change in kinetic energy (W_net = ΔKE).",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "os-phys-04",
+        "category": "chem_phys",
+        "stem": "What is the kinetic energy of a 10 kg object moving at 2.0 m/s?",
+        "options": [
+            "10 J",
+            "20 J",
+            "40 J",
+            "100 J"
         ],
         "answer_index": 1,
-        "explanation": "The fundamental attribution error is the tendency to overemphasize dispositional (personality) explanations for others' behavior while underweighting situational factors, exactly the pattern here.",
+        "explanation": "KE = ½mv² = ½ × 10 × (2.0)² = ½ × 10 × 4 = 20 J.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "os-phys-05",
+        "category": "chem_phys",
+        "stem": "At the beginning of a roller coaster ride, the roller coaster car has an initial energy mostly in the form of PE. Which statement explains why the fastest speeds of the car will be at the lowest points in the ride?",
+        "options": [
+            "At the bottom of the slope kinetic energy is at its maximum value and potential energy is at its minimum value.",
+            "At the bottom of the slope potential energy is at its maximum value and kinetic energy is at its minimum value.",
+            "At the bottom of the slope both kinetic and potential energy reach their maximum values",
+            "At the bottom of the slope both kinetic and potential energy reach their minimum values."
+        ],
+        "answer_index": 0,
+        "explanation": "As the car descends, gravitational PE converts to KE. At the lowest point PE is minimized and KE (and thus speed) is maximized.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "os-phys-06",
+        "category": "chem_phys",
+        "stem": "A plane flies north at 200 m/s with a headwind blowing from the north at 70 m/s. What is the resultant velocity of the plane?",
+        "options": [
+            "130 m/s north",
+            "130 m/s south",
+            "270 m/s north",
+            "270 m/s south"
+        ],
+        "answer_index": 0,
+        "explanation": "A headwind from the north pushes south, opposing the plane's northward motion: 200 − 70 = 130 m/s, still directed north.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "os-phys-07",
+        "category": "chem_phys",
+        "stem": "When will the x-component of a vector with angle θ be greater than its y-component?",
+        "options": [
+            "0° < θ < 45°",
+            "θ = 45°",
+            "45° < θ < 60°",
+            "60° < θ < 90°"
+        ],
+        "answer_index": 0,
+        "explanation": "The x-component scales with cosθ and the y-component with sinθ. cosθ > sinθ only when θ < 45°.",
         "difficulty_b": 1.0
     },
     {
-        "id": "seed-020",
-        "category": "cars",
-        "stem": "\"The committee's report claims that the decline in local newspaper readership caused the drop in civic engagement in the county. Yet the report's own data show that civic engagement began declining three years before the newspaper's circulation fell.\" This objection primarily challenges the report's argument by:",
+        "id": "os-psy-01",
+        "category": "psych_soc",
+        "stem": "In the scientific method, a hypothesis is a(n) __________.",
         "options": [
-            "Questioning the reliability of the civic engagement data",
-            "Showing that the proposed cause postdates the effect it supposedly produced",
-            "Introducing a completely unrelated variable",
-            "Conceding the report's conclusion while disputing its evidence"
+            "observation",
+            "measurement",
+            "test",
+            "proposed explanation"
+        ],
+        "answer_index": 3,
+        "explanation": "A hypothesis is a testable, proposed explanation for a phenomenon that predictions can be derived from and tested.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-psy-02",
+        "category": "psych_soc",
+        "stem": "__________ is most well-known for proposing his hierarchy of needs.",
+        "options": [
+            "Noam Chomsky",
+            "Carl Rogers",
+            "Abraham Maslow",
+            "Sigmund Freud"
+        ],
+        "answer_index": 2,
+        "explanation": "Abraham Maslow, a humanistic psychologist, proposed the hierarchy of needs, culminating in self-actualization.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-psy-03",
+        "category": "psych_soc",
+        "stem": "In Milgram's controversial study on obedience, nearly __________ of the participants were willing to administer what appeared to be lethal electrical shocks to another person because they were told to do so by an authority figure.",
+        "options": [
+            "1/3",
+            "2/3",
+            "3/4",
+            "4/5"
         ],
         "answer_index": 1,
-        "explanation": "If civic engagement declined before newspaper circulation fell, the newspaper decline cannot be the cause of the earlier drop in engagement; the objection attacks the causal claim via reversed temporal order.",
+        "explanation": "In Milgram's obedience experiments, roughly two-thirds (about 65%) of participants delivered the maximum, apparently lethal shock when instructed by the authority figure.",
         "difficulty_b": 0.5
+    },
+    {
+        "id": "os-psy-04",
+        "category": "psych_soc",
+        "stem": "An individual's consistent pattern of thought and behavior is known as a(n) __________.",
+        "options": [
+            "psychosexual stage",
+            "object permanence",
+            "personality",
+            "perception"
+        ],
+        "answer_index": 2,
+        "explanation": "Personality is the enduring, consistent pattern of thoughts, feelings, and behaviors that characterizes an individual.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-soc-01",
+        "category": "psych_soc",
+        "stem": "Which of the following best describes sociology as a subject?",
+        "options": [
+            "The study of individual behavior",
+            "The study of cultures",
+            "The study of society and social interaction",
+            "The study of economics"
+        ],
+        "answer_index": 2,
+        "explanation": "Sociology is the systematic study of society and social interaction, spanning groups, institutions, and social relationships.",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-soc-02",
+        "category": "psych_soc",
+        "stem": "Which founder of sociology believed societies changed due to class struggle?",
+        "options": [
+            "Emile Comte",
+            "Karl Marx",
+            "Plato",
+            "Herbert Spencer"
+        ],
+        "answer_index": 1,
+        "explanation": "Karl Marx argued that social change is driven by conflict between economic classes (the bourgeoisie and the proletariat).",
+        "difficulty_b": 0.0
+    },
+    {
+        "id": "os-soc-03",
+        "category": "psych_soc",
+        "stem": "Which of these theories is most likely to look at the social world on a micro level?",
+        "options": [
+            "Structural functionalism",
+            "Conflict theory",
+            "Positivism",
+            "Symbolic interactionism"
+        ],
+        "answer_index": 3,
+        "explanation": "Symbolic interactionism is a micro-level theory focused on face-to-face interactions and the shared meanings people attach to symbols.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "cars-01",
+        "category": "cars",
+        "stem": "The rationalizing of society can be conceptualized as the pursuit of efficiency, predictability, calculability, and control through technology. But rational systems inevitably spawn a series of irrationalities that result in the compromising and perhaps even the undermining of their rationality.\nFast-food restaurants, which epitomize the rational model, proffer the fastest means of getting from a hungry state to a sated one, without surprises, at low cost, in a carnival-like setting suggesting that fun awaits the consumer at each visit. The wholesomeness of the food seems an insignificant consideration. Whereas in the past, working people were prepared to spend up to an hour preparing dinner, they now are impatient if a meal is not on the table within ten minutes. (For their part, some fast-food restaurants have developed chairs that become uncomfortable after about twenty minutes, to ensure that diners do not stay long.)\nFast-food restaurants have preferentially recruited adolescent help, at least until recently, because this age group adjusts more easily than adults do to surrendering their autonomy to machines, rules, and procedures. Few skills are required on the job, so workers are asked to use only a minute portion of their abilities. This policy is irrational from the standpoint of the organization, since it could obtain much more from its employees for the money (however negligible) it pays them. These minimal skill demands are also irrational from the perspective of the employees, who are not allowed to think or to respond creatively to the demands of the work.\nThese restrictions lead to high levels of resentment, job dissatisfaction, alienation, absenteeism, and turnover among workers in fast-food franchises. In fact, these businesses have the highest turnover rate of any industry in the U.S. The entire workforce of the fast-food industry turns over three times in a year. Although the simple, repetitive nature of the work makes it easy to replace those who leave, the organization would clearly benefit from keeping employees longer. The costs of hiring and training are magnified when the turnover rate is extraordinarily high.\nThe application of the rational model to the house-building process in the 1950s and ’60s led to suburban communities consisting of nearly identical structures. Indeed, it was possible to wander into the residence of someone else and not to realize immediately that one was not at home. The more expensive developments were superficially more diversified, but their interior layouts assumed residents who were indistinguishable in their requirements.\nFurthermore, the planned communities themselves look very similar. Established trees are bulldozed to facilitate construction. In their place, a number of saplings, held up by posts and wire, are planted. Streets are laid out in symmetrical grid patterns. With such uniformity, suburbanites may well enter the wrong subdivision or become lost in their own.\nMany of Steven Spielberg’s films are set in such suburbs. Spielberg’s strategy is to lure the viewer into this highly repetitive world and then to have a completely unexpected event occur. For example, the film Poltergeist takes place in a conventional suburban household in which evil spirits ultimately disrupt the sameness. (The spirits first manifest themselves through another key element of the homogeneous society—the television set.) The great success of Spielberg’s films may be traceable to a longing for some unpredictability, even if it is bizarre and menacing, in increasingly routinized lives.\nAdapted from G. Ritzer, The McDonaldization of Society. ©1993 by Pine Forge Press.\n\nThe author’s argument suggests that the primary motive of employers who make humans work with machines is to:",
+        "options": [
+            "improve the quality of their products.",
+            "reduce the cost of wages and benefits.",
+            "avoid seeming to be behind the times.",
+            "increase the uniformity of procedures."
+        ],
+        "answer_index": 3,
+        "explanation": "The passage frames rationalization as the pursuit of control and predictability; making people work with machines chiefly serves to standardize and make procedures uniform, not primarily to cut costs (the author even calls the low-skill policy cost-irrational).",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "cars-02",
+        "category": "cars",
+        "stem": "The rationalizing of society can be conceptualized as the pursuit of efficiency, predictability, calculability, and control through technology. But rational systems inevitably spawn a series of irrationalities that result in the compromising and perhaps even the undermining of their rationality.\nFast-food restaurants, which epitomize the rational model, proffer the fastest means of getting from a hungry state to a sated one, without surprises, at low cost, in a carnival-like setting suggesting that fun awaits the consumer at each visit. The wholesomeness of the food seems an insignificant consideration. Whereas in the past, working people were prepared to spend up to an hour preparing dinner, they now are impatient if a meal is not on the table within ten minutes. (For their part, some fast-food restaurants have developed chairs that become uncomfortable after about twenty minutes, to ensure that diners do not stay long.)\nFast-food restaurants have preferentially recruited adolescent help, at least until recently, because this age group adjusts more easily than adults do to surrendering their autonomy to machines, rules, and procedures. Few skills are required on the job, so workers are asked to use only a minute portion of their abilities. This policy is irrational from the standpoint of the organization, since it could obtain much more from its employees for the money (however negligible) it pays them. These minimal skill demands are also irrational from the perspective of the employees, who are not allowed to think or to respond creatively to the demands of the work.\nThese restrictions lead to high levels of resentment, job dissatisfaction, alienation, absenteeism, and turnover among workers in fast-food franchises. In fact, these businesses have the highest turnover rate of any industry in the U.S. The entire workforce of the fast-food industry turns over three times in a year. Although the simple, repetitive nature of the work makes it easy to replace those who leave, the organization would clearly benefit from keeping employees longer. The costs of hiring and training are magnified when the turnover rate is extraordinarily high.\nThe application of the rational model to the house-building process in the 1950s and ’60s led to suburban communities consisting of nearly identical structures. Indeed, it was possible to wander into the residence of someone else and not to realize immediately that one was not at home. The more expensive developments were superficially more diversified, but their interior layouts assumed residents who were indistinguishable in their requirements.\nFurthermore, the planned communities themselves look very similar. Established trees are bulldozed to facilitate construction. In their place, a number of saplings, held up by posts and wire, are planted. Streets are laid out in symmetrical grid patterns. With such uniformity, suburbanites may well enter the wrong subdivision or become lost in their own.\nMany of Steven Spielberg’s films are set in such suburbs. Spielberg’s strategy is to lure the viewer into this highly repetitive world and then to have a completely unexpected event occur. For example, the film Poltergeist takes place in a conventional suburban household in which evil spirits ultimately disrupt the sameness. (The spirits first manifest themselves through another key element of the homogeneous society—the television set.) The great success of Spielberg’s films may be traceable to a longing for some unpredictability, even if it is bizarre and menacing, in increasingly routinized lives.\nAdapted from G. Ritzer, The McDonaldization of Society. ©1993 by Pine Forge Press.\n\nA common thread in the discussion of fast food and the discussion of suburban housing is that people today:",
+        "options": [
+            "are increasingly resistant to the regimentation of life.",
+            "expect their needs to be met at the lowest possible cost.",
+            "allow themselves to be treated as interchangeable.",
+            "are unable to discriminate among products that differ in quality."
+        ],
+        "answer_index": 2,
+        "explanation": "Both examples emphasize sameness and interchangeability—interchangeable fast-food workers and nearly identical homes whose layouts assume residents 'indistinguishable in their requirements.'",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "cars-03",
+        "category": "cars",
+        "stem": "The rationalizing of society can be conceptualized as the pursuit of efficiency, predictability, calculability, and control through technology. But rational systems inevitably spawn a series of irrationalities that result in the compromising and perhaps even the undermining of their rationality.\nFast-food restaurants, which epitomize the rational model, proffer the fastest means of getting from a hungry state to a sated one, without surprises, at low cost, in a carnival-like setting suggesting that fun awaits the consumer at each visit. The wholesomeness of the food seems an insignificant consideration. Whereas in the past, working people were prepared to spend up to an hour preparing dinner, they now are impatient if a meal is not on the table within ten minutes. (For their part, some fast-food restaurants have developed chairs that become uncomfortable after about twenty minutes, to ensure that diners do not stay long.)\nFast-food restaurants have preferentially recruited adolescent help, at least until recently, because this age group adjusts more easily than adults do to surrendering their autonomy to machines, rules, and procedures. Few skills are required on the job, so workers are asked to use only a minute portion of their abilities. This policy is irrational from the standpoint of the organization, since it could obtain much more from its employees for the money (however negligible) it pays them. These minimal skill demands are also irrational from the perspective of the employees, who are not allowed to think or to respond creatively to the demands of the work.\nThese restrictions lead to high levels of resentment, job dissatisfaction, alienation, absenteeism, and turnover among workers in fast-food franchises. In fact, these businesses have the highest turnover rate of any industry in the U.S. The entire workforce of the fast-food industry turns over three times in a year. Although the simple, repetitive nature of the work makes it easy to replace those who leave, the organization would clearly benefit from keeping employees longer. The costs of hiring and training are magnified when the turnover rate is extraordinarily high.\nThe application of the rational model to the house-building process in the 1950s and ’60s led to suburban communities consisting of nearly identical structures. Indeed, it was possible to wander into the residence of someone else and not to realize immediately that one was not at home. The more expensive developments were superficially more diversified, but their interior layouts assumed residents who were indistinguishable in their requirements.\nFurthermore, the planned communities themselves look very similar. Established trees are bulldozed to facilitate construction. In their place, a number of saplings, held up by posts and wire, are planted. Streets are laid out in symmetrical grid patterns. With such uniformity, suburbanites may well enter the wrong subdivision or become lost in their own.\nMany of Steven Spielberg’s films are set in such suburbs. Spielberg’s strategy is to lure the viewer into this highly repetitive world and then to have a completely unexpected event occur. For example, the film Poltergeist takes place in a conventional suburban household in which evil spirits ultimately disrupt the sameness. (The spirits first manifest themselves through another key element of the homogeneous society—the television set.) The great success of Spielberg’s films may be traceable to a longing for some unpredictability, even if it is bizarre and menacing, in increasingly routinized lives.\nAdapted from G. Ritzer, The McDonaldization of Society. ©1993 by Pine Forge Press.\n\nInformation in the passage suggests that a rationalized travel agency would emphasize:",
+        "options": [
+            "planned tours to popular attractions with accommodations at large hotels.",
+            "computerized systems to provide low-cost customized itineraries.",
+            "personnel trained to make reservations but with little experience as travelers.",
+            "procedures that encourage problem-solving initiatives by managers."
+        ],
+        "answer_index": 0,
+        "explanation": "Rationalization prizes predictability and standardization, so a rationalized agency would push uniform, planned tours to popular attractions with standardized large-hotel accommodations rather than customized or improvised offerings.",
+        "difficulty_b": 1.5
+    },
+    {
+        "id": "cars-04",
+        "category": "cars",
+        "stem": "The rationalizing of society can be conceptualized as the pursuit of efficiency, predictability, calculability, and control through technology. But rational systems inevitably spawn a series of irrationalities that result in the compromising and perhaps even the undermining of their rationality.\nFast-food restaurants, which epitomize the rational model, proffer the fastest means of getting from a hungry state to a sated one, without surprises, at low cost, in a carnival-like setting suggesting that fun awaits the consumer at each visit. The wholesomeness of the food seems an insignificant consideration. Whereas in the past, working people were prepared to spend up to an hour preparing dinner, they now are impatient if a meal is not on the table within ten minutes. (For their part, some fast-food restaurants have developed chairs that become uncomfortable after about twenty minutes, to ensure that diners do not stay long.)\nFast-food restaurants have preferentially recruited adolescent help, at least until recently, because this age group adjusts more easily than adults do to surrendering their autonomy to machines, rules, and procedures. Few skills are required on the job, so workers are asked to use only a minute portion of their abilities. This policy is irrational from the standpoint of the organization, since it could obtain much more from its employees for the money (however negligible) it pays them. These minimal skill demands are also irrational from the perspective of the employees, who are not allowed to think or to respond creatively to the demands of the work.\nThese restrictions lead to high levels of resentment, job dissatisfaction, alienation, absenteeism, and turnover among workers in fast-food franchises. In fact, these businesses have the highest turnover rate of any industry in the U.S. The entire workforce of the fast-food industry turns over three times in a year. Although the simple, repetitive nature of the work makes it easy to replace those who leave, the organization would clearly benefit from keeping employees longer. The costs of hiring and training are magnified when the turnover rate is extraordinarily high.\nThe application of the rational model to the house-building process in the 1950s and ’60s led to suburban communities consisting of nearly identical structures. Indeed, it was possible to wander into the residence of someone else and not to realize immediately that one was not at home. The more expensive developments were superficially more diversified, but their interior layouts assumed residents who were indistinguishable in their requirements.\nFurthermore, the planned communities themselves look very similar. Established trees are bulldozed to facilitate construction. In their place, a number of saplings, held up by posts and wire, are planted. Streets are laid out in symmetrical grid patterns. With such uniformity, suburbanites may well enter the wrong subdivision or become lost in their own.\nMany of Steven Spielberg’s films are set in such suburbs. Spielberg’s strategy is to lure the viewer into this highly repetitive world and then to have a completely unexpected event occur. For example, the film Poltergeist takes place in a conventional suburban household in which evil spirits ultimately disrupt the sameness. (The spirits first manifest themselves through another key element of the homogeneous society—the television set.) The great success of Spielberg’s films may be traceable to a longing for some unpredictability, even if it is bizarre and menacing, in increasingly routinized lives.\nAdapted from G. Ritzer, The McDonaldization of Society. ©1993 by Pine Forge Press.\n\nSuppose that the employee responses to working conditions in fast-food franchises (paragraph 4) also apply to entry-level assembly line workers. In light of this information, the author’s main point in mentioning these responses is:",
+        "options": [
+            "weakened, since the fast-food industry is not unique in suppressing creativity.",
+            "weakened, since the monotony of work is not necessarily related to employee dissatisfaction.",
+            "strengthened, since predictability and employee turnover are associated in another context.",
+            "strengthened, since low wages and job dissatisfaction are associated in another context."
+        ],
+        "answer_index": 2,
+        "explanation": "The author's point is that rational (predictable) systems breed irrational outcomes like dissatisfaction and turnover. Finding the same responses in another rationalized setting (assembly lines) strengthens that claim.",
+        "difficulty_b": 1.5
+    },
+    {
+        "id": "cars-05",
+        "category": "cars",
+        "stem": "Americans are a “positive” people. This is their reputation as well as their self-image. In the well-worn stereotype, they are upbeat, cheerful, and optimistic.\nWho would be churlish enough to challenge these happy features of the American personality? Take the business of positive “affect,” which refers to the mood they display to others through their smiles, their greetings, their professions of confidence and optimism. Scientists have found that the mere act of smiling can generate positive feelings within us, at least if the smile is not forced. In addition, recent studies show that happy feelings flit easily through social networks, so that one person’s good fortune can brighten the day even for only distantly connected others. Furthermore, psychologists agree that positive feelings can actually lengthen our lives and improve our health. People who report having positive feelings are more likely to participate in a rich social life, and social connectedness turns out to be an important defense against depression, which is a known risk factor for many physical illnesses.\nIt is a sign of progress, then, that economists have begun to show an interest in using happiness rather than just the gross national product as a measure of an economy’s success. Happiness is, of course, a slippery thing to measure or define. Philosophers have debated what it is for centuries, and even if they were to define it simply as a greater frequency of positive feelings than negative ones, when they ask people if they are happy, they are asking them to arrive at some sort of average over many moods and moments.\nSurprisingly, when psychologists measure the relative happiness of nations, they routinely find that Americans are not, even in prosperous times and despite their vaunted positivity, very happy at all. A recent meta-analysis of over a hundred studies of self-reported happiness worldwide found Americans ranking only twenty-third. Americans account for two-thirds of the global market for antidepressants, which happen also to be the most commonly prescribed drugs in the United States.\nHow can Americans be so surpassingly “positive” in self-image and stereotype without being the world’s happiest and best-off people? The answer is that positivity is not so much their condition as it is part of their ideology—the way they explain the world and think they ought to function within it. That ideology is “positive thinking,” by which they usually mean two things. One is the generic content of positive thinking—that is, the positive thought itself—which can be summarized as “Things are pretty good right now, at least if you are willing to see silver linings, make lemonade out of lemons, etc., and things are going to get a whole lot better.”\nThe second thing they mean by “positive thinking” is this practice of trying to think in a positive way. There is, they are told, a practical reason for undertaking this effort: positive thinking supposedly not only makes us feel optimistic but actually makes happy outcomes more likely. How can the mere process of thinking do this? In the rational explanation that many psychologists would offer today, optimism improves health, personal efficacy, confidence, and resilience, making it easier for us to accomplish our goals. A far less rational theory also runs rampant in American ideology—the idea that our thoughts can, in some mysterious way, directly affect the physical world. Negative thoughts somehow produce negative outcomes, while positive thoughts realize themselves in the form of health, prosperity, and success. For both rational and mystical reasons, then, the effort of positive thinking is said to be well worth our time and attention.\nAdapted from B. Ehrenreich, Bright-sided. ©2009 by Metropolitan Books.\n\nAccording to the passage, positive feelings are:",
+        "options": [
+            "universal",
+            "hereditary",
+            "contagious",
+            "ephemeral"
+        ],
+        "answer_index": 2,
+        "explanation": "The passage states that 'happy feelings flit easily through social networks,' so that one person's good fortune can brighten others' days—i.e., positive feelings are contagious.",
+        "difficulty_b": 0.5
+    },
+    {
+        "id": "cars-06",
+        "category": "cars",
+        "stem": "Americans are a “positive” people. This is their reputation as well as their self-image. In the well-worn stereotype, they are upbeat, cheerful, and optimistic.\nWho would be churlish enough to challenge these happy features of the American personality? Take the business of positive “affect,” which refers to the mood they display to others through their smiles, their greetings, their professions of confidence and optimism. Scientists have found that the mere act of smiling can generate positive feelings within us, at least if the smile is not forced. In addition, recent studies show that happy feelings flit easily through social networks, so that one person’s good fortune can brighten the day even for only distantly connected others. Furthermore, psychologists agree that positive feelings can actually lengthen our lives and improve our health. People who report having positive feelings are more likely to participate in a rich social life, and social connectedness turns out to be an important defense against depression, which is a known risk factor for many physical illnesses.\nIt is a sign of progress, then, that economists have begun to show an interest in using happiness rather than just the gross national product as a measure of an economy’s success. Happiness is, of course, a slippery thing to measure or define. Philosophers have debated what it is for centuries, and even if they were to define it simply as a greater frequency of positive feelings than negative ones, when they ask people if they are happy, they are asking them to arrive at some sort of average over many moods and moments.\nSurprisingly, when psychologists measure the relative happiness of nations, they routinely find that Americans are not, even in prosperous times and despite their vaunted positivity, very happy at all. A recent meta-analysis of over a hundred studies of self-reported happiness worldwide found Americans ranking only twenty-third. Americans account for two-thirds of the global market for antidepressants, which happen also to be the most commonly prescribed drugs in the United States.\nHow can Americans be so surpassingly “positive” in self-image and stereotype without being the world’s happiest and best-off people? The answer is that positivity is not so much their condition as it is part of their ideology—the way they explain the world and think they ought to function within it. That ideology is “positive thinking,” by which they usually mean two things. One is the generic content of positive thinking—that is, the positive thought itself—which can be summarized as “Things are pretty good right now, at least if you are willing to see silver linings, make lemonade out of lemons, etc., and things are going to get a whole lot better.”\nThe second thing they mean by “positive thinking” is this practice of trying to think in a positive way. There is, they are told, a practical reason for undertaking this effort: positive thinking supposedly not only makes us feel optimistic but actually makes happy outcomes more likely. How can the mere process of thinking do this? In the rational explanation that many psychologists would offer today, optimism improves health, personal efficacy, confidence, and resilience, making it easier for us to accomplish our goals. A far less rational theory also runs rampant in American ideology—the idea that our thoughts can, in some mysterious way, directly affect the physical world. Negative thoughts somehow produce negative outcomes, while positive thoughts realize themselves in the form of health, prosperity, and success. For both rational and mystical reasons, then, the effort of positive thinking is said to be well worth our time and attention.\nAdapted from B. Ehrenreich, Bright-sided. ©2009 by Metropolitan Books.\n\nWhat best represents the author’s explanation for why Americans can be “so surpassingly ‘positive’ in self-image and stereotype without being the world’s happiest and best-off people?”",
+        "options": [
+            "Americans’ positivity is not a true reflection of their affect.",
+            "Being “well-off” is not the same as being “happy.”",
+            "Stereotypes tend to be unwarranted generalizations.",
+            "Americans tend to have high rates of depression."
+        ],
+        "answer_index": 0,
+        "explanation": "The author answers directly: positivity 'is not so much their condition as it is part of their ideology.' Thus the displayed positivity is not a genuine reflection of Americans' actual affect.",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "cars-07",
+        "category": "cars",
+        "stem": "For someone used to contemporary academic writing, reading the chapter on color in William Gladstone’s Studies on Homer and the Homeric Age (1858) comes as rather a shock—the shock of meeting an extraordinary mind. It is therefore all the more startling that Gladstone’s nineteenth century tour de force comes to such a strange conclusion: Homer and his contemporaries perceived the world in something closer to black and white than to full Technicolor.\nNo one would deny that there is a wide gulf between Homer’s world and ours: in the millennia that separate us, empires have risen and fallen, religions and ideologies have come and gone, and science and technology have transformed our intellectual horizons and almost every aspect of daily life beyond all recognition. Surely one aspect that must have remained exactly the same since Homer’s day, even since time immemorial, would be the rich colors of nature: the blue of sky and sea, the glowing red of dawn, the green of fresh leaves.\nGladstone says things are not the same, for many reasons. One, Homer uses the same word to denote colors which, according to us, are essentially different. For example, he describes as “violet” the sea, sheep, and iron. Two, Homer’s similes are so rich with sensible imagery, we expect to find color a frequent and prominent ingredient, and yet his poppies have never so much as a hint of scarlet. Three, Gladstone notes, Homer uses “black” about 170 times, “white” 100 times, “red” thirteen, “yellow” ten, “violet” six times, and the other colors even less often. Four, Homer’s color vocabulary is astonishingly small. There doesn’t seem to be anything equivalent to our orange or pink in Homer’s color palette; most striking is the lack of any word that could be taken to mean “blue.”\nWhat is more, Gladstone proves that the oddities in Homer’s Iliad and Odyssey could not have stemmed from any problems peculiar to Homer. “Violet-colored hair” was used by Pindar in his poems.\nGladstone is well aware of the utter weirdness of his thesis—nothing less than universal color blindness among the ancient Greeks—so he tries to make it more palatable by evoking an evolutionary explanation for how sensitivity to colors could have increased over the generations. The perception of color, he says, seems natural to us only because humankind as a whole has undergone a progressive “education of the eye” over the last millennia. The eye’s ability to perceive and appreciate differences in color, he suggests, can improve with practice, and these acquired improvements are then passed on to offspring.\nBut why, one may well ask, should this progressive refinement of color vision not have started much earlier than the Homeric period? Gladstone’s theory is that the appreciation of color as a property independent of a particular material develops only with the capacity to manipulate colors artificially. And that capacity, he notes, barely existed in Homer’s day: the art of dyeing was in its infancy, cultivation of flowers was not practiced, and almost all of the brightly colored objects we take for granted were entirely absent. Other than the ocean, people in Homer’s day may have gone through life without ever setting their eyes on a single blue object. Blue eyes, Gladstone explains, were in short supply; blue dyes, which are very difficult to manufacture, were practically unknown; and natural flowers that are truly blue are rare.\nGladstone’s analysis was brilliant, but completely off course. Indeed, philologists, anthropologists, and even natural scientists would need decades to free themselves from the error of underestimating the power of culture.\nAdapted from G. Deutscher, Through the language glass: why the world looks different in other languages. ©2010 Metropolitan Books.\n\nIt can be inferred from the passage that the author believes which of the following about contemporary academic writing?",
+        "options": [
+            "Academic papers are typically not especially brilliant.",
+            "Academics seldom address color perception in their papers.",
+            "Academics often reach very strange conclusions in their papers.",
+            "Academic papers are usually outdated soon after they are written."
+        ],
+        "answer_index": 0,
+        "explanation": "Calling Gladstone's work 'the shock of meeting an extraordinary mind' implies, by contrast, that contemporary academic writing is not usually brilliant or extraordinary.",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "cars-08",
+        "category": "cars",
+        "stem": "For someone used to contemporary academic writing, reading the chapter on color in William Gladstone’s Studies on Homer and the Homeric Age (1858) comes as rather a shock—the shock of meeting an extraordinary mind. It is therefore all the more startling that Gladstone’s nineteenth century tour de force comes to such a strange conclusion: Homer and his contemporaries perceived the world in something closer to black and white than to full Technicolor.\nNo one would deny that there is a wide gulf between Homer’s world and ours: in the millennia that separate us, empires have risen and fallen, religions and ideologies have come and gone, and science and technology have transformed our intellectual horizons and almost every aspect of daily life beyond all recognition. Surely one aspect that must have remained exactly the same since Homer’s day, even since time immemorial, would be the rich colors of nature: the blue of sky and sea, the glowing red of dawn, the green of fresh leaves.\nGladstone says things are not the same, for many reasons. One, Homer uses the same word to denote colors which, according to us, are essentially different. For example, he describes as “violet” the sea, sheep, and iron. Two, Homer’s similes are so rich with sensible imagery, we expect to find color a frequent and prominent ingredient, and yet his poppies have never so much as a hint of scarlet. Three, Gladstone notes, Homer uses “black” about 170 times, “white” 100 times, “red” thirteen, “yellow” ten, “violet” six times, and the other colors even less often. Four, Homer’s color vocabulary is astonishingly small. There doesn’t seem to be anything equivalent to our orange or pink in Homer’s color palette; most striking is the lack of any word that could be taken to mean “blue.”\nWhat is more, Gladstone proves that the oddities in Homer’s Iliad and Odyssey could not have stemmed from any problems peculiar to Homer. “Violet-colored hair” was used by Pindar in his poems.\nGladstone is well aware of the utter weirdness of his thesis—nothing less than universal color blindness among the ancient Greeks—so he tries to make it more palatable by evoking an evolutionary explanation for how sensitivity to colors could have increased over the generations. The perception of color, he says, seems natural to us only because humankind as a whole has undergone a progressive “education of the eye” over the last millennia. The eye’s ability to perceive and appreciate differences in color, he suggests, can improve with practice, and these acquired improvements are then passed on to offspring.\nBut why, one may well ask, should this progressive refinement of color vision not have started much earlier than the Homeric period? Gladstone’s theory is that the appreciation of color as a property independent of a particular material develops only with the capacity to manipulate colors artificially. And that capacity, he notes, barely existed in Homer’s day: the art of dyeing was in its infancy, cultivation of flowers was not practiced, and almost all of the brightly colored objects we take for granted were entirely absent. Other than the ocean, people in Homer’s day may have gone through life without ever setting their eyes on a single blue object. Blue eyes, Gladstone explains, were in short supply; blue dyes, which are very difficult to manufacture, were practically unknown; and natural flowers that are truly blue are rare.\nGladstone’s analysis was brilliant, but completely off course. Indeed, philologists, anthropologists, and even natural scientists would need decades to free themselves from the error of underestimating the power of culture.\nAdapted from G. Deutscher, Through the language glass: why the world looks different in other languages. ©2010 Metropolitan Books.\n\nIt has been suggested that the Iliad and the Odyssey were a patchwork of a great number of popular ballads woven together from different poets, rather than a single work by a poet named Homer. If true, how would this affect the opinions expressed in the passage?",
+        "options": [
+            "It would strengthen Gladstone’s basic thesis.",
+            "It would weaken Gladstone’s basic thesis.",
+            "It would require a modification of Gladstone’s basic thesis.",
+            "It would not affect Gladstone’s basic thesis."
+        ],
+        "answer_index": 0,
+        "explanation": "Gladstone's thesis concerns the color perception of ancient Greeks as a whole, and he explicitly argued the pattern was not peculiar to Homer. Multiple authors all showing the same color usage would further support that it reflects the era's perception, strengthening the thesis.",
+        "difficulty_b": 1.5
+    },
+    {
+        "id": "cars-09",
+        "category": "cars",
+        "stem": "For someone used to contemporary academic writing, reading the chapter on color in William Gladstone’s Studies on Homer and the Homeric Age (1858) comes as rather a shock—the shock of meeting an extraordinary mind. It is therefore all the more startling that Gladstone’s nineteenth century tour de force comes to such a strange conclusion: Homer and his contemporaries perceived the world in something closer to black and white than to full Technicolor.\nNo one would deny that there is a wide gulf between Homer’s world and ours: in the millennia that separate us, empires have risen and fallen, religions and ideologies have come and gone, and science and technology have transformed our intellectual horizons and almost every aspect of daily life beyond all recognition. Surely one aspect that must have remained exactly the same since Homer’s day, even since time immemorial, would be the rich colors of nature: the blue of sky and sea, the glowing red of dawn, the green of fresh leaves.\nGladstone says things are not the same, for many reasons. One, Homer uses the same word to denote colors which, according to us, are essentially different. For example, he describes as “violet” the sea, sheep, and iron. Two, Homer’s similes are so rich with sensible imagery, we expect to find color a frequent and prominent ingredient, and yet his poppies have never so much as a hint of scarlet. Three, Gladstone notes, Homer uses “black” about 170 times, “white” 100 times, “red” thirteen, “yellow” ten, “violet” six times, and the other colors even less often. Four, Homer’s color vocabulary is astonishingly small. There doesn’t seem to be anything equivalent to our orange or pink in Homer’s color palette; most striking is the lack of any word that could be taken to mean “blue.”\nWhat is more, Gladstone proves that the oddities in Homer’s Iliad and Odyssey could not have stemmed from any problems peculiar to Homer. “Violet-colored hair” was used by Pindar in his poems.\nGladstone is well aware of the utter weirdness of his thesis—nothing less than universal color blindness among the ancient Greeks—so he tries to make it more palatable by evoking an evolutionary explanation for how sensitivity to colors could have increased over the generations. The perception of color, he says, seems natural to us only because humankind as a whole has undergone a progressive “education of the eye” over the last millennia. The eye’s ability to perceive and appreciate differences in color, he suggests, can improve with practice, and these acquired improvements are then passed on to offspring.\nBut why, one may well ask, should this progressive refinement of color vision not have started much earlier than the Homeric period? Gladstone’s theory is that the appreciation of color as a property independent of a particular material develops only with the capacity to manipulate colors artificially. And that capacity, he notes, barely existed in Homer’s day: the art of dyeing was in its infancy, cultivation of flowers was not practiced, and almost all of the brightly colored objects we take for granted were entirely absent. Other than the ocean, people in Homer’s day may have gone through life without ever setting their eyes on a single blue object. Blue eyes, Gladstone explains, were in short supply; blue dyes, which are very difficult to manufacture, were practically unknown; and natural flowers that are truly blue are rare.\nGladstone’s analysis was brilliant, but completely off course. Indeed, philologists, anthropologists, and even natural scientists would need decades to free themselves from the error of underestimating the power of culture.\nAdapted from G. Deutscher, Through the language glass: why the world looks different in other languages. ©2010 Metropolitan Books.\n\nGladstone would predict which of the following about the children of an interior decorator who easily distinguishes among scarlet, burgundy, and fuchsia?",
+        "options": [
+            "The children would be able to easily distinguish various versions of red.",
+            "The children would be drawn more to objects in various versions of red than to those of any other color.",
+            "The children would seldom bother mentioning what are to them obvious differences among various versions of red.",
+            "The children would need to practice distinguishing among various versions of red for years before achieving proficiency."
+        ],
+        "answer_index": 0,
+        "explanation": "Gladstone held that acquired improvements in color perception are passed on to offspring, so a decorator's refined ability to distinguish reds would be inherited by the children.",
+        "difficulty_b": 1.0
+    },
+    {
+        "id": "cars-10",
+        "category": "cars",
+        "stem": "For someone used to contemporary academic writing, reading the chapter on color in William Gladstone’s Studies on Homer and the Homeric Age (1858) comes as rather a shock—the shock of meeting an extraordinary mind. It is therefore all the more startling that Gladstone’s nineteenth century tour de force comes to such a strange conclusion: Homer and his contemporaries perceived the world in something closer to black and white than to full Technicolor.\nNo one would deny that there is a wide gulf between Homer’s world and ours: in the millennia that separate us, empires have risen and fallen, religions and ideologies have come and gone, and science and technology have transformed our intellectual horizons and almost every aspect of daily life beyond all recognition. Surely one aspect that must have remained exactly the same since Homer’s day, even since time immemorial, would be the rich colors of nature: the blue of sky and sea, the glowing red of dawn, the green of fresh leaves.\nGladstone says things are not the same, for many reasons. One, Homer uses the same word to denote colors which, according to us, are essentially different. For example, he describes as “violet” the sea, sheep, and iron. Two, Homer’s similes are so rich with sensible imagery, we expect to find color a frequent and prominent ingredient, and yet his poppies have never so much as a hint of scarlet. Three, Gladstone notes, Homer uses “black” about 170 times, “white” 100 times, “red” thirteen, “yellow” ten, “violet” six times, and the other colors even less often. Four, Homer’s color vocabulary is astonishingly small. There doesn’t seem to be anything equivalent to our orange or pink in Homer’s color palette; most striking is the lack of any word that could be taken to mean “blue.”\nWhat is more, Gladstone proves that the oddities in Homer’s Iliad and Odyssey could not have stemmed from any problems peculiar to Homer. “Violet-colored hair” was used by Pindar in his poems.\nGladstone is well aware of the utter weirdness of his thesis—nothing less than universal color blindness among the ancient Greeks—so he tries to make it more palatable by evoking an evolutionary explanation for how sensitivity to colors could have increased over the generations. The perception of color, he says, seems natural to us only because humankind as a whole has undergone a progressive “education of the eye” over the last millennia. The eye’s ability to perceive and appreciate differences in color, he suggests, can improve with practice, and these acquired improvements are then passed on to offspring.\nBut why, one may well ask, should this progressive refinement of color vision not have started much earlier than the Homeric period? Gladstone’s theory is that the appreciation of color as a property independent of a particular material develops only with the capacity to manipulate colors artificially. And that capacity, he notes, barely existed in Homer’s day: the art of dyeing was in its infancy, cultivation of flowers was not practiced, and almost all of the brightly colored objects we take for granted were entirely absent. Other than the ocean, people in Homer’s day may have gone through life without ever setting their eyes on a single blue object. Blue eyes, Gladstone explains, were in short supply; blue dyes, which are very difficult to manufacture, were practically unknown; and natural flowers that are truly blue are rare.\nGladstone’s analysis was brilliant, but completely off course. Indeed, philologists, anthropologists, and even natural scientists would need decades to free themselves from the error of underestimating the power of culture.\nAdapted from G. Deutscher, Through the language glass: why the world looks different in other languages. ©2010 Metropolitan Books.\n\nHomer’s sky is starry, or broad, or great, or iron, or violet; but it is never blue. How does this affect the opinions expressed in the passage?\nI. It supports Gladstone’s claim regarding Homer’s use of color.\nII. It extends Gladstone’s claim regarding Homer’s focus on nature.\nIII. It challenges Gladstone’s claim regarding Homer’s penchant for strange imagery.",
+        "options": [
+            "I only",
+            "II only",
+            "I and III only",
+            "II and III only"
+        ],
+        "answer_index": 0,
+        "explanation": "A never-blue sky supports Gladstone's claim that Homer's color vocabulary lacked 'blue' (I). It does not concern a 'focus on nature' (II), and the odd 'iron/violet' sky is consistent with, not a challenge to, strange imagery (III). So only I applies.",
+        "difficulty_b": 1.5
     }
 ]
