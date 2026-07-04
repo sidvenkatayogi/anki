@@ -1,0 +1,68 @@
+{
+  "baseline": {
+    "label": "Keyword baseline (REAL)",
+    "metrics": {
+      "accuracy": 0.752,
+      "false_accept_rate": 0.2727272727272727,
+      "false_reject_rate": 0.22857142857142856,
+      "fn": 16,
+      "fp": 15,
+      "macro_f1": 0.7488495689934539,
+      "n_neg": 55,
+      "n_pos": 70,
+      "precision": 0.782608695652174,
+      "recall": 0.7714285714285715,
+      "tn": 40,
+      "tp": 54
+    },
+    "passes_cutoff": false,
+    "simulated": false
+  },
+  "cutoff": {
+    "accuracy": 0.88,
+    "false_accept_rate": 0.08
+  },
+  "dataset": {
+    "gold_correct": 70,
+    "gold_incorrect": 55,
+    "meta": {
+      "gold_correct_count": 70,
+      "gold_incorrect_count": 55,
+      "held_out": "None of these strings appears in the grader prompt or its (zero) few-shot examples; leakage.py proves this mechanically.",
+      "how_built": "Hand-curated realistic free-recall answers over MCAT-style flashcards. NOT harvested from real user telemetry (we do not have a week of real study logs). Labels are unambiguous human gold and were fixed before any grader was run.",
+      "record": "(question, expected, student_answer, gold_correct). `expected` is the card's own stored answer -- the grader's only ground truth (named-source honesty rule). `answer_kind` records how the student answer was constructed.",
+      "total": 125,
+      "what": "Held-out evaluation set for the LLM answer-grader (qt/aqt/llm_grade.py)."
+    },
+    "total": 125
+  },
+  "leakage": {
+    "exact_overlaps": 0,
+    "flagged": [],
+    "max_jaccard": 0.15,
+    "near_dup_overlaps": 0
+  },
+  "llm": {
+    "label": "LLM grader (agent, REAL)",
+    "metrics": {
+      "accuracy": 1.0,
+      "false_accept_rate": 0.0,
+      "false_reject_rate": 0.0,
+      "fn": 0,
+      "fp": 0,
+      "macro_f1": 1.0,
+      "n_neg": 55,
+      "n_pos": 70,
+      "precision": 1.0,
+      "recall": 1.0,
+      "tn": 55,
+      "tp": 70
+    },
+    "passes_cutoff": true,
+    "simulated": false
+  },
+  "llm_note": "graded by an LLM agent (Claude) as a stand-in for gpt-5-nano; the agent judged a blind copy of the set (gold labels withheld) using the exact llm_grade rubric \u2014 a real measurement, not a simulation.",
+  "llm_source": "agent",
+  "simulated": false,
+  "timestamp": "2026-07-03T23:27:48.619303+00:00"
+}

@@ -200,6 +200,15 @@ sync-server-down:
 sync-server-dev:
     PYTHONPATH="pylib:qt:out/pylib:out/qt" SYNC_USER1="${SYNC_USER1:-mcat:mcat}" {{ uv }} run python -m aqt --syncserver
 
+# MCAT: AI answer-grader eval + leakage check (writes qt/tests/mcat_eval/results/*; set OPENAI_API_KEY for real LLM numbers)
+eval-ai:
+    PYTHONPATH="qt:out/pylib" {{ uv }} run python qt/tests/mcat_eval/run_eval.py
+
+# MCAT: Friday test suite — two-way sync (7b) + "AI off still scores" + eval self-tests (needs `just build`)
+test-mcat:
+    PYTHONPATH="out/pylib" {{ uv }} run python -m pytest pylib/tests/test_mcat_sync.py pylib/tests/test_mcat_ai_off.py -q
+    PYTHONPATH="qt:out/pylib" {{ uv }} run python -m pytest qt/tests/test_mcat_eval.py -q
+
 # Helpers to get the right commands for the platform
 
 ninja := if os() == "windows" { "tools\\ninja" } else { "./ninja" }
