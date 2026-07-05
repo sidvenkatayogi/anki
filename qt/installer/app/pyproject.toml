@@ -11,9 +11,9 @@ license-files = ["LICENSE"]
 author = "Damien Elmes"
 
 [tool.briefcase.app.anki]
-formal_name = "Anki"
-description = "An intelligent spaced-repetition learning system"
-long_description = """Anki is a flashcard program that helps you spend more time on challenging material, and less on what you already know."""
+formal_name = "Ankinetic"
+description = "An MCAT study app built on Anki's spaced-repetition engine"
+long_description = """Ankinetic is an MCAT study app built as a fork of Anki. It shares Anki's spaced-repetition engine and adds an honest memory-readiness dashboard, MCAT-tuned study flows, and an iOS companion."""
 sources = [
   "src/anki",
 ]

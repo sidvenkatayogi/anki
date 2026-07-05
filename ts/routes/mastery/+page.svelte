@@ -213,7 +213,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 <div class="con-root mastery-page">
     {#if data}
         <header class="masthead">
-            <span class="unit">MCAT&nbsp;SPEEDRUN</span>
+            <span class="unit">ANKINETIC</span>
             <span class="sep">/</span>
             <span class="screen">SCORES</span><span class="caret" aria-hidden="true"
             ></span>

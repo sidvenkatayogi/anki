@@ -16,7 +16,7 @@ companion — often the same collection synced across both.
 
 ## Product Purpose
 
-MCAT Speedrun is a spaced-repetition study app built as a fork of Anki, sharing
+Ankinetic is a spaced-repetition study app built as a fork of Anki, sharing
 Anki's Rust core across a desktop app and an iOS companion. Beyond the standard
 review loop, it adds a per-topic mastery query in the engine and an **honest
 memory-readiness dashboard**: three separate, ranged scores — **Memory**

@@ -1,6 +1,6 @@
 # Design
 
-The visual system for the MCAT Speedrun custom surfaces — **"Console"**: a
+The visual system for the Ankinetic custom surfaces — **"Console"**: a
 self-contained, near-black instrument panel with a single amber phosphor accent
 and monospaced readouts. It is defined once and shared by desktop web
 (`sass/mcat-tools.scss`) and iOS (`ios/AnkiMCAT/Sources/AnkiMCAT/App/Theme.swift`).

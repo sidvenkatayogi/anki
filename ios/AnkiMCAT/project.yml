@@ -45,12 +45,12 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: net.ankiweb.mcat.AnkiMCAT
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_UILaunchScreen_Generation: true
-        INFOPLIST_KEY_CFBundleDisplayName: Anki MCAT
+        INFOPLIST_KEY_CFBundleDisplayName: Ankinetic
         # Memory-palace AR capture uses the camera (ARKit world tracking).
-        INFOPLIST_KEY_NSCameraUsageDescription: "Anki MCAT uses the camera to capture the places you turn into memory palaces and to show your cards anchored in the room."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Ankinetic uses the camera to capture the places you turn into memory palaces and to show your cards anchored in the room."
         # Automatic grading listens to your spoken answer and transcribes it on-device.
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Anki MCAT uses the microphone so you can answer cards by speaking."
-        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Anki MCAT transcribes your spoken answer so it can be graded automatically."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ankinetic uses the microphone so you can answer cards by speaking."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Ankinetic transcribes your spoken answer so it can be graded automatically."
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         # The xcframework's module map lives in its Headers dir; expose it so

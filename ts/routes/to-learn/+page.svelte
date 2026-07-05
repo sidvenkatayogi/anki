@@ -25,7 +25,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 <div class="con-root to-learn-page">
     {#if data}
         <header class="masthead">
-            <span class="unit">MCAT&nbsp;SPEEDRUN</span>
+            <span class="unit">ANKINETIC</span>
             <span class="sep">/</span>
             <span class="screen">TO&nbsp;LEARN</span><span class="caret" aria-hidden="true"
             ></span>

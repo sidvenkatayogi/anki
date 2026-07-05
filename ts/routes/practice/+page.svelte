@@ -178,7 +178,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 <div class="con-root practice-page">
     <header class="masthead">
-        <span class="unit">MCAT&nbsp;SPEEDRUN</span>
+        <span class="unit">ANKINETIC</span>
         <span class="sep">/</span>
         <span class="screen">PRACTICE</span><span class="caret" aria-hidden="true"
         ></span>

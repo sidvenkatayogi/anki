@@ -152,7 +152,7 @@ def render_report(results: dict) -> str:
 
     out: list[str] = []
     out.append("=" * 64)
-    out.append(" MCAT Speedrun — AI answer-grader evaluation")
+    out.append(" Ankinetic — AI answer-grader evaluation")
     out.append("=" * 64)
     out.append(
         f"Dataset: {ds['total']} records  "
@@ -216,7 +216,7 @@ def render_markdown(results: dict) -> str:
     llm_m = results["llm"]["metrics"]
 
     lines: list[str] = []
-    lines.append("# MCAT Speedrun — AI answer-grader evaluation")
+    lines.append("# Ankinetic — AI answer-grader evaluation")
     lines.append("")
     lines.append(f"_Generated: {results['timestamp']}_")
     lines.append("")
