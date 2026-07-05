@@ -24,25 +24,98 @@ What runs today:
 - ✅ An **iOS companion** that builds and runs **on a physical iPhone** (and the simulator), loads the MCAT deck, runs a real review session **on the shared Rust engine** (via the C FFI), and shows the **same three scores** (Memory, Performance, Readiness) with ranges and give-up rules. It also has an **AR memory-palace** (method-of-loci) study mode — the study feature tested in the ablation below.
 - ✅ **Model evidence (Sunday)** — a memory **calibration** check (reliability diagram + Brier/log-loss), a **paraphrase test** measuring the memory→performance gap, and a three-build **study-feature ablation** (AR memory palace on / off / plain Anki). These use clearly-labeled **synthetic data** (per the assignment's synthetic-data allowance) and encode the real experimental design; run with `just eval-models`.
 
-## Install (macOS)
+## Install
 
-There's no signed release download yet, so you install from a DMG you build locally:
+There are no signed release downloads yet, so both apps are installed from a
+source build. All commands are run from the repo root unless noted, and every
+build recipe lives in the `justfile` (`just --list`).
+
+### Desktop (macOS)
+
+**Prerequisites:** Xcode Command Line Tools (`xcode-select --install`) and
+[`just`](https://github.com/casey/just) (`brew install just`). The rest of the
+toolchain (Rust, Python, Node) is downloaded automatically by the build system
+on first run.
+
+**Build and open the installer:**
 
 ```
 just installer          # builds -> out/installer/dist/anki-26.05-mac-apple.dmg
 open out/installer/dist/anki-26.05-mac-apple.dmg
 ```
 
-Then drag **Ankinetic.app** onto the **Applications** folder in the window that opens.
+Then drag **Ankinetic.app** onto the **Applications** folder in the window that
+opens. `just installer` runs a full wheels rebuild first, so the initial build
+takes a while (subsequent builds are incremental).
 
-The DMG is unsigned/unnotarized (no Apple certs), so macOS Gatekeeper will block the
-first launch. Clear it once with either:
+The DMG is an **arm64 (Apple Silicon)** build, unsigned/unnotarized (no Apple
+certs), so macOS Gatekeeper will block the first launch. Clear it once with
+either:
 
 - **Finder:** right-click **Ankinetic.app** → **Open** → **Open**, or
 - **Terminal:** `xattr -dr com.apple.quarantine "/Applications/Ankinetic.app"`
 
-After that it launches normally. `just installer` runs a full wheels rebuild first, so the
-initial build takes a while.
+After that it launches normally. To produce a signed build instead, set
+`SIGN_IDENTITY` (a Developer ID identity) before running `just installer`.
+
+The installer ships two profiles — a clean-slate default and a pre-seeded demo
+profile that populates the Memory/Performance/Readiness dashboard for a quick look.
+
+### iOS companion
+
+The iOS app (`ios/AnkiMCAT/`) is a SwiftUI app that links the same Rust core as
+the desktop through a C ABI, packaged as `out/ios/Anki.xcframework`.
+
+**Prerequisites:**
+
+- **Xcode** (full app, not just the CLT) with an iOS SDK.
+- **xcodegen** — `brew install xcodegen` (generates the `.xcodeproj` from `project.yml`).
+- **Rust iOS targets** — `rustup target add aarch64-apple-ios aarch64-apple-ios-sim`.
+
+**Step 1 — build the shared Rust framework.** This produces both the simulator
+and physical-device slices, so the same framework works everywhere:
+
+```
+./ios/build-xcframework.sh          # -> out/ios/Anki.xcframework
+```
+
+(Pass `SIM_ONLY=1 ./ios/build-xcframework.sh` for a faster simulator-only build.)
+
+**Step 2a — run on the simulator** (easiest; no Apple account needed). The AR
+memory-palace mode is stubbed here — ARKit world tracking only runs on real
+hardware:
+
+```
+cd ios/AnkiMCAT && ./build-sim.sh run   # generates the project, builds, boots a sim, installs & launches
+```
+
+**Step 2b — run on a physical iPhone** (needed to try the AR memory palace):
+
+```
+cd ios/AnkiMCAT && xcodegen generate    # creates AnkiMCAT.xcodeproj
+open AnkiMCAT.xcodeproj                  # then build/run from Xcode
+```
+
+In Xcode, select the **AnkiMCAT** target → **Signing & Capabilities**, pick your
+Apple **Team** (a free personal Apple ID works for on-device development), plug in
+the iPhone, choose it as the run destination, and press **Run**. On the device,
+approve the developer profile the first time under **Settings → General → VPN &
+Device Management**.
+
+### Two-way desktop ⇄ iOS sync (optional)
+
+Both apps embed the same engine and can sync the whole collection (cards, FSRS
+memory state, review log, notes, media) over Anki's native sync against a
+**self-hosted** sync server — no AnkiWeb account, all data stays local.
+
+```
+SYNC_USER1=me:secret just sync-server   # starts the server (Docker); see tools/syncserver/README.md
+```
+
+Then point each app at that server: on desktop via **Preferences → Syncing →
+self-hosted sync server**, and on iOS via the app's **Account** tab. See
+[`tools/syncserver/README.md`](./tools/syncserver/README.md) for the full desktop +
+iOS setup.
 
 ## Architecture — two apps, one engine
 
@@ -52,30 +125,28 @@ Both apps drive the same Anki Rust core (`rslib`); neither reimplements the sche
 - **Desktop** — Python/Qt in `qt/aqt/` embedding Svelte/TypeScript web views (`ts/`), talking to the engine through the PyO3 bridge (`pylib/rsbridge`).
 - **iOS companion** — SwiftUI in `ios/AnkiMCAT/`, calling the **same Rust core** through a thin C ABI (`rslib/ios/`, built as an `xcframework`) with swift-protobuf messages. No scheduler is rewritten in Swift.
 
-## Build & run
+## Build & run (development)
 
-Everything is wrapped in the project `justfile` (`just --list`). Do not call `./ninja`/`./run` directly.
+For installing the finished apps, see [Install](#install) above. This section is
+the day-to-day dev loop. Everything is wrapped in the project `justfile`
+(`just --list`); do not call `./ninja`/`./run` directly.
 
-**Desktop (development):**
-
-```
-just run                 # build pylib + qt and launch Anki
-```
-
-**Desktop installer (macOS):**
+**Desktop:**
 
 ```
-just installer           # -> out/installer/dist/anki-26.05-mac-apple.dmg
+just run                 # build pylib + qt and launch Anki against a dev profile
+just installer           # package the DMG -> out/installer/dist/anki-26.05-mac-apple.dmg
 ```
 
-The DMG is unsigned/unnotarized (no certs), so on first launch clear Gatekeeper with
-right-click → Open, or `xattr -dr com.apple.quarantine "/Applications/Ankinetic.app"`.
-
-**iOS companion (simulator):**
+**iOS companion:**
 
 ```
-cd ios/AnkiMCAT && ./build-sim.sh run     # requires xcodegen + an iOS simulator runtime
+./ios/build-xcframework.sh                # (re)build out/ios/Anki.xcframework
+cd ios/AnkiMCAT && ./build-sim.sh run     # build + launch on a booted simulator
 ```
+
+`build-sim.sh test` runs the live on-simulator XCUITest; for a physical device,
+open the generated `AnkiMCAT.xcodeproj` in Xcode (see [Install → iOS](#ios-companion)).
 
 **Tests for the engine change:**
 
