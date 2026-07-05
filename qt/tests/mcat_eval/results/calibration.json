@@ -1,0 +1,93 @@
+{
+  "base_rate": 0.7035,
+  "bins": [
+    {
+      "gap": 0.0,
+      "hi": 0.1,
+      "lo": 0.0,
+      "mean_predicted": 0.0,
+      "n": 0,
+      "observed_frequency": 0.0
+    },
+    {
+      "gap": -0.19513590932964417,
+      "hi": 0.2,
+      "lo": 0.1,
+      "mean_predicted": 0.13819742400368915,
+      "n": 3,
+      "observed_frequency": 0.3333333333333333
+    },
+    {
+      "gap": -0.09817399542290006,
+      "hi": 0.3,
+      "lo": 0.2,
+      "mean_predicted": 0.2654623682134636,
+      "n": 22,
+      "observed_frequency": 0.36363636363636365
+    },
+    {
+      "gap": -0.10019869459441888,
+      "hi": 0.4,
+      "lo": 0.3,
+      "mean_predicted": 0.3601187657230414,
+      "n": 63,
+      "observed_frequency": 0.4603174603174603
+    },
+    {
+      "gap": -0.032060305270758704,
+      "hi": 0.5,
+      "lo": 0.4,
+      "mean_predicted": 0.45745018423973083,
+      "n": 143,
+      "observed_frequency": 0.48951048951048953
+    },
+    {
+      "gap": -0.008650440670607495,
+      "hi": 0.6,
+      "lo": 0.5,
+      "mean_predicted": 0.5523251690854901,
+      "n": 246,
+      "observed_frequency": 0.5609756097560976
+    },
+    {
+      "gap": 0.01991193855784068,
+      "hi": 0.7,
+      "lo": 0.6,
+      "mean_predicted": 0.6503467211665364,
+      "n": 368,
+      "observed_frequency": 0.6304347826086957
+    },
+    {
+      "gap": 0.008412443647998535,
+      "hi": 0.8,
+      "lo": 0.7,
+      "mean_predicted": 0.7523418034713981,
+      "n": 453,
+      "observed_frequency": 0.7439293598233996
+    },
+    {
+      "gap": 0.038263091810468164,
+      "hi": 0.9,
+      "lo": 0.8,
+      "mean_predicted": 0.8473917225158624,
+      "n": 482,
+      "observed_frequency": 0.8091286307053942
+    },
+    {
+      "gap": 0.01955630418804888,
+      "hi": 1.0,
+      "lo": 0.9,
+      "mean_predicted": 0.9377381223698671,
+      "n": 220,
+      "observed_frequency": 0.9181818181818182
+    }
+  ],
+  "brier": 0.1910620123292573,
+  "brier_baseline_predict_base_rate": 0.20858775,
+  "brier_skill_score": 0.08402093445440928,
+  "expected_calibration_error": 0.02482700649063709,
+  "log_loss": 0.5657103856035365,
+  "n_reviews": 2000,
+  "synthetic": true,
+  "timestamp": "2026-07-05T19:54:44.639832+00:00"
+}

@@ -1,0 +1,197 @@
+{
+  "bridge_built": true,
+  "cards": [
+    {
+      "card": 1,
+      "flashcard_recall": 0.8432513715901409,
+      "gap": -0.15674862840985915,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 2,
+      "flashcard_recall": 0.6630929573405362,
+      "gap": 0.1630929573405362,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 3,
+      "flashcard_recall": 0.905776899937308,
+      "gap": 0.40577689993730803,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 4,
+      "flashcard_recall": 0.609976367799742,
+      "gap": -0.39002363220025804,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 5,
+      "flashcard_recall": 0.9445030019470116,
+      "gap": 0.44450300194701164,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 6,
+      "flashcard_recall": 0.8984058741146468,
+      "gap": -0.10159412588535321,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 7,
+      "flashcard_recall": 0.9283303867464062,
+      "gap": -0.07166961325359378,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 8,
+      "flashcard_recall": 0.6790840337066418,
+      "gap": 0.17908403370664183,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 9,
+      "flashcard_recall": 0.8099563238968618,
+      "gap": -0.19004367610313821,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 10,
+      "flashcard_recall": 0.5533671341846855,
+      "gap": 0.5533671341846855,
+      "reworded_accuracy": 0.0
+    },
+    {
+      "card": 11,
+      "flashcard_recall": 0.8886494736746048,
+      "gap": 0.8886494736746048,
+      "reworded_accuracy": 0.0
+    },
+    {
+      "card": 12,
+      "flashcard_recall": 0.7590798832406289,
+      "gap": -0.24092011675937108,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 13,
+      "flashcard_recall": 0.5100896992451173,
+      "gap": 0.010089699245117267,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 14,
+      "flashcard_recall": 0.6496377621085263,
+      "gap": 0.6496377621085263,
+      "reworded_accuracy": 0.0
+    },
+    {
+      "card": 15,
+      "flashcard_recall": 0.7683188656042729,
+      "gap": 0.26831886560427287,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 16,
+      "flashcard_recall": 0.7375887456377882,
+      "gap": 0.2375887456377882,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 17,
+      "flashcard_recall": 0.9251181681991185,
+      "gap": -0.07488183180088148,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 18,
+      "flashcard_recall": 0.6411626558082412,
+      "gap": 0.14116265580824117,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 19,
+      "flashcard_recall": 0.8447212155940789,
+      "gap": 0.34472121559407887,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 20,
+      "flashcard_recall": 0.690616218130306,
+      "gap": -0.30938378186969395,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 21,
+      "flashcard_recall": 0.9439374952771923,
+      "gap": 0.4439374952771923,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 22,
+      "flashcard_recall": 0.8311227012924476,
+      "gap": 0.3311227012924476,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 23,
+      "flashcard_recall": 0.7447525638064875,
+      "gap": 0.24475256380648747,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 24,
+      "flashcard_recall": 0.73503035766009,
+      "gap": 0.73503035766009,
+      "reworded_accuracy": 0.0
+    },
+    {
+      "card": 25,
+      "flashcard_recall": 0.642613406591265,
+      "gap": 0.14261340659126498,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 26,
+      "flashcard_recall": 0.7780005863446877,
+      "gap": -0.22199941365531228,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 27,
+      "flashcard_recall": 0.681691171955068,
+      "gap": 0.681691171955068,
+      "reworded_accuracy": 0.0
+    },
+    {
+      "card": 28,
+      "flashcard_recall": 0.38000263953112107,
+      "gap": -0.11999736046887893,
+      "reworded_accuracy": 0.5
+    },
+    {
+      "card": 29,
+      "flashcard_recall": 0.9032675241155458,
+      "gap": -0.09673247588445422,
+      "reworded_accuracy": 1.0
+    },
+    {
+      "card": 30,
+      "flashcard_recall": 0.9108754969582908,
+      "gap": -0.08912450304170916,
+      "reworded_accuracy": 1.0
+    }
+  ],
+  "correlation": 0.33547606492478327,
+  "gap_ci95": [
+    0.03939001428577417,
+    0.2807447178501498
+  ],
+  "mean_flashcard_recall": 0.7600673660679619,
+  "mean_gap": 0.16006736606796199,
+  "mean_reworded_accuracy": 0.6,
+  "n_cards": 30,
+  "questions_per_card": 2,
+  "synthetic": true,
+  "timestamp": "2026-07-05T19:55:37.110613+00:00"
+}

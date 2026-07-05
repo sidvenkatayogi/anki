@@ -1,0 +1,93 @@
+{
+  "conditions": {
+    "ablation": {
+      "cards_covered_in_window": 45,
+      "ci95": [
+        0.5751069921977319,
+        0.7282263411356016
+      ],
+      "fact_accuracy": 0.6468650793650794,
+      "label": "Ablation \u2014 palace OFF (same app, plain flashcards)",
+      "mean_accuracy": 0.6516666666666667,
+      "spatial_accuracy": 0.6609546009546009
+    },
+    "full": {
+      "cards_covered_in_window": 38,
+      "ci95": [
+        0.6796756937753595,
+        0.8203243062246405
+      ],
+      "fact_accuracy": 0.6734940984940985,
+      "label": "Full app \u2014 palace ON (method of loci)",
+      "mean_accuracy": 0.75,
+      "spatial_accuracy": 0.8167979242979243
+    },
+    "plain": {
+      "cards_covered_in_window": 46,
+      "ci95": [
+        0.5638842048829718,
+        0.7094491284503617
+      ],
+      "fact_accuracy": 0.6202645502645503,
+      "label": "Plain unmodified Anki (baseline)",
+      "mean_accuracy": 0.6366666666666667,
+      "spatial_accuracy": 0.6482065157065157
+    }
+  },
+  "contrasts": {
+    "ablation_minus_plain": {
+      "ci95": [
+        -0.03409003223025847,
+        0.06409003223025848
+      ],
+      "delta": 0.015000000000000006,
+      "what": "what the rest of our app adds over stock Anki"
+    },
+    "full_minus_ablation": {
+      "ci95": [
+        0.048499357633018034,
+        0.14816730903364866
+      ],
+      "delta": 0.09833333333333334,
+      "what": "the palace feature's own contribution (the ablation)"
+    },
+    "full_minus_ablation_fact_cards_only": {
+      "ci95": [
+        -0.05414708157179908,
+        0.10740511982983734
+      ],
+      "delta": 0.02662901912901913,
+      "what": "same feature, pure fact-recall cards \u2014 expected NULL"
+    },
+    "full_minus_plain": {
+      "ci95": [
+        0.05875238567993239,
+        0.16791428098673428
+      ],
+      "delta": 0.11333333333333334,
+      "what": "whole app vs the obvious alternative"
+    }
+  },
+  "hypothesis": "Studying a topic's cards through the AR memory palace (method of loci) will produce higher delayed recall on NEW, reworded questions \u2014 at equal study time \u2014 than studying the same cards as plain flashcards.",
+  "main_number": "Mean accuracy on a 48-hour-delayed test of reworded questions, on the studied topics. The decisive comparison is Full (palace ON) minus Ablation (palace OFF); plain Anki is the sanity floor.",
+  "protocol": {
+    "builds": [
+      "Full app \u2014 palace ON (method of loci)",
+      "Ablation \u2014 palace OFF (same app, plain flashcards)",
+      "Plain unmodified Anki (baseline)"
+    ],
+    "delayed_test_hours": 48,
+    "learners": 30,
+    "questions_per_topic": 20,
+    "same_learners_questions_time": true,
+    "seed": 20260705,
+    "study_minutes_each": 25,
+    "success_threshold_full_minus_ablation": 0.05
+  },
+  "synthetic": true,
+  "timestamp": "2026-07-05T19:55:01.344269+00:00",
+  "verdict": {
+    "feature_supported": true,
+    "rule": "Full - Ablation >= +0.05 AND its 95% CI excludes 0"
+  }
+}

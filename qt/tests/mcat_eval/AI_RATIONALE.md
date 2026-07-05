@@ -116,7 +116,7 @@ near-duplicate). Full numbers and method:
 | **AI card generation** | A wrong generated card is worse than no card, and the research warns that _"a wrong fact is worse than no card."_ Our deck is a fixed, curated, open-licensed set (MileDown); no model writes cards at runtime, so there is no generation surface to attack or hallucinate. |
 | **A chatbot / tutor** | Out of scope for an honest score tool, and it would create an unbounded, hard-to-evaluate AI surface. The rubric rewards *checked* AI, not chat. |
 | **Retrieval / RAG** | The grader needs exactly one fact — the card's own answer — which is already in the prompt. Adding retrieval would add a hallucination surface for zero benefit. |
-| **AI in the score models** | Memory (FSRS calibration), Performance (Rasch/1-PL), and Readiness (score mapping + range) are all computed from local review history and held-out questions — **no model in the loop** — so all three scores compute with AI switched off. |
+| **AI in the score models** | Memory (FSRS retrievability), Performance (Rasch/1-PL), and Readiness (score mapping + range) are all computed from local review history and held-out questions — **no LLM in the loop** — so all three scores compute with AI switched off. (Memory *calibration* — Brier/log-loss + reliability diagram — is demonstrated separately with clearly-labeled synthetic data in `calibration.py`; the shipping memory number itself is real FSRS.) |
 
 ## AI off
 

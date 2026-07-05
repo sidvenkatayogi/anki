@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" font-family="monospace" font-size="10">
+<rect width="320" height="320" fill="#0A0E13"/>
+<line x1="40" y1="280" x2="280" y2="280" stroke="#5F6C7B"/>
+<line x1="40" y1="40" x2="40" y2="280" stroke="#5F6C7B"/>
+<line x1="40" y1="280" x2="280" y2="40" stroke="#5F6C7B" stroke-dasharray="4 3"/>
+<polyline points="73.2,200.0 103.7,192.7 126.4,169.5 149.8,162.5 172.6,145.4 196.1,128.7 220.6,101.5 243.4,85.8 265.1,59.6" fill="none" stroke="#FFB020" stroke-width="2"/>
+<circle cx="73.2" cy="200.0" r="3" fill="#FFB020"/>
+<circle cx="103.7" cy="192.7" r="3" fill="#FFB020"/>
+<circle cx="126.4" cy="169.5" r="3" fill="#FFB020"/>
+<circle cx="149.8" cy="162.5" r="3" fill="#FFB020"/>
+<circle cx="172.6" cy="145.4" r="3" fill="#FFB020"/>
+<circle cx="196.1" cy="128.7" r="3" fill="#FFB020"/>
+<circle cx="220.6" cy="101.5" r="3" fill="#FFB020"/>
+<circle cx="243.4" cy="85.8" r="3" fill="#FFB020"/>
+<circle cx="265.1" cy="59.6" r="3" fill="#FFB020"/>
+<text x="160" y="308" fill="#94A2B2" text-anchor="middle">predicted recall</text>
+<text x="14" y="160" fill="#94A2B2" text-anchor="middle" transform="rotate(-90 14 160)">observed recall</text>
+<text x="44" y="32" fill="#DFE6EE">Memory calibration (synthetic)</text>
+</svg>

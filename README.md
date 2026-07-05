@@ -1,8 +1,8 @@
-# MCAT Speedrun — a study app built on Anki
+# Ankinetic — an MCAT study app built on Anki
 
 **Exam:** [MCAT](https://students-residents.aamc.org/about-mcat-exam/about-mcat-exam) — scored **472–528**, four sections each scored **118–132** (Chem/Phys, CARS, Bio/Biochem, Psych/Soc). A large fact base plus reading passages; the hard part is covering it all.
 
-**MCAT Speedrun** is a fork of [Anki](https://apps.ankiweb.net) with a **desktop app** and an **iOS companion** that share one engine — Anki's Rust core. It adds a real change inside that Rust engine (a per-topic mastery query), an **honest memory-readiness dashboard**, and MCAT-tuned study flows, on top of the MileDown MCAT deck.
+**Ankinetic** is a fork of [Anki](https://apps.ankiweb.net) with a **desktop app** and an **iOS companion** that share one engine — Anki's Rust core. It adds a real change inside that Rust engine (a per-topic mastery query), an **honest memory-readiness dashboard**, and MCAT-tuned study flows, on top of the MileDown MCAT deck.
 
 This is a fork of Anki and is distributed under **AGPL-3.0-or-later**, with credit to Anki and its contributors (see [Upstream Anki](#upstream-anki) and [LICENSE](./LICENSE)). Some parts of Anki are BSD-3-Clause.
 
@@ -20,7 +20,8 @@ What runs today:
 - ✅ **Two-way desktop⇄iOS sync** — both apps embed the same Rust core and sync the whole collection (cards, FSRS memory state, review log, notes, decks, media) over Anki's native sync against a self-hosted sync server (see [`tools/syncserver`](./tools/syncserver)). Offline review syncs when the connection returns.
 - ✅ An **optional AI answer-grader** (off by default) that judges typed (desktop) / voice-transcribed (iOS) free-text answers with an LLM and maps the verdict onto an FSRS rating. With AI switched off, review is 100% local and all three scores still compute.
 - ✅ A **macOS desktop installer** (Briefcase DMG) that ships two profiles — a clean-slate default and a pre-seeded demo profile.
-- ✅ An **iOS companion** that builds and runs on the simulator, loads the MCAT deck, runs a real review session **on the shared Rust engine** (via the C FFI), and shows the **same three scores** (Memory, Performance, Readiness) with ranges and give-up rules.
+- ✅ An **iOS companion** that builds and runs **on a physical iPhone** (and the simulator), loads the MCAT deck, runs a real review session **on the shared Rust engine** (via the C FFI), and shows the **same three scores** (Memory, Performance, Readiness) with ranges and give-up rules. It also has an **AR memory-palace** (method-of-loci) study mode — the study feature tested in the ablation below.
+- ✅ **Model evidence (Sunday)** — a memory **calibration** check (reliability diagram + Brier/log-loss), a **paraphrase test** measuring the memory→performance gap, and a three-build **study-feature ablation** (AR memory palace on / off / plain Anki). These use clearly-labeled **synthetic data** (per the assignment's synthetic-data allowance) and encode the real experimental design; run with `just eval-models`.
 
 ## Install (macOS)
 
@@ -31,13 +32,13 @@ just installer          # builds -> out/installer/dist/anki-26.05-mac-apple.dmg
 open out/installer/dist/anki-26.05-mac-apple.dmg
 ```
 
-Then drag **Anki.app** onto the **Applications** folder in the window that opens.
+Then drag **Ankinetic.app** onto the **Applications** folder in the window that opens.
 
 The DMG is unsigned/unnotarized (no Apple certs), so macOS Gatekeeper will block the
 first launch. Clear it once with either:
 
-- **Finder:** right-click **Anki.app** → **Open** → **Open**, or
-- **Terminal:** `xattr -dr com.apple.quarantine "/Applications/Anki.app"`
+- **Finder:** right-click **Ankinetic.app** → **Open** → **Open**, or
+- **Terminal:** `xattr -dr com.apple.quarantine "/Applications/Ankinetic.app"`
 
 After that it launches normally. `just installer` runs a full wheels rebuild first, so the
 initial build takes a while.
@@ -67,7 +68,7 @@ just installer           # -> out/installer/dist/anki-26.05-mac-apple.dmg
 ```
 
 The DMG is unsigned/unnotarized (no certs), so on first launch clear Gatekeeper with
-right-click → Open, or `xattr -dr com.apple.quarantine "/Applications/Anki.app"`.
+right-click → Open, or `xattr -dr com.apple.quarantine "/Applications/Ankinetic.app"`.
 
 **iOS companion (simulator):**
 
@@ -294,9 +295,18 @@ just eval-ai       # AI answer-grader eval + leakage check -> writes results/lat
 | Rust engine change | `cargo test -p anki tag_mastery` (23) · `cargo test -p anki never_learned` (18) | **REAL** | Mastery-query aggregation, honest-score fields, give-up boundary, read-only/undo/integrity; never-learned bulk op. |
 | Engine change from Python | `pylib/tests/test_tag_mastery.py` (3) · `pylib/tests/test_never_learned.py` (2) | **REAL** | The proto → Rust → Python path for both engine changes. |
 | Three scores math | `ts/routes/practice/mcatMetrics.test.ts` (`just test-ts`) | **REAL** | Performance (Rasch/1-PL) and Readiness (472–528 + range) compute from local history with the give-up rule — no AI. |
-| iOS parity + logic | `ios/AnkiMCAT/Tests/*/run.sh` — Practice (28), Parity (139), Palace (31 assertions) | **REAL** (host `swiftc`, no simulator) | The iOS three-scores math matches the desktop/TS implementation bit-for-bit. The full `AnkiMCATUITests` XCUITest needs a simulator app build (`ios/AnkiMCAT/build-sim.sh test`). |
+| Memory calibration (Step 1, Sunday) | `qt/tests/mcat_eval/calibration.py` (`just eval-calibration`) | **SYNTHETIC** (real math, generated inputs) | Reliability diagram + Brier (0.19) + log-loss + ECE on held-out reviews, and a Brier skill score vs the base-rate baseline. Encodes the calibration check; inputs are fixed-seed synthetic (loudly labeled). |
+| Paraphrase / memory→performance gap (7d) | `qt/tests/mcat_eval/paraphrase_gap.py` (`just eval-paraphrase`) | **SYNTHETIC** (real math, generated inputs) | 30 cards × 2 reworded questions: mean recall 0.76 vs reworded accuracy 0.60 → **+0.16 gap (CI excludes 0)**, showing Performance measures more than Memory. |
+| Study-feature ablation (section 8) | `qt/tests/mcat_eval/ablation_palace.py` (`just eval-ablation`) | **SYNTHETIC** (real design, generated outcomes) | AR memory palace vs palace-off vs plain Anki at equal time. Pre-stated hypothesis + main number; palace **+9.8% [4.8, 14.8]** over ablation, with honest nulls on fact-cards and app-vs-Anki. |
+| iOS parity + logic | `ios/AnkiMCAT/Tests/*/run.sh` — Practice (28), Parity (139), Palace (31 assertions) | **REAL** (host `swiftc`) | The iOS three-scores math matches the desktop/TS implementation bit-for-bit. The app itself was built and run on a **physical iPhone** (and the simulator via `ios/AnkiMCAT/build-sim.sh`), driving the shared Rust engine over the C FFI. |
 
-**Honesty note.** Every number above is a real, re-runnable measurement. The LLM-grader columns are
+**Honesty note.** Every number above is real and re-runnable **except the three rows explicitly marked
+SYNTHETIC** (memory calibration, the paraphrase gap, and the study-feature ablation). Those three are
+Sunday model-evidence deliverables for which we do not yet have a week of real learner telemetry; per the
+assignment's explicit synthetic-data allowance ("just show what results might look like") their *inputs*
+are generated from a fixed seed while the scoring math (Brier/log-loss/ECE, paired CIs, the ablation
+contrasts) is real. Each script prints a `*** SYNTHETIC / ILLUSTRATIVE ***` banner on stdout and into its
+`results/*.md`/`.json`, so a synthetic number is never dressed up as a measurement. The LLM-grader columns are
 real `gpt-5-nano`, produced by running `just eval-ai` with `OPENAI_API_KEY` set (each record graded over
 the network by the shipping `grade_answer`). On plain grading the hardened model scores 99.2% (near
 ceiling — the held-out labels are unambiguous by construction). The adversarial **injection** set was

@@ -204,6 +204,21 @@ sync-server-dev:
 eval-ai:
     PYTHONPATH="qt:out/pylib" {{ uv }} run python qt/tests/mcat_eval/run_eval.py
 
+# MCAT: study-feature ablation — AR memory palace vs palace-off vs plain Anki (SYNTHETIC; writes results/ablation_palace.*)
+eval-ablation:
+    {{ uv }} run python qt/tests/mcat_eval/ablation_palace.py
+
+# MCAT: memory-model calibration — reliability diagram + Brier/log-loss (SYNTHETIC; writes results/calibration.*)
+eval-calibration:
+    {{ uv }} run python qt/tests/mcat_eval/calibration.py
+
+# MCAT: paraphrase test — memory-vs-performance gap (SYNTHETIC; writes results/paraphrase_gap.*)
+eval-paraphrase:
+    {{ uv }} run python qt/tests/mcat_eval/paraphrase_gap.py
+
+# MCAT: run all three Sunday model evals (ablation + calibration + paraphrase gap)
+eval-models: eval-ablation eval-calibration eval-paraphrase
+
 # MCAT: Friday test suite — two-way sync (7b) + "AI off still scores" + eval self-tests (needs `just build`)
 test-mcat:
     PYTHONPATH="out/pylib" {{ uv }} run python -m pytest pylib/tests/test_mcat_sync.py pylib/tests/test_mcat_ai_off.py -q
