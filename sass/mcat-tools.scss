@@ -1,62 +1,329 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-// Shared design tokens for the MCAT "Read" and "Practice" tool tabs.
+// Shared design system for the MCAT Speedrun web surfaces (Scores/Mastery,
+// Practice, To Learn) — the "Console" look: a self-contained, near-black
+// instrument panel with a single amber phosphor accent and monospaced readouts.
 //
-// This file is the single source of truth for the accent colour and spacing
-// scale both tabs should use, so they stay visually cohesive even though
-// they are built by independent workers in parallel. It respects the same
-// theme variables (`--fg`, `--border`, etc.) that `mastery`/`to-learn` use,
-// so it looks correct in both light and dark mode.
+// WHY SELF-CONTAINED: these pages render *inside* Anki, which ships both a light
+// and a dark theme. A near-black console can't inherit `--fg` / `--canvas` or it
+// would look broken under Anki's light theme, so every page wraps its content in
+// `.con-root`, which lays down its own graphite ground and ink. The look is
+// therefore identical regardless of Anki's active theme.
 //
-// Chosen accent: a cool teal, distinct from Anki's own chrome but calm
-// enough for long study sessions. Document any change here so the sibling
-// Read-tab page (built in parallel, cannot see this file live) has a single
-// place to eyeball for consistency.
-$mcat-accent: #2f7a78;
-$mcat-accent-fg: #eafaf9; // text colour to use on top of a solid $mcat-accent fill
-$mcat-accent-soft: color-mix(in srgb, #{$mcat-accent} 12%, transparent);
-$mcat-accent-border: color-mix(in srgb, #{$mcat-accent} 45%, transparent);
+// HONESTY RULE (see README "The three scores"): the *memory-recall* visuals must
+// never imply a verdict — no red→green scale and NOT the amber accent either
+// (amber would read as "good/go"). Recall uses the neutral `$con-steel-*` tokens.
+// Semantic colour (green / red) is reserved for *real* correctness (a practice
+// answer being right or wrong). The amber accent is for interaction & wayfinding.
 
-// Spacing scale (rem-based, matches the ~1em/0.6em/0.35em rhythm already
-// used by mastery/to-learn's inline styles).
+// ── Palette ──────────────────────────────────────────────────────────────────
+// Cool graphite grounds — near-black with a faint blue cast so it reads as a
+// screen/instrument, not warm paper.
+$con-bg: #0a0e13; // page ground
+$con-panel: #10161d; // panel surface
+$con-panel-2: #161e27; // nested / raised surface
+$con-well: #0c1116; // inset wells (tracks, code-ish blocks)
+
+// Hairlines & ink.
+$con-line: rgba(148, 163, 184, 0.16);
+$con-line-strong: rgba(148, 163, 184, 0.3);
+$con-ink: #dfe6ee; // primary text
+$con-ink-dim: #94a2b2; // secondary text (AA on $con-panel)
+$con-ink-faint: #5f6c7b; // captions, leader dots, disabled
+
+// Amber phosphor — the single accent. Interaction, wayfinding, section markers.
+// NOT a verdict colour.
+$con-amber: #ffb020;
+$con-amber-bright: #ffc65c;
+$con-amber-dim: rgba(255, 176, 32, 0.14);
+$con-amber-line: rgba(255, 176, 32, 0.42);
+$con-amber-ink: #1a1206; // text on a solid amber fill
+
+// Semantic — REAL correctness only (never recall).
+$con-correct: #3fb950;
+$con-correct-dim: rgba(63, 185, 80, 0.14);
+$con-incorrect: #f85149;
+$con-incorrect-dim: rgba(248, 81, 73, 0.14);
+
+// Steel — honest neutral magnitude (recall). Monochrome; no judgement.
+$con-steel: #8b98a8;
+$con-steel-track: rgba(148, 163, 184, 0.14);
+
+// ── Type ─────────────────────────────────────────────────────────────────────
+// Mono carries all chrome, labels and data (the instrument voice). A humanist
+// sans carries long prose (question stems, CARS passages, explanations) so
+// reading stays comfortable — a legitimate mono↔sans contrast pairing.
+$con-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace,
+    "Menlo", "Consolas", monospace;
+$con-sans: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+
+// ── Spacing scale (rem) ──────────────────────────────────────────────────────
 $mcat-space-xs: 0.35rem;
 $mcat-space-sm: 0.6rem;
 $mcat-space-md: 1rem;
 $mcat-space-lg: 1.5rem;
 $mcat-space-xl: 2.25rem;
 
-// Card mixin: a bordered, rounded content block matching TitledContainer's
-// visual language but usable for smaller nested panels (e.g. per-category
-// rows, individual quiz options) that don't warrant a full TitledContainer.
-@mixin mcat-card {
-    background: var(--canvas-elevated, transparent);
-    border: 1px solid var(--border, #8884);
-    border-radius: var(--border-radius-medium, 10px);
+// ── Radii / motion ───────────────────────────────────────────────────────────
+// Small radii read mechanical/precise, in keeping with an instrument panel.
+$con-radius-sm: 5px;
+$con-radius: 8px;
+$con-radius-lg: 10px;
+$mcat-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+$mcat-dur: 180ms;
+
+// Semantic z-index scale.
+$z-sticky: 100;
+$z-tooltip: 600;
+
+// ── Root: the self-contained console ground ──────────────────────────────────
+// Each page's outermost wrapper includes this. It resets the type to mono and
+// paints the graphite ground + a faint amber scanline glow at the top so the
+// panel reads as "powered on".
+@mixin con-root {
+    color: $con-ink;
+    font-family: $con-mono;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    background:
+        radial-gradient(
+            140% 60% at 50% -10%,
+            rgba(255, 176, 32, 0.06),
+            transparent 60%
+        ),
+        $con-bg;
+    line-height: 1.5;
+}
+
+// ── Panel ────────────────────────────────────────────────────────────────────
+@mixin con-panel {
+    background: $con-panel;
+    border: 1px solid $con-line;
+    border-radius: $con-radius;
     padding: $mcat-space-md;
 }
 
-// Primary button mixin: solid accent fill, used for the main forward-moving
-// actions (Submit, Next, Retry, New passage).
-@mixin mcat-button-primary {
+// Interactive panel (options, tappable rows): border lifts to amber on hover.
+@mixin con-panel-interactive {
+    @include con-panel;
+    cursor: pointer;
+    transition:
+        border-color $mcat-dur $mcat-ease,
+        background $mcat-dur $mcat-ease,
+        transform 110ms $mcat-ease;
+
+    &:hover:not(:disabled) {
+        border-color: $con-amber-line;
+        background: $con-panel-2;
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(1px);
+    }
+}
+
+// ── Section header ───────────────────────────────────────────────────────────
+// A leading amber block glyph + a mono uppercase label + a hairline rule that
+// runs to the end of the row. Replaces the AI "eyebrow"; it reads as a labelled
+// channel on an instrument, not a marketing kicker.
+@mixin con-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    margin: 0 0 $mcat-space-md;
+    font-family: $con-mono;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $con-ink-dim;
+
+    // The channel marker.
+    &::before {
+        content: "";
+        flex: none;
+        width: 0.7em;
+        height: 0.7em;
+        background: $con-amber;
+        box-shadow: 0 0 10px rgba(255, 176, 32, 0.55);
+    }
+
+    // The rule that fills the remaining width.
+    &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: $con-line;
+    }
+}
+
+// ── Leader row (label ······· value) ─────────────────────────────────────────
+// The classic printed-index dotted leader; here it makes label→value scanning
+// unambiguous in a dense readout. Markup: <span class="k">…</span><span
+// class="d"></span><span class="v">…</span>.
+@mixin con-leader-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+    font-size: 0.9rem;
+
+    .k {
+        color: $con-ink-dim;
+        white-space: nowrap;
+    }
+
+    .d {
+        flex: 1;
+        transform: translateY(-0.25em);
+        border-bottom: 1px dotted $con-ink-faint;
+    }
+
+    .v {
+        color: $con-ink;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+}
+
+// ── Blocky magnitude bar ─────────────────────────────────────────────────────
+// A filled bar overlaid with a faint segment grid so it reads as discrete cells,
+// like a console meter. `--v` in [0,1]; consumers set `--bar-fill`.
+@mixin con-bar($height: 8px) {
+    position: relative;
+    height: $height;
+    border-radius: 2px;
+    background: $con-steel-track;
+    overflow: hidden;
+
+    .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: calc(var(--v, 0) * 100%);
+        background: var(--bar-fill, #{$con-steel});
+        transition: width 320ms $mcat-ease;
+    }
+
+    // Segment grid (drawn on top, non-interactive).
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            transparent calc(10% - 1px),
+            rgba(10, 14, 19, 0.55) calc(10% - 1px),
+            rgba(10, 14, 19, 0.55) 10%
+        );
+        pointer-events: none;
+    }
+}
+
+// ── Bracketed range scale ────────────────────────────────────────────────────
+// The signature honest device: a fixed axis [lo … hi] with the *likely range*
+// shown as a lit band and the point estimate as a bright marker. Consumers set
+// `--lo`, `--hi`, `--pt` (all 0..1) and `--scale-accent`.
+@mixin con-scale {
+    position: relative;
+    height: 26px;
+
+    .track {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 9px;
+        height: 8px;
+        border-radius: 2px;
+        background: $con-well;
+        border: 1px solid $con-line;
+    }
+
+    // The lit "likely" band.
+    .band {
+        position: absolute;
+        top: 9px;
+        height: 8px;
+        left: calc(var(--lo, 0) * 100%);
+        width: calc((var(--hi, 1) - var(--lo, 0)) * 100%);
+        border-radius: 2px;
+        background: color-mix(
+            in srgb,
+            var(--scale-accent, #{$con-steel}) 42%,
+            transparent
+        );
+    }
+
+    // The point-estimate marker.
+    .marker {
+        position: absolute;
+        top: 4px;
+        left: calc(var(--pt, 0.5) * 100%);
+        width: 2px;
+        height: 18px;
+        transform: translateX(-50%);
+        background: var(--scale-accent, #{$con-steel});
+        box-shadow: 0 0 8px color-mix(
+            in srgb,
+            var(--scale-accent, #{$con-steel}) 70%,
+            transparent
+        );
+    }
+}
+
+// ── Chip ─────────────────────────────────────────────────────────────────────
+// A bracketed mono tag: [ LABEL ]. Reads as a machine token, not a pill.
+@mixin con-chip($tint: $con-steel) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.2em 0.6em;
+    font-family: $con-mono;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $tint;
+    background: color-mix(in srgb, #{$tint} 12%, transparent);
+    border: 1px solid color-mix(in srgb, #{$tint} 40%, transparent);
+    border-radius: $con-radius-sm;
+    white-space: nowrap;
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+@mixin con-focus-ring {
+    &:focus-visible {
+        outline: 2px solid $con-amber;
+        outline-offset: 2px;
+    }
+}
+
+// Primary: solid amber (phosphor) fill with dark ink — the one lit control.
+@mixin con-button-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4em;
-    padding: 0.55em 1.1em;
-    font-size: 0.95em;
-    font-weight: 600;
-    color: $mcat-accent-fg;
-    background: $mcat-accent;
-    border: 1px solid $mcat-accent;
-    border-radius: 8px;
+    gap: 0.5em;
+    padding: 0.65em 1.15em;
+    font-family: $con-mono;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $con-amber-ink;
+    background: $con-amber;
+    border: 1px solid $con-amber;
+    border-radius: $con-radius-sm;
     cursor: pointer;
     transition:
-        opacity 150ms ease-out,
-        transform 100ms ease-out;
+        filter $mcat-dur $mcat-ease,
+        transform 100ms $mcat-ease,
+        box-shadow $mcat-dur $mcat-ease;
+    @include con-focus-ring;
 
     &:hover:not(:disabled) {
-        opacity: 0.92;
+        filter: brightness(1.08);
+        box-shadow: 0 0 18px rgba(255, 176, 32, 0.35);
     }
 
     &:active:not(:disabled) {
@@ -64,33 +331,90 @@ $mcat-space-xl: 2.25rem;
     }
 
     &:disabled {
-        opacity: 0.5;
+        color: $con-ink-faint;
+        background: transparent;
+        border-color: $con-line;
         cursor: default;
     }
 }
 
-// Secondary/outline button mixin: for less prominent actions (skip, cancel).
-@mixin mcat-button-secondary {
+// Secondary: ghost control — hairline border, ink text, amber border on hover.
+@mixin con-button-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4em;
-    padding: 0.55em 1.1em;
-    font-size: 0.95em;
+    gap: 0.5em;
+    padding: 0.65em 1.15em;
+    font-family: $con-mono;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: var(--fg, #000);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $con-ink;
     background: transparent;
-    border: 1px solid var(--border, #8884);
-    border-radius: 8px;
+    border: 1px solid $con-line-strong;
+    border-radius: $con-radius-sm;
     cursor: pointer;
-    transition: background 150ms ease-out;
+    transition:
+        border-color $mcat-dur $mcat-ease,
+        background $mcat-dur $mcat-ease;
+    @include con-focus-ring;
 
     &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--fg, #000) 5%, transparent);
+        border-color: $con-amber-line;
+        background: $con-panel-2;
     }
 
     &:disabled {
         opacity: 0.5;
         cursor: default;
+    }
+}
+
+// ── Blinking caret (small delight on active/live headers) ─────────────────────
+@mixin con-caret {
+    display: inline-block;
+    width: 0.55em;
+    height: 1em;
+    margin-left: 0.15em;
+    vertical-align: text-bottom;
+    background: $con-amber;
+    animation: con-blink 1.1s steps(1) infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        opacity: 0.9;
+    }
+}
+
+@keyframes con-blink {
+    0%,
+    50% {
+        opacity: 1;
+    }
+    50.01%,
+    100% {
+        opacity: 0;
+    }
+}
+
+// ── Panel entrance (enhances an already-visible default) ──────────────────────
+// The base state is fully visible; the entrance only runs when motion is
+// allowed, so headless renderers / hidden tabs always show content.
+@mixin con-enter {
+    @media (prefers-reduced-motion: no-preference) {
+        opacity: 0;
+        animation: con-enter 420ms $mcat-ease forwards;
+    }
+}
+
+@keyframes con-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
     }
 }

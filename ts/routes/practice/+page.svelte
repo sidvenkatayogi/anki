@@ -3,21 +3,10 @@ Copyright: Ankitects Pty Ltd and contributors
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 -->
 <script lang="ts">
-    import type { TagMasteryResponse } from "@generated/anki/stats_pb";
-    import { answerCard, getSchedulingStates, tagMastery } from "@generated/backend";
+    import { answerCard, getSchedulingStates } from "@generated/backend";
     import { CardAnswer_Rating } from "@generated/anki/scheduler_pb";
 
-    import TitledContainer from "$lib/components/TitledContainer.svelte";
-
-    import type {
-        Category,
-        FsrsCategorySummary,
-        FsrsSummary,
-        Performance,
-        PracticeHistoryItem,
-        Readiness,
-    } from "./mcatMetrics";
-    import { CATEGORIES, computePerformance, computeReadiness } from "./mcatMetrics";
+    import type { Category } from "./mcatMetrics";
 
     interface SeedQuestion {
         id: string;
@@ -41,12 +30,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         answered_at: number;
     }
 
-    // Same MileDown-taxonomy grouping as the Mastery page (depth-1 collapses
-    // everything into one root tag, so we use depth-2 and map the resulting
-    // "MileDown::<Section>" tags onto the 4 canonical categories below).
-    // See domains/frontend/plan.md's "Category -> tag mapping deviation" note.
-    const fsrsGroupDepth = 2;
-
     const categoryLabels: Record<Category, string> = {
         bio_biochem: "Bio/Biochem",
         chem_phys: "Chem/Phys",
@@ -64,9 +47,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     let submitting = false;
     let completedFullSet = false;
 
-    let performance: Performance | null = null;
-    let fsrsSummary: FsrsSummary | null = null;
-    let readiness: Readiness | null = null;
     // Set when the current question's answer couldn't be persisted to the
     // local history store (after a best-effort retry) -- see submitAnswer().
     // Informational only: the reveal/Next flow is never blocked on this.
@@ -88,7 +68,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             };
             history = historyJson.records ?? [];
             applyResumePosition();
-            recomputePerformance();
         } catch (e) {
             loadError = true;
             questions = null;
@@ -100,6 +79,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     // with no recorded answer. Only applied on initial load, so it doesn't
     // fight the user's own Next progression. Cross-device because the answers
     // sync via the review log even though the on-screen cursor doesn't.
+    // (Performance/Readiness now live on the Scores dashboard, which reads the
+    // same review log — so grading here still feeds those scores.)
     function applyResumePosition(): void {
         if (!questions || questions.length === 0) {
             return;
@@ -116,143 +97,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         }
     }
 
-    // Re-read the answer history from the collection's review log (called after
-    // grading a question) and recompute Performance.
-    async function loadHistory(): Promise<void> {
-        try {
-            const resp = await fetch("/_anki/practiceHistory");
-            if (!resp.ok) {
-                return;
-            }
-            const json = (await resp.json()) as { records: PracticeAnswer[] };
-            history = json.records ?? [];
-            recomputePerformance();
-        } catch (e) {
-            // Keep the prior history on a transient read failure.
-        }
-    }
-
-    function recomputePerformance(): void {
-        if (!history) {
-            return;
-        }
-        const items: PracticeHistoryItem[] = history.map((r) => ({
-            question_id: r.question_id,
-            category: r.category,
-            correct: r.correct,
-            difficulty_b: r.difficulty_b,
-        }));
-        performance = computePerformance(items);
-        recomputeReadiness();
-    }
-
-    function recomputeReadiness(): void {
-        if (!performance || !fsrsSummary) {
-            return;
-        }
-        readiness = computeReadiness(performance, fsrsSummary);
-    }
-
-    // Maps a MileDown::<Section> tag (or the "(untagged)" sentinel) to one of
-    // the 4 canonical categories via case-insensitive substring match. Order
-    // matters: bio_biochem is checked before chem_phys so "Biochemistry"
-    // (which contains "chem") is not misrouted. Unmatched tags (including
-    // "(untagged)") are skipped -- never folded into a real category.
-    function tagToCategory(tag: string): Category | null {
-        const t = tag.toLowerCase();
-        if (t.includes("biochem") || t.includes("biology") || t.includes("bio")) {
-            return "bio_biochem";
-        }
-        if (t.includes("chem") || t.includes("physics") || t.includes("phys")) {
-            return "chem_phys";
-        }
-        if (
-            t.includes("psych") ||
-            t.includes("behavior") ||
-            t.includes("social") ||
-            t.includes("soc")
-        ) {
-            return "psych_soc";
-        }
-        if (t.includes("cars") || t.includes("critical") || t.includes("reading")) {
-            return "cars";
-        }
-        return null;
-    }
-
-    function buildFsrsSummary(data: TagMasteryResponse): FsrsSummary {
-        const per_category: FsrsCategorySummary[] = CATEGORIES.map((category) => {
-            const matched = data.groups.filter(
-                (g) => tagToCategory(g.tag) === category,
-            );
-            const cardsWithState = matched.reduce(
-                (sum, g) => sum + g.cardsWithState,
-                0,
-            );
-            if (cardsWithState === 0) {
-                return {
-                    category,
-                    average_recall: 0,
-                    mastered_fraction: 0,
-                    enough_data: false,
-                    graded_reviews: 0,
-                };
-            }
-            const masteredCards = matched.reduce((sum, g) => sum + g.masteredCards, 0);
-            const gradedReviews = matched.reduce((sum, g) => sum + g.gradedReviews, 0);
-            const weightedRecall =
-                matched.reduce(
-                    (sum, g) => sum + g.averageRecall * g.cardsWithState,
-                    0,
-                ) / cardsWithState;
-            return {
-                category,
-                average_recall: weightedRecall,
-                mastered_fraction: masteredCards / cardsWithState,
-                enough_data: cardsWithState >= 20,
-                graded_reviews: gradedReviews,
-            };
-        });
-
-        return {
-            per_category,
-            // Reusing the backend's own weighted overall figure rather than
-            // recomputing (it already spans all groups, tagged or not).
-            overall_mean_recall: data.overallMeanRecall,
-        };
-    }
-
-    async function loadFsrsSummary(): Promise<void> {
-        try {
-            const data = await tagMastery({
-                groupDepth: fsrsGroupDepth,
-                masteredThreshold: 0,
-                // Exclude the MCAT practice/palace cards so they never perturb
-                // the Readiness figure (which reflects the study deck only).
-                search: "-tag:mcat_practice -tag:mcat_palace",
-            });
-            fsrsSummary = buildFsrsSummary(data);
-            recomputeReadiness();
-        } catch (e) {
-            // FSRS summary is an enhancement layer over the offline practice
-            // metrics; if it fails, per-category readiness just treats every
-            // category as fsrs-not-enough-data (still shows Performance).
-            fsrsSummary = {
-                per_category: CATEGORIES.map((category) => ({
-                    category,
-                    average_recall: 0,
-                    mastered_fraction: 0,
-                    enough_data: false,
-                    graded_reviews: 0,
-                })),
-                overall_mean_recall: 0,
-            };
-            recomputeReadiness();
-        }
-    }
-
     loadAll();
-    loadFsrsSummary();
 
     $: currentQuestion = questions ? questions[currentIndex] : null;
 
@@ -266,7 +111,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     // Record one answer as a review of the question's card (correct -> Good,
     // wrong -> Again) via the real scheduler, exactly as the memory-palace
     // page grades pinned cards. This writes a revlog entry that syncs with the
-    // rest of the collection. Returns false on any failure.
+    // rest of the collection (and feeds the Scores dashboard). Returns false
+    // on any failure.
     async function gradePracticeCard(
         cardId: number,
         correct: boolean,
@@ -305,10 +151,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
         const correct = selectedIndex === currentQuestion.answer_index;
         const graded = await gradePracticeCard(currentQuestion.card_id, correct);
-        if (graded) {
-            // Re-read history from the (updated) review log and recompute.
-            await loadHistory();
-        } else {
+        if (!graded) {
             // Never block the reveal/Next flow on this -- just make the
             // failure visible instead of silently dropping the answer.
             saveWarning = true;
@@ -331,32 +174,50 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             currentIndex = nextIndex;
         }
     }
-
-    function pct(n: number): string {
-        return `${Math.round(n * 100)}%`;
-    }
 </script>
 
-<div class="practice-page">
-    <TitledContainer title="Practice">
+<div class="con-root practice-page">
+    <header class="masthead">
+        <span class="unit">MCAT&nbsp;SPEEDRUN</span>
+        <span class="sep">/</span>
+        <span class="screen">PRACTICE</span><span class="caret" aria-hidden="true"
+        ></span>
+    </header>
+
+    <section class="panel">
         {#if loadError}
-            <div class="error-banner">
-                <span>Couldn't load practice questions or history.</span>
+            <div class="error-banner" role="alert">
+                <span>! Couldn't load practice questions or history.</span>
                 <button class="retry-button" on:click={loadAll}>Retry</button>
             </div>
         {:else if !questions || !currentQuestion}
-            <div class="empty">Loading...</div>
+            <div class="empty">Loading…</div>
         {:else}
+            <div class="quiz-head">
+                <span class="category-chip">
+                    {categoryLabels[currentQuestion.category]}
+                </span>
+                <span class="q-count">
+                    Q<b>{String(currentIndex + 1).padStart(2, "0")}</b>
+                    <span class="of">/ {String(questions.length).padStart(2, "0")}</span>
+                </span>
+            </div>
+            <div
+                class="q-progress"
+                style="--v: {(currentIndex + 1) / questions.length}"
+                aria-hidden="true"
+            >
+                <div class="fill"></div>
+            </div>
+
             {#if completedFullSet}
                 <div class="completed-note">
-                    You've completed the full question set — keep going for more
-                    practice!
+                    ✓ Full set complete — keep going for more practice.
                 </div>
             {/if}
-            <div class="question-meta">
-                Question {currentIndex + 1} of {questions.length}
-            </div>
+
             <div class="stem">{currentQuestion.stem}</div>
+
             <div class="options" role="radiogroup" aria-label="Answer options">
                 {#each currentQuestion.options as option, i (i)}
                     <button
@@ -372,7 +233,15 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                         disabled={submitted}
                         on:click={() => selectOption(i)}
                     >
-                        {option}
+                        <span class="marker" aria-hidden="true">
+                            {String.fromCharCode(65 + i)}
+                        </span>
+                        <span class="opt-text">{option}</span>
+                        {#if submitted && i === currentQuestion.answer_index}
+                            <span class="verdict" aria-hidden="true">✓</span>
+                        {:else if submitted && selectedIndex === i}
+                            <span class="verdict" aria-hidden="true">✕</span>
+                        {/if}
                     </button>
                 {/each}
             </div>
@@ -386,114 +255,82 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                     Submit
                 </button>
             {:else}
-                <div class="reveal">
-                    <div class="category-chip">
-                        {categoryLabels[currentQuestion.category]}
-                    </div>
+                <div
+                    class="reveal"
+                    class:is-correct={selectedIndex === currentQuestion.answer_index}
+                    class:is-incorrect={selectedIndex !== currentQuestion.answer_index}
+                >
                     <div class="result-label">
                         {selectedIndex === currentQuestion.answer_index
-                            ? "Correct!"
-                            : "Incorrect"}
+                            ? "› Correct"
+                            : "› Incorrect"}
                     </div>
                     <div class="explanation">{currentQuestion.explanation}</div>
                     {#if saveWarning}
                         <div class="save-warning" role="alert">
-                            Couldn't save this answer — your progress may not be
+                            ! Couldn't save this answer — your progress may not be
                             recorded.
                         </div>
                     {/if}
-                    <button class="next-button" on:click={nextQuestion}>Next</button>
+                    <button class="next-button" on:click={nextQuestion}>
+                        Next question
+                    </button>
                 </div>
             {/if}
         {/if}
-    </TitledContainer>
+    </section>
 
-    {#if performance}
-        <TitledContainer title="Performance">
-            {#if !performance.overall.enough_data}
-                <div class="not-enough-data">
-                    Not enough data yet — answer at least 5 questions to see your
-                    overall performance.
-                </div>
-            {:else}
-                <div class="overall-performance">
-                    <div class="point">{pct(performance.overall.p)}</div>
-                    <div class="range">
-                        Likely range: {pct(performance.overall.p_low)} – {pct(
-                            performance.overall.p_high,
-                        )}
-                    </div>
-                    <div class="caption">
-                        chance of getting a new question right (based on
-                        {performance.overall.n} answers)
-                    </div>
-                </div>
-            {/if}
-
-            <div class="category-grid">
-                {#each performance.per_category as cat (cat.category)}
-                    <div class="category-card">
-                        <div class="category-name">{categoryLabels[cat.category]}</div>
-                        {#if cat.enough_data}
-                            <div class="category-value">{pct(cat.p)}</div>
-                            <div class="category-range">
-                                {pct(cat.p_low)} – {pct(cat.p_high)}
-                            </div>
-                            <div class="category-caption">{cat.n} answers</div>
-                        {:else}
-                            <div class="category-value dash">Not enough data</div>
-                            <div class="category-caption">
-                                {cat.n} answer{cat.n === 1 ? "" : "s"}
-                            </div>
-                        {/if}
-                    </div>
-                {/each}
-            </div>
-        </TitledContainer>
-    {/if}
-
-    {#if readiness}
-        <TitledContainer title="Readiness">
-            {#if !readiness.enough_data || readiness.confidence === "low"}
-                <div class="not-enough-data">
-                    {readiness.enough_data
-                        ? "Keep answering questions and reviewing cards — there isn't enough confidence in a score estimate yet."
-                        : readiness.note}
-                </div>
-            {:else}
-                <div class="readiness-band">
-                    <div class="score-point">{readiness.score_point}</div>
-                    <div class="score-range">
-                        Likely range: {readiness.score_low} – {readiness.score_high}
-                    </div>
-                    <div class="confidence confidence-{readiness.confidence}">
-                        Confidence: {readiness.confidence}
-                    </div>
-                </div>
-            {/if}
-        </TitledContainer>
-    {/if}
+    <div class="scores-note">
+        <b>Performance</b>
+        and
+        <b>Readiness</b>
+        scores live on the Scores dashboard.
+    </div>
 </div>
 
 <style lang="scss">
     @use "../../../sass/mcat-tools.scss" as mcat;
 
     .practice-page {
-        max-width: 46em;
+        @include mcat.con-root;
+        max-width: 48em;
         margin: 0 auto;
-        padding: 1em;
+        min-height: 100%;
+        padding: clamp(0.9rem, 2.5vw, 1.6rem);
         display: flex;
         flex-direction: column;
-        gap: mcat.$mcat-space-lg;
-        font-variant-numeric: tabular-nums;
+        gap: mcat.$mcat-space-md;
     }
 
-    .empty,
-    .not-enough-data {
-        color: var(--fg-subtle, #666);
-        font-style: italic;
-        padding: 0.75em 0;
+    .masthead {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55em;
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        color: mcat.$con-ink-faint;
+
+        .unit {
+            color: mcat.$con-ink-dim;
+        }
+        .screen {
+            color: mcat.$con-amber;
+            font-weight: 700;
+        }
+        .caret {
+            @include mcat.con-caret;
+        }
+    }
+
+    .panel {
+        @include mcat.con-panel;
+        padding: clamp(1rem, 2.5vw, 1.5rem);
+    }
+
+    .empty {
+        color: mcat.$con-ink-dim;
         text-align: center;
+        padding: 1.5em 0;
     }
 
     .error-banner {
@@ -502,54 +339,86 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         justify-content: space-between;
         gap: mcat.$mcat-space-md;
         padding: mcat.$mcat-space-md;
-        border: 1px solid var(--border, #8884);
-        border-radius: 8px;
-        background: color-mix(in srgb, red 8%, transparent);
+        border: 1px solid color-mix(in srgb, #{mcat.$con-incorrect} 55%, transparent);
+        border-radius: mcat.$con-radius;
+        background: mcat.$con-incorrect-dim;
+        color: mcat.$con-incorrect;
+        font-weight: 600;
     }
 
     .retry-button {
-        @include mcat.mcat-button-secondary;
+        @include mcat.con-button-secondary;
     }
 
-    // Non-blocking, informational -- a warmer/less alarming tone than
-    // .error-banner (which blocks the whole page); this sits alongside a
-    // still-usable reveal, so it should read as a heads-up, not a failure.
+    // Non-blocking heads-up (sits alongside a still-usable reveal) — amber, not
+    // the alarming red of a blocking error.
     .save-warning {
         margin-top: mcat.$mcat-space-sm;
         padding: mcat.$mcat-space-sm mcat.$mcat-space-md;
-        border-radius: 8px;
-        background: color-mix(in srgb, orange 12%, transparent);
-        border: 1px solid color-mix(in srgb, orange 45%, transparent);
-        font-weight: 600;
-        text-align: center;
+        border-radius: mcat.$con-radius-sm;
+        background: mcat.$con-amber-dim;
+        border: 1px solid mcat.$con-amber-line;
+        color: mcat.$con-amber;
+        font-size: 0.85rem;
     }
 
     .completed-note {
         margin-bottom: mcat.$mcat-space-sm;
         padding: mcat.$mcat-space-sm mcat.$mcat-space-md;
-        border-radius: 8px;
-        background: mcat.$mcat-accent-soft;
-        border: 1px solid mcat.$mcat-accent-border;
-        font-weight: 600;
-        text-align: center;
+        border-radius: mcat.$con-radius-sm;
+        background: mcat.$con-correct-dim;
+        border: 1px solid color-mix(in srgb, #{mcat.$con-correct} 40%, transparent);
+        color: mcat.$con-correct;
+        font-size: 0.85rem;
     }
 
-    .question-meta {
-        color: var(--fg-subtle, #666);
-        font-size: 0.85em;
-        margin-bottom: mcat.$mcat-space-xs;
+    // ── Quiz header + progress ──────────────────────────────────────────
+    .quiz-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: mcat.$mcat-space-sm;
+        margin-bottom: mcat.$mcat-space-sm;
+    }
+
+    .category-chip {
+        @include mcat.con-chip(mcat.$con-amber);
+    }
+
+    .q-count {
+        color: mcat.$con-ink-dim;
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+
+        b {
+            color: mcat.$con-ink;
+            font-weight: 700;
+        }
+        .of {
+            color: mcat.$con-ink-faint;
+        }
+    }
+
+    .q-progress {
+        @include mcat.con-bar(6px);
+        --bar-fill: #{mcat.$con-amber};
+        margin-bottom: mcat.$mcat-space-md;
     }
 
     .stem {
-        font-size: 1.1em;
-        font-weight: 600;
+        font-family: mcat.$con-sans;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: mcat.$con-ink;
         margin-bottom: mcat.$mcat-space-md;
-        line-height: 1.4;
+        line-height: 1.5;
+        text-wrap: pretty;
         // CARS questions embed a multi-paragraph reading passage in the stem;
-        // preserve its line breaks (science stems are single-line, so this is a no-op for them).
+        // preserve its line breaks (science stems are single-line, a no-op there).
         white-space: pre-line;
     }
 
+    // ── Options ─────────────────────────────────────────────────────────
     .options {
         display: flex;
         flex-direction: column;
@@ -558,32 +427,83 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     }
 
     .option {
-        @include mcat.mcat-card;
+        @include mcat.con-panel-interactive;
+        display: flex;
+        align-items: center;
+        gap: 0.75em;
+        width: 100%;
         text-align: start;
-        cursor: pointer;
-        font: inherit;
-        color: var(--fg, #000);
-        transition:
-            border-color 150ms ease-out,
-            background 150ms ease-out;
+        font-family: mcat.$con-sans;
+        color: mcat.$con-ink;
+        padding: 0.7em 0.85em;
 
-        &:hover:not(:disabled) {
-            border-color: mcat.$mcat-accent-border;
+        .marker {
+            flex: none;
+            display: grid;
+            place-items: center;
+            width: 1.9em;
+            height: 1.9em;
+            border-radius: mcat.$con-radius-sm;
+            font-family: mcat.$con-mono;
+            font-size: 0.85em;
+            font-weight: 700;
+            background: mcat.$con-well;
+            border: 1px solid mcat.$con-line;
+            color: mcat.$con-ink-dim;
+            transition:
+                background mcat.$mcat-dur mcat.$mcat-ease,
+                color mcat.$mcat-dur mcat.$mcat-ease,
+                border-color mcat.$mcat-dur mcat.$mcat-ease;
+        }
+
+        .opt-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .verdict {
+            flex: none;
+            font-family: mcat.$con-mono;
+            font-weight: 700;
         }
 
         &.selected {
-            border-color: mcat.$mcat-accent;
-            background: mcat.$mcat-accent-soft;
+            border-color: mcat.$con-amber;
+            background: mcat.$con-amber-dim;
+
+            .marker {
+                background: mcat.$con-amber;
+                border-color: mcat.$con-amber;
+                color: mcat.$con-amber-ink;
+            }
         }
 
         &.correct {
-            border-color: #2e8b57;
-            background: color-mix(in srgb, #2e8b57 12%, transparent);
+            border-color: mcat.$con-correct;
+            background: mcat.$con-correct-dim;
+
+            .marker {
+                background: mcat.$con-correct;
+                border-color: mcat.$con-correct;
+                color: #06210d;
+            }
+            .verdict {
+                color: mcat.$con-correct;
+            }
         }
 
         &.incorrect {
-            border-color: #b23b3b;
-            background: color-mix(in srgb, #b23b3b 12%, transparent);
+            border-color: mcat.$con-incorrect;
+            background: mcat.$con-incorrect-dim;
+
+            .marker {
+                background: mcat.$con-incorrect;
+                border-color: mcat.$con-incorrect;
+                color: #2a0705;
+            }
+            .verdict {
+                color: mcat.$con-incorrect;
+            }
         }
 
         &:disabled {
@@ -591,124 +511,73 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         }
     }
 
-    .submit-button {
-        @include mcat.mcat-button-primary;
+    .submit-button,
+    .next-button {
+        @include mcat.con-button-primary;
+        width: 100%;
     }
 
+    // ── Reveal / explanation ────────────────────────────────────────────
+    // Full-border panel tinted by result — no side-stripe.
     .reveal {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: mcat.$mcat-space-sm;
-    }
+        padding: mcat.$mcat-space-md;
+        border-radius: mcat.$con-radius;
+        border: 1px solid mcat.$con-line;
 
-    .category-chip {
-        display: inline-block;
-        padding: 0.25em 0.7em;
-        border-radius: 999px;
-        background: mcat.$mcat-accent-soft;
-        border: 1px solid mcat.$mcat-accent-border;
-        font-size: 0.8em;
-        font-weight: 600;
+        &.is-correct {
+            background: mcat.$con-correct-dim;
+            border-color: color-mix(in srgb, #{mcat.$con-correct} 45%, transparent);
+        }
+        &.is-incorrect {
+            background: mcat.$con-incorrect-dim;
+            border-color: color-mix(in srgb, #{mcat.$con-incorrect} 45%, transparent);
+        }
     }
 
     .result-label {
         font-weight: 700;
-        font-size: 1.05em;
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+
+        .is-correct & {
+            color: mcat.$con-correct;
+        }
+        .is-incorrect & {
+            color: mcat.$con-incorrect;
+        }
     }
 
     .explanation {
-        color: var(--fg-subtle, #444);
-        line-height: 1.4;
+        font-family: mcat.$con-sans;
+        color: mcat.$con-ink;
+        line-height: 1.5;
+        text-wrap: pretty;
     }
 
     .next-button {
-        @include mcat.mcat-button-primary;
         margin-top: mcat.$mcat-space-xs;
     }
 
-    .overall-performance {
+    .scores-note {
         text-align: center;
-        padding: 0.25em 0 mcat.$mcat-space-md;
+        color: mcat.$con-ink-faint;
+        font-size: 0.82rem;
 
-        .point {
-            font-size: 2.6em;
-            font-weight: 700;
-            line-height: 1.1;
-            color: mcat.$mcat-accent;
-        }
-
-        .range {
-            color: var(--fg-subtle, #666);
-            font-size: 0.95em;
-        }
-
-        .caption {
-            color: var(--fg-subtle, #666);
-            font-size: 0.9em;
-        }
-    }
-
-    .category-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(9.5em, 1fr));
-        gap: mcat.$mcat-space-sm;
-    }
-
-    .category-card {
-        @include mcat.mcat-card;
-        text-align: center;
-
-        .category-name {
+        b {
+            color: mcat.$con-ink-dim;
             font-weight: 600;
-            font-size: 0.9em;
-            margin-bottom: 0.3em;
-        }
-
-        .category-value {
-            font-size: 1.4em;
-            font-weight: 700;
-
-            &.dash {
-                font-size: 0.9em;
-                font-weight: 500;
-                font-style: italic;
-                color: var(--fg-subtle, #999);
-            }
-        }
-
-        .category-range {
-            font-size: 0.8em;
-            color: var(--fg-subtle, #666);
-        }
-
-        .category-caption {
-            font-size: 0.8em;
-            color: var(--fg-subtle, #666);
         }
     }
 
-    .readiness-band {
-        text-align: center;
-        padding: 0.25em 0 0.5em;
-
-        .score-point {
-            font-size: 2.6em;
-            font-weight: 700;
-            line-height: 1.1;
-            color: mcat.$mcat-accent;
-        }
-
-        .score-range {
-            color: var(--fg-subtle, #666);
-            font-size: 0.95em;
-        }
-
-        .confidence {
-            margin-top: mcat.$mcat-space-xs;
-            font-size: 0.85em;
-            font-weight: 600;
-            text-transform: capitalize;
+    @media (prefers-reduced-motion: reduce) {
+        .q-progress .fill,
+        .option {
+            transition: none;
         }
     }
 </style>

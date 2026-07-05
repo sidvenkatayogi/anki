@@ -81,9 +81,15 @@ struct PalaceListView: View {
 
     private var emptyState: some View {
         VStack(spacing: 16) {
-            Image(systemName: "building.columns")
-                .font(.system(size: 56))
-                .foregroundStyle(.tint)
+            ZStack {
+                RoundedRectangle(cornerRadius: MCATTheme.cornerRadius, style: .continuous)
+                    .fill(MCATTheme.amber)
+                    .frame(width: 96, height: 96)
+                    .shadow(color: MCATTheme.amber.opacity(0.4), radius: 18, y: 6)
+                Image(systemName: "building.columns")
+                    .font(.system(size: 44, weight: .semibold))
+                    .foregroundStyle(MCATTheme.amberInk)
+            }
             Text("No palaces yet")
                 .font(.title2.bold())
             Text("Capture a place you know well — your desk, kitchen, a room — and fill its spots with MCAT cards. You'll remember them by where they live.")
@@ -368,10 +374,12 @@ private struct LocusRow: View {
     var body: some View {
         HStack(spacing: 10) {
             ZStack {
-                Circle()
-                    .fill(locus.learned ? Color.green : Color.accentColor)
+                RoundedRectangle(cornerRadius: MCATTheme.cornerRadiusSmall)
+                    .fill(locus.learned ? MCATTheme.correct : MCATTheme.amber)
                     .frame(width: 26, height: 26)
-                Text("\(number)").font(.caption2.bold()).foregroundStyle(.white)
+                Text("\(number)")
+                    .font(.mono(11, .bold))
+                    .foregroundStyle(locus.learned ? Color(hex: 0x06210D) : MCATTheme.amberInk)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(locus.label).lineLimit(2)

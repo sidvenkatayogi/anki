@@ -78,6 +78,12 @@ struct RootView: View {
     let settings: SettingsModel
 
     var body: some View {
+        // Five top-level tabs (iPhone shows at most five before collapsing the
+        // rest into a "More" list): Settings lives under Account as a gear so
+        // the primary study surfaces stay one tap away. The amber phosphor
+        // accent drives every system control (selection, buttons, toolbar
+        // items), and the whole app is pinned to the dark "Console" chrome so
+        // the graphite ground is consistent regardless of the device theme.
         TabView {
             ReviewView(model: review, settings: settings)
                 .tabItem { Label("Review", systemImage: "rectangle.on.rectangle") }
@@ -85,17 +91,16 @@ struct RootView: View {
             PalaceListView(model: palace)
                 .tabItem { Label("Palace", systemImage: "building.columns") }
 
-            MemoryView(model: memory)
-                .tabItem { Label("Memory", systemImage: "brain.head.profile") }
+            ScoresView(memory: memory, practice: practice)
+                .tabItem { Label("Scores", systemImage: "chart.bar.xaxis") }
 
             PracticeView(model: practice)
                 .tabItem { Label("Practice", systemImage: "pencil.and.list.clipboard") }
 
-            SyncView(model: sync)
+            SyncView(model: sync, settings: settings)
                 .tabItem { Label("Account", systemImage: "person.crop.circle") }
-
-            SettingsView(model: settings)
-                .tabItem { Label("Settings", systemImage: "gearshape") }
         }
+        .tint(MCATTheme.amber)
+        .preferredColorScheme(.dark)
     }
 }

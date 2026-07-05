@@ -1,10 +1,10 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 //
-// ReviewView — the single review screen. Renders the current card, a
-// Show Answer button, then Again/Hard/Good/Easy grading buttons that round-trip
-// through the shared Rust scheduler (C4). Kept intentionally plain — this is a
-// functional review loop, not a designed UI.
+// ReviewView — the single review screen. Renders the current card in an elevated
+// surface, a Show Answer button, then Again/Hard/Good/Easy grading buttons that
+// round-trip through the shared Rust scheduler (C4). Styled with the shared
+// "Clinical Aurora" theme (see Theme.swift) and tactile haptics.
 
 import SwiftUI
 
@@ -32,23 +32,34 @@ struct ReviewView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Anki MCAT")
+            .background(MCATScreenBackground())
+            .navigationTitle("Review")
         }
     }
 
     // MARK: - Phases
 
     private var launching: some View {
-        VStack(spacing: 16) {
-            ProgressView()
+        VStack(spacing: 18) {
+            ZStack {
+                RoundedRectangle(cornerRadius: MCATTheme.cornerRadius, style: .continuous)
+                    .fill(MCATTheme.amber)
+                    .frame(width: 84, height: 84)
+                    .shadow(color: MCATTheme.amber.opacity(0.4), radius: 18, y: 6)
+                Image(systemName: "waveform.path.ecg")
+                    .font(.system(size: 38, weight: .semibold))
+                    .foregroundStyle(MCATTheme.amberInk)
+            }
+            ProgressView().tint(MCATTheme.amber)
             Text(model.statusLine)
-                .foregroundStyle(.secondary)
+                .font(.mono(13))
+                .foregroundStyle(MCATTheme.inkDim)
         }
         .accessibilityElement(children: .combine)
     }
 
     private var reviewing: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 14) {
             queueBar
 
             CardWebView(
@@ -56,19 +67,27 @@ struct ReviewView: View {
                 css: model.cardCSS
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            Divider()
+            .background(MCATTheme.panel)
+            .clipShape(RoundedRectangle(cornerRadius: MCATTheme.cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: MCATTheme.cornerRadius, style: .continuous)
+                    .strokeBorder(MCATTheme.line, lineWidth: 1)
+            )
 
             controls
 
             didntLearnBar
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
         .confirmationDialog(
             "Mark this topic as not yet learned?",
             isPresented: $confirmDidntLearn,
             titleVisibility: .visible
         ) {
             Button("Move topic to To Learn", role: .destructive) {
+                Haptics.warning()
                 Task { await model.markDidntLearn() }
             }
             Button("Cancel", role: .cancel) {}
@@ -93,18 +112,21 @@ struct ReviewView: View {
                 confirmDidntLearn = true
             } label: {
                 Label("Didn't Learn", systemImage: "questionmark.circle")
+                    .font(.subheadline.weight(.medium))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 8)
             }
-            .buttonStyle(.bordered)
-            .tint(.secondary)
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .background(
+                Color.primary.opacity(0.05),
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
             .disabled(model.currentCard == nil)
-            .help("Mark this topic as not yet learned — suspends its cards and moves them to To Learn")
+            .opacity(model.currentCard == nil ? 0.4 : 1)
             .accessibilityLabel("Didn't learn this topic")
             .accessibilityHint("Suspends every card in this topic and moves them to the To Learn list")
         }
-        .padding(.horizontal)
-        .padding(.bottom, 8)
     }
 
     // MARK: - Controls (automatic vs manual grading)
@@ -129,14 +151,12 @@ struct ReviewView: View {
 
     private var showAnswerButton: some View {
         Button {
+            Haptics.tap()
             model.revealAnswer()
         } label: {
-            Text("Show Answer")
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+            Label("Show Answer", systemImage: "eye")
         }
-        .buttonStyle(.borderedProminent)
-        .padding()
+        .buttonStyle(MCATPrimaryButtonStyle())
         .accessibilityLabel("Show answer")
     }
 
@@ -150,7 +170,8 @@ struct ReviewView: View {
                     ProgressView()
                     Text("Grading…").foregroundStyle(.secondary)
                 }
-                .padding()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
             } else {
                 VStack(spacing: 8) {
                     if let message = model.autoGradeMessage {
@@ -162,7 +183,6 @@ struct ReviewView: View {
                     }
                     gradingButtons
                 }
-                .padding(.bottom, 4)
             }
         } else {
             voiceInput
@@ -178,7 +198,11 @@ struct ReviewView: View {
                 .foregroundStyle(model.voice.transcript.isEmpty ? .secondary : .primary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .padding(.horizontal)
+                .padding(12)
+                .background(
+                    Color.primary.opacity(0.04),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                )
 
             voiceStatus
 
@@ -189,10 +213,10 @@ struct ReviewView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-                .help("Speak \u{201C}didn't learn\u{201D} to mark this topic as not yet learned")
 
             HStack(spacing: 12) {
                 Button {
+                    Haptics.tap()
                     Task {
                         if model.voice.isRecording {
                             _ = model.voice.stop()
@@ -206,28 +230,37 @@ struct ReviewView: View {
                         systemImage: model.voice.isRecording
                             ? "stop.circle.fill" : "mic.circle.fill"
                     )
+                    .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 12)
+                    .foregroundStyle(model.voice.isRecording ? Color.red : MCATTheme.brand)
+                    .background(
+                        (model.voice.isRecording ? Color.red : MCATTheme.brand).opacity(0.14),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(
+                                (model.voice.isRecording ? Color.red : MCATTheme.brand).opacity(0.35),
+                                lineWidth: 1
+                            )
+                    )
                 }
-                .buttonStyle(.bordered)
-                .tint(model.voice.isRecording ? .red : .blue)
+                .buttonStyle(.plain)
                 .accessibilityLabel(model.voice.isRecording ? "Stop recording" : "Start recording")
 
                 Button {
                     Task { await model.submitVoiceAnswer() }
                 } label: {
                     Text("Submit")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(MCATPrimaryButtonStyle())
                 .disabled(
                     model.voice.transcript.trimmingCharacters(in: .whitespaces).isEmpty
                 )
                 .accessibilityLabel("Submit spoken answer")
             }
         }
-        .padding()
     }
 
     @ViewBuilder
@@ -246,14 +279,22 @@ struct ReviewView: View {
 
     private var finished: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(.green)
+            ZStack {
+                Circle()
+                    .fill(MCATTheme.correct.opacity(0.15))
+                    .frame(width: 96, height: 96)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(MCATTheme.correct)
+            }
             Text("All caught up")
-                .font(.title2)
+                .font(.title2.bold())
             Text("Imported \(model.importedNotes) note(s).")
                 .foregroundStyle(.secondary)
         }
+        .padding(24)
+        .mcatCard()
+        .padding(24)
         .accessibilityElement(children: .combine)
     }
 
@@ -270,18 +311,19 @@ struct ReviewView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }
+        .padding(24)
+        .mcatCard()
+        .padding(24)
     }
 
     // MARK: - Pieces
 
     private var queueBar: some View {
-        HStack(spacing: 20) {
-            countPill(model.newCount, color: .blue, label: "new")
-            countPill(model.learningCount, color: .red, label: "learning")
-            countPill(model.reviewCount, color: .green, label: "review")
+        HStack(spacing: 10) {
+            countPill(model.newCount, color: MCATTheme.amber, label: "New")
+            countPill(model.learningCount, color: MCATTheme.amberBright, label: "Learning")
+            countPill(model.reviewCount, color: MCATTheme.steel, label: "Review")
         }
-        .font(.subheadline.monospacedDigit())
-        .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             "\(model.newCount) new, \(model.learningCount) learning, \(model.reviewCount) review"
@@ -289,35 +331,58 @@ struct ReviewView: View {
     }
 
     private func countPill(_ value: UInt32, color: Color, label: String) -> some View {
-        Text("\(value)")
-            .foregroundStyle(color)
-            .accessibilityLabel("\(value) \(label)")
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text("\(value)")
+                .font(.subheadline.weight(.bold).monospacedDigit())
+                .foregroundStyle(color)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.12), in: Capsule())
     }
 
     private var gradingButtons: some View {
         HStack(spacing: 8) {
-            gradeButton("Again", .again, .red)
-            gradeButton("Hard", .hard, .orange)
-            gradeButton("Good", .good, .green)
-            gradeButton("Easy", .easy, .blue)
+            gradeButton("Again", .again, .red, "arrow.counterclockwise")
+            gradeButton("Hard", .hard, .orange, "tortoise.fill")
+            gradeButton("Good", .good, MCATTheme.correct, "checkmark")
+            gradeButton("Easy", .easy, MCATTheme.brandBright, "hare.fill")
         }
-        .padding()
     }
 
     private func gradeButton(
         _ title: String,
         _ rating: Anki_Scheduler_CardAnswer.Rating,
-        _ color: Color
+        _ color: Color,
+        _ icon: String
     ) -> some View {
         Button {
+            Haptics.tap()
             Task { await model.answer(rating) }
         } label: {
-            Text(title)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+            VStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.title3)
+                Text(title)
+                    .font(.caption.weight(.semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .foregroundStyle(color)
+            .background(
+                color.opacity(0.15),
+                in: RoundedRectangle(cornerRadius: 13, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .strokeBorder(color.opacity(0.4), lineWidth: 1)
+            )
         }
-        .buttonStyle(.bordered)
-        .tint(color)
+        .buttonStyle(.plain)
         .accessibilityLabel("Grade \(title)")
     }
 }

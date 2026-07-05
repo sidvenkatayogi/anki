@@ -29,23 +29,29 @@ struct CardWebView: UIViewRepresentable {
     /// Wrap the card HTML in a minimal document with the template CSS and a
     /// responsive viewport, mirroring how the reviewer hosts a card.
     private var document: String {
+        // Pin the card to dark (the app runs in the "Console" dark theme), and
+        // add Anki's `nightMode`/`night_mode` body classes so decks that ship
+        // night-mode styling (e.g. MileDown) render exactly as they do in the
+        // desktop reviewer. A light-ink default keeps plain cards legible on the
+        // dark console panel showing through the transparent web view.
         """
         <!DOCTYPE html>
-        <html>
+        <html class="night-mode">
         <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
         <style>
-        :root { color-scheme: light dark; }
+        :root { color-scheme: dark; }
         body {
             font-family: -apple-system, system-ui, sans-serif;
             font-size: 20px;
             text-align: center;
             margin: 16px;
+            color: #dfe6ee;
         }
         \(css)
         </style>
         </head>
-        <body class="card">
+        <body class="card nightMode night_mode">
         \(html)
         </body>
         </html>

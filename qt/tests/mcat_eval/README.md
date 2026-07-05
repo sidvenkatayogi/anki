@@ -7,7 +7,16 @@ the Friday requirements:
 - an eval that runs **before** the student sees anything (accuracy + wrong-answer rate
   on a **held-out** set, with a pre-registered cutoff),
 - a **side-by-side** showing the AI beats a simpler method (keyword overlap),
-- a **leakage check** proving no test item leaked into the grader's prompt/examples.
+- a **leakage check** proving no test item leaked into the grader's prompt/examples,
+- a **prompt-injection resistance** eval (rubric section 10).
+
+## Standalone evidence artifacts (start here)
+
+| Artifact | What it is |
+| --- | --- |
+| [`AI_RATIONALE.md`](./AI_RATIONALE.md) | What AI we built, **why** (grounded in `brainlifts/1.md`), and what we skipped. |
+| [`BASELINE_COMPARISON.md`](./BASELINE_COMPARISON.md) | The AI-vs-simpler-method side-by-side, with numbers, for both grading accuracy and injection resistance. |
+| [`results/latest.md`](./results/latest.md) · [`results/injection.md`](./results/injection.md) | Machine-regenerated outputs of `just eval-ai`. |
 
 ## One command
 
@@ -64,4 +73,7 @@ light stemming).
 | `llm_driver.py` | real w/ key, else **labeled simulation** | drives `llm_grade.grade_answer` |
 | `metrics.py` | **real** | accuracy / false-accept / false-reject / macro-F1 |
 | `leakage.py` | **real** (local) | exact + near-duplicate leakage scan (challenge 7e) |
-| `run_eval.py` | — | one-command entrypoint; writes `results/` |
+| `injection_set.json` | data (real, authored) | 26-record adversarial prompt-injection set (20 attacks) |
+| `injection_eval.py` | real w/ key or agent verdicts, else **labeled simulation** | injection-success rate + accuracy vs a pre-registered cutoff |
+| `injection_agent_verdicts.json` | **real** (blind agent stand-in) | LLM verdicts on the blind injection set |
+| `run_eval.py` | — | one-command entrypoint; runs both evals, writes `results/` |

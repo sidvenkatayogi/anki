@@ -374,7 +374,7 @@ class Toolbar:
             ),
             self.create_link(
                 "mastery",
-                tr.statistics_mastery_title(),
+                tr.statistics_scores_title(),
                 self._masteryLinkHandler,
                 id="mastery",
             ),

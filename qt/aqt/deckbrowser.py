@@ -214,12 +214,17 @@ class DeckBrowser:
         return best_id
 
     def _start_flashcards_button(self) -> str:
+        # MCAT Speedrun brand CTA — solid amber phosphor fill with dark ink,
+        # matching the "Console" look shared by the web dashboards and iOS app.
         return (
             '<div style="text-align:center; margin:0.7em 0 1.1em;">'
             "<button onclick=\"pycmd('startflashcards'); return false;\" "
-            'style="font-size:15px; font-weight:600; padding:10px 24px; '
-            "border-radius:8px; cursor:pointer; border:1px solid var(--border,#8884); "
-            'background:var(--canvas-elevated,#eee); color:var(--fg,#000);">'
+            'style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace; '
+            "font-size:14px; font-weight:700; letter-spacing:0.04em; "
+            "text-transform:uppercase; padding:11px 26px; "
+            "border-radius:6px; cursor:pointer; border:none; color:#1a1206; "
+            "background:#ffb020; "
+            'box-shadow:0 0 20px -2px rgba(255,176,32,0.45);">'
             f"{tr.studying_start_flashcards()}</button></div>"
         )
 

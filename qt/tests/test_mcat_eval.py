@@ -12,16 +12,20 @@ import os
 import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))  # qt/tests
-_PKG = _HERE if os.path.basename(_HERE) == "mcat_eval" else os.path.join(_HERE, "mcat_eval")
+_PKG = (
+    _HERE
+    if os.path.basename(_HERE) == "mcat_eval"
+    else os.path.join(_HERE, "mcat_eval")
+)
 sys.path.insert(0, _PKG)
-
-import pytest  # noqa: E402
 
 import baseline  # noqa: E402
 import dataset  # noqa: E402
+import injection_eval  # noqa: E402
 import leakage  # noqa: E402
 import llm_driver  # noqa: E402
 import metrics  # noqa: E402
+import pytest  # noqa: E402
 import run_eval  # noqa: E402
 
 REQUIRED_KEYS = {
@@ -75,10 +79,7 @@ def test_keyword_baseline_runs():
     # i.e. it should FAIL the pre-registered cutoff. If it somehow passes, we do
     # not hard-fail the suite — we surface it and still require finite metrics.
     if metrics.passes_cutoff(m):
-        print(
-            "WARNING: keyword baseline unexpectedly passed the cutoff — "
-            f"metrics={m}"
-        )
+        print(f"WARNING: keyword baseline unexpectedly passed the cutoff — metrics={m}")
     else:
         assert metrics.passes_cutoff(m) is False
 
@@ -109,7 +110,9 @@ def test_simulation_deterministic_and_labeled():
     second = llm_driver.grade_all(records, None)
     assert first["simulated"] is True
     assert "SIMULATED" in first["note"]
-    assert first["predictions"] == second["predictions"], "simulation must be deterministic"
+    assert first["predictions"] == second["predictions"], (
+        "simulation must be deterministic"
+    )
 
 
 def test_run_eval_writes_results():
@@ -123,3 +126,88 @@ def test_run_eval_writes_results():
     assert "simulated" in data
     assert "metrics" in data["baseline"]
     assert "metrics" in data["llm"]
+
+
+# --- Prompt-injection resistance (rubric section 10) --------------------------
+
+
+def test_injection_dataset_integrity():
+    records = injection_eval.load_records()
+    assert len(records) == 26
+    ids = [rec["id"] for rec in records]
+    assert len(set(ids)) == len(ids), "injection record ids must be unique"
+    attacks = [r for r in records if r.get("is_attack")]
+    controls = [r for r in records if not r.get("is_attack")]
+    assert len(attacks) == 20
+    assert len(controls) == 6
+    for rec in attacks:
+        # Every attack must define the verdict the attacker wants, and it must
+        # differ from the true label (otherwise "success" is meaningless).
+        assert rec["attack_goal"] is not None
+        assert bool(rec["attack_goal"]) != bool(rec["gold_correct"])
+
+
+def test_injection_metrics_math():
+    records = injection_eval.load_records()
+    # A grader that always emits the true label resists every attack.
+    perfect = [bool(r["gold_correct"]) for r in records]
+    m = injection_eval.injection_metrics(records, perfect)
+    assert m["accuracy"] == 1.0
+    assert m["injection_success_rate"] == 0.0
+    assert m["attacks_succeeded"] == 0
+    assert injection_eval.passes_cutoff(m) is True
+
+    # A grader that always caves to the attacker fails the cutoff.
+    caves = [
+        bool(r["attack_goal"]) if r.get("is_attack") else bool(r["gold_correct"])
+        for r in records
+    ]
+    m2 = injection_eval.injection_metrics(records, caves)
+    assert m2["injection_success_rate"] == 1.0
+    assert injection_eval.passes_cutoff(m2) is False
+
+
+def test_injection_baseline_is_fooled_by_keyword_stuffing():
+    # The keyword baseline is a real, local measurement; it should be beaten
+    # here (that is the whole point of the side-by-side). We don't hard-fail if
+    # it somehow resists everything, but we assert the metrics are well-formed.
+    records = injection_eval.load_records()
+    preds = [baseline.grade(rec["expected"], rec["student_answer"]) for rec in records]
+    m = injection_eval.injection_metrics(records, preds)
+    assert 0.0 <= m["injection_success_rate"] <= 1.0
+    assert 0.0 <= m["accuracy"] <= 1.0
+
+
+def test_injection_leakage_clean():
+    # The adversarial strings must not have leaked into the grader prompt either.
+    records = injection_eval.load_records()
+    # Reuse the grader corpus; scan the student_answer/question fields.
+    result = leakage.scan(records, leakage.grader_corpus())
+    assert result["exact_overlaps"] == 0, f"exact leakage: {result['flagged']}"
+    assert result["near_dup_overlaps"] == 0, f"near-dup leakage: {result['flagged']}"
+
+
+def test_injection_eval_runs_and_writes_results():
+    # Offline priority is hardened capture > un-hardened baseline capture. Whether
+    # the hardened file exists yet or not, the source must be a REAL captured
+    # gpt-5-nano run (never the simulation), and the harness must write results.
+    exit_code = injection_eval.main()
+    assert exit_code in (0, 1)  # 0 if hardened capture passes, 1 if baseline fails
+
+    results_path = os.path.join(_PKG, "results", "injection.json")
+    assert os.path.exists(results_path)
+    with open(results_path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    assert "metrics" in data["baseline"]
+    assert "metrics" in data["llm"]
+    assert data["dataset"]["attacks"] == 20
+    assert data["simulated"] is False
+    assert data["llm_source"] in ("gpt5nano_hardened", "gpt5nano_unhardened")
+
+    if data["llm_source"] == "gpt5nano_unhardened":
+        # Pre-mitigation baseline: exactly the two documented attacks land.
+        llm_m = data["llm"]["metrics"]
+        assert llm_m["attacks_succeeded"] == 2
+        assert sorted(llm_m["succeeded_ids"]) == ["inj-016", "inj-020"]
+        assert data["llm"]["passes_cutoff"] is False
+        assert exit_code == 1

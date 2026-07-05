@@ -7,8 +7,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     import { neverLearnedList } from "@generated/backend";
     import * as tr from "@generated/ftl";
 
-    import TitledContainer from "$lib/components/TitledContainer.svelte";
-
     // Group by AAMC section. MileDown is single-rooted under "MileDown::", so
     // the sections live at depth 2 (MileDown::Behavioral, MileDown::Biochemistry,
     // ...); depth 1 would collapse everything into one "MileDown" topic.
@@ -24,75 +22,144 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     load();
 </script>
 
-<div class="to-learn-page">
+<div class="con-root to-learn-page">
     {#if data}
-        <TitledContainer title={tr.statisticsToLearnTitle()}>
-            {#if data.groups.length === 0}
-                <div class="groups empty">{tr.statisticsToLearnEmpty()}</div>
-            {:else}
+        <header class="masthead">
+            <span class="unit">MCAT&nbsp;SPEEDRUN</span>
+            <span class="sep">/</span>
+            <span class="screen">TO&nbsp;LEARN</span><span class="caret" aria-hidden="true"
+            ></span>
+        </header>
+
+        {#if data.groups.length === 0}
+            <section class="panel">
+                <p class="empty">{tr.statisticsToLearnEmpty()}</p>
+            </section>
+        {:else}
+            <div class="group-stack">
                 {#each data.groups as group (group.tag)}
-                    <div class="group">
-                        <h2 class="group-title">
-                            {group.tag}
-                            <span class="count">
-                                {tr.statisticsToLearnCount({
-                                    count: group.cards.length,
-                                })}
+                    <section class="panel group enter">
+                        <header class="group-head">
+                            <h2 class="group-title">{group.tag}</h2>
+                            <span class="count-chip">
+                                {group.cards.length} cards
                             </span>
-                        </h2>
+                        </header>
                         <ul class="card-list">
                             {#each group.cards as card (card.cardId)}
                                 <li>{card.label}</li>
                             {/each}
                         </ul>
-                    </div>
+                    </section>
                 {/each}
-            {/if}
-        </TitledContainer>
+            </div>
+        {/if}
     {/if}
 </div>
 
 <style lang="scss">
+    @use "../../../sass/mcat-tools.scss" as mcat;
+
     .to-learn-page {
-        max-width: 60em;
+        @include mcat.con-root;
+        max-width: 62em;
         margin: 0 auto;
-        padding: 1em;
-        // Line up digits in card labels so any numbers scan cleanly.
-        font-variant-numeric: tabular-nums;
+        min-height: 100%;
+        padding: clamp(0.9rem, 2.5vw, 1.6rem);
+        display: flex;
+        flex-direction: column;
+        gap: mcat.$mcat-space-md;
     }
 
-    .groups.empty {
-        color: var(--fg-subtle, #666);
-        font-style: italic;
-        padding: 0.75em 0;
-        text-align: center;
-    }
+    .masthead {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55em;
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        color: mcat.$con-ink-faint;
 
-    .group {
-        & + .group {
-            margin-top: 1.1em;
-            padding-top: 0.85em;
-            border-top: 1px solid var(--border, #8884);
+        .unit {
+            color: mcat.$con-ink-dim;
         }
+        .screen {
+            color: mcat.$con-amber;
+            font-weight: 700;
+        }
+        .caret {
+            @include mcat.con-caret;
+        }
+    }
+
+    .panel {
+        @include mcat.con-panel;
+        padding: clamp(0.9rem, 2.2vw, 1.35rem);
+    }
+
+    .enter {
+        @include mcat.con-enter;
+    }
+
+    .empty {
+        color: mcat.$con-ink-dim;
+        font-family: mcat.$con-sans;
+        text-align: center;
+        margin: 0.5em 0;
+    }
+
+    .group-stack {
+        display: flex;
+        flex-direction: column;
+        gap: mcat.$mcat-space-md;
+    }
+
+    .group-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: mcat.$mcat-space-sm;
+        margin-bottom: mcat.$mcat-space-sm;
+        padding-bottom: mcat.$mcat-space-sm;
+        border-bottom: 1px solid mcat.$con-line;
     }
 
     .group-title {
-        font-size: 1.05em;
-        font-weight: 600;
-        margin: 0 0 0.35em;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        margin: 0;
+        color: mcat.$con-ink;
+    }
 
-        .count {
-            font-weight: 400;
-            color: var(--fg-subtle, #666);
-        }
+    .count-chip {
+        @include mcat.con-chip(mcat.$con-amber);
     }
 
     .card-list {
+        list-style: none;
         margin: 0;
-        padding-inline-start: 1.4em;
+        padding: 0;
+        font-family: mcat.$con-sans;
 
         li {
-            padding: 2px 0;
+            position: relative;
+            padding: 0.45em 0 0.45em 1.3em;
+            line-height: 1.4;
+            color: mcat.$con-ink;
+
+            // A mono "prompt" marker instead of a bullet.
+            &::before {
+                content: "›";
+                position: absolute;
+                left: 0.1em;
+                top: 0.42em;
+                font-family: mcat.$con-mono;
+                color: mcat.$con-amber;
+            }
+
+            & + li {
+                border-top: 1px solid mcat.$con-line;
+            }
         }
     }
 </style>

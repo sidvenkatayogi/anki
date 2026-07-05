@@ -28,6 +28,7 @@ import json  # noqa: E402
 
 import baseline  # noqa: E402
 import dataset  # noqa: E402
+import injection_eval  # noqa: E402
 import leakage  # noqa: E402
 import llm_driver  # noqa: E402
 import metrics  # noqa: E402
@@ -301,8 +302,16 @@ def main() -> int:
 
     Leakage is a hard gate: a held-out item leaking into the grader prompt
     invalidates the whole evaluation, so that (and only that) fails the command.
+    The prompt-injection eval is run and printed too (challenge: section 10),
+    but it does not gate this command — it has its own entrypoint/exit code.
     """
     results = run()
+
+    # Also run the prompt-injection resistance eval so `just eval-ai` surfaces
+    # it in one place (writes results/injection.{md,json}).
+    print()
+    injection_eval.run()
+
     leak = results["leakage"]
     if leak["exact_overlaps"] > 0 or leak["near_dup_overlaps"] > 0:
         return 1

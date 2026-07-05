@@ -200,7 +200,7 @@ sync-server-down:
 sync-server-dev:
     PYTHONPATH="pylib:qt:out/pylib:out/qt" SYNC_USER1="${SYNC_USER1:-mcat:mcat}" {{ uv }} run python -m aqt --syncserver
 
-# MCAT: AI answer-grader eval + leakage check (writes qt/tests/mcat_eval/results/*; set OPENAI_API_KEY for real LLM numbers)
+# MCAT: AI answer-grader eval + baseline + leakage + prompt-injection check (writes qt/tests/mcat_eval/results/*; set OPENAI_API_KEY for real LLM numbers)
 eval-ai:
     PYTHONPATH="qt:out/pylib" {{ uv }} run python qt/tests/mcat_eval/run_eval.py
 

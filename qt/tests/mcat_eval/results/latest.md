@@ -1,6 +1,6 @@
 # MCAT Speedrun — AI answer-grader evaluation
 
-_Generated: 2026-07-03T23:27:48.619303+00:00_
+_Generated: 2026-07-05T18:44:51.480035+00:00_
 
 **Dataset:** 125 records (gold-correct: 70, gold-incorrect: 55) — `grader_eval_set.json`, hand-curated, held-out.
 

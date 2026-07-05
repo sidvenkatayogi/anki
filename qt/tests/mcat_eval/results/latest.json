@@ -64,5 +64,5 @@
   "llm_note": "graded by an LLM agent (Claude) as a stand-in for gpt-5-nano; the agent judged a blind copy of the set (gold labels withheld) using the exact llm_grade rubric \u2014 a real measurement, not a simulation.",
   "llm_source": "agent",
   "simulated": false,
-  "timestamp": "2026-07-03T23:27:48.619303+00:00"
+  "timestamp": "2026-07-05T18:44:51.480035+00:00"
 }

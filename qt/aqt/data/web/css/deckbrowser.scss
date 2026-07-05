@@ -4,6 +4,34 @@
 @use "../../../../../ts/lib/sass/vars" as *;
 @use "../../../../../ts/lib/sass/card-counts";
 @use "../../../../../ts/lib/sass/elevation" as *;
+@use "../../../../../sass/mcat-tools.scss" as mcat;
+
+// ── MCAT "Console" chrome ────────────────────────────────────────────────────
+// Repaint the deck browser (the landing screen) to match the Console study
+// surfaces — self-dark graphite + amber accent, regardless of Anki's theme.
+// Scoped to this webview's CSS; the deck-count state colours (new/learn/due)
+// stay as-is since they carry meaning.
+:root {
+    --canvas: #{mcat.$con-bg};
+    --canvas-elevated: #{mcat.$con-panel};
+    --canvas-glass: #{mcat.$con-panel};
+    --canvas-inset: #{mcat.$con-well};
+    --fg: #{mcat.$con-ink};
+    --fg-subtle: #{mcat.$con-ink-dim};
+    --fg-faint: #{mcat.$con-ink-faint};
+    --fg-link: #{mcat.$con-amber};
+    --border: #{mcat.$con-line-strong};
+    --border-subtle: #{mcat.$con-line};
+    --accent-card: #{mcat.$con-amber};
+    --accent-note: #{mcat.$con-amber};
+}
+
+body {
+    background: #{mcat.$con-bg};
+    color: #{mcat.$con-ink};
+    font-family: mcat.$con-mono;
+    font-variant-numeric: tabular-nums;
+}
 
 table {
     padding: 1rem;

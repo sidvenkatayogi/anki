@@ -209,17 +209,10 @@ class ThemeManager:
         return QColor(self.var(colors))
 
     def _determine_night_mode(self) -> bool:
-        theme = aqt.mw.pm.theme()
-        if theme == Theme.LIGHT:
-            return False
-        elif theme == Theme.DARK:
-            return True
-        elif is_win:
-            return get_windows_dark_mode()
-        elif is_mac:
-            return get_macos_dark_mode()
-        else:
-            return get_linux_dark_mode()
+        # MCAT Speedrun "Console" look: the whole app is pinned to the dark
+        # graphite + amber theme regardless of the user's OS/theme preference,
+        # so every native and web surface matches the study dashboards.
+        return True
 
     def apply_style(self) -> None:
         "Apply currently configured style."

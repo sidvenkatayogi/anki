@@ -1,8 +1,31 @@
 /* Copyright: Ankitects Pty Ltd and contributors
  * License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html */
 
+@use "../../../../../sass/mcat-tools.scss" as mcat;
+
+// ── MCAT "Console" chrome ────────────────────────────────────────────────────
+// Match the bottom tray (Get Shared / Create Deck / Import File) to the Console
+// palette regardless of Anki's active theme.
+:root {
+    --canvas: #{mcat.$con-bg};
+    --canvas-elevated: #{mcat.$con-panel};
+    --canvas-glass: #{mcat.$con-panel};
+    --canvas-inset: #{mcat.$con-well};
+    --fg: #{mcat.$con-ink};
+    --fg-subtle: #{mcat.$con-ink-dim};
+    --fg-faint: #{mcat.$con-ink-faint};
+    --fg-link: #{mcat.$con-amber};
+    --border: #{mcat.$con-line-strong};
+    --border-subtle: #{mcat.$con-line};
+    --accent-card: #{mcat.$con-amber};
+    --accent-note: #{mcat.$con-amber};
+}
+
 body {
     overflow: hidden;
+    background: #{mcat.$con-bg};
+    color: #{mcat.$con-ink};
+    font-family: mcat.$con-mono;
 }
 
 #header {

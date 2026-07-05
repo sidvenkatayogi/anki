@@ -35,7 +35,7 @@ class MasteryStats(QDialog):
         layout.addWidget(self.web)
         self.setLayout(layout)
 
-        self.setWindowTitle(tr.statistics_mastery_title())
+        self.setWindowTitle(tr.statistics_scores_title())
         self.show()
 
     def reject(self) -> None:

@@ -300,6 +300,8 @@ statistics-title = Statistics
 
 ## Topic-mastery dashboard
 
+# Title of the unified scores dashboard (Memory, Performance, Readiness).
+statistics-scores-title = Scores
 statistics-mastery-title = Topic mastery
 statistics-mastery-readiness = Memory readiness
 statistics-mastery-not-enough-data = Not enough data yet

@@ -5,6 +5,47 @@
 @use "../../../../../ts/lib/sass/vars" as *;
 @use "../../../../../ts/lib/sass/elevation" as *;
 @use "../../../../../ts/lib/sass/button-mixins" as button;
+@use "../../../../../sass/mcat-tools.scss" as mcat;
+
+// ── MCAT "Console" chrome ────────────────────────────────────────────────────
+// Repaint the top toolbar to match the Console study surfaces (self-dark,
+// amber accent) regardless of Anki's active light/dark theme. Scoped to this
+// webview's CSS, so it never leaks into card rendering or other pages.
+:root {
+    --canvas: #{mcat.$con-bg};
+    --canvas-elevated: #{mcat.$con-panel};
+    --canvas-glass: #{mcat.$con-panel};
+    --canvas-inset: #{mcat.$con-well};
+    --fg: #{mcat.$con-ink};
+    --fg-subtle: #{mcat.$con-ink-dim};
+    --fg-faint: #{mcat.$con-ink-faint};
+    --fg-link: #{mcat.$con-amber};
+    --border: #{mcat.$con-line-strong};
+    --border-subtle: #{mcat.$con-line};
+    --accent-card: #{mcat.$con-amber};
+    --accent-note: #{mcat.$con-amber};
+}
+
+body {
+    background: #{mcat.$con-bg};
+    color: #{mcat.$con-ink};
+    font-family: mcat.$con-mono;
+}
+
+// Nav items read as labelled console channels: mono, uppercase, amber on hover.
+.hitem {
+    font-family: mcat.$con-mono;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #{mcat.$con-ink-dim};
+
+    &:hover {
+        text-decoration: none;
+        color: #{mcat.$con-amber};
+    }
+}
 
 .header {
     display: grid;

@@ -3,12 +3,16 @@
 //
 // SyncView — the Account tab. Signed out shows a branded sign-in card; signed
 // in shows a sync dashboard (status, media progress, Sync Now, Sign Out). The
-// ambiguous full-sync case is resolved with a direction dialog.
+// ambiguous full-sync case is resolved with a direction dialog. A toolbar gear
+// opens Settings (grading + AI), which used to be its own tab.
 
 import SwiftUI
 
 struct SyncView: View {
     @Bindable var model: SyncModel
+    // Settings are reached from here via the toolbar gear (keeps the tab bar to
+    // five primary destinations).
+    var settings: SettingsModel
 
     // Login form state. The server is optional: blank means the default
     // AnkiWeb server (SyncModel omits an empty endpoint, so the Rust core
@@ -16,6 +20,7 @@ struct SyncView: View {
     @State private var username = ""
     @State private var password = ""
     @State private var server = ""
+    @State private var showingSettings = false
 
     var body: some View {
         NavigationStack {
@@ -32,9 +37,22 @@ struct SyncView: View {
                 .frame(maxWidth: 520)
                 .frame(maxWidth: .infinity)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(MCATScreenBackground())
             .navigationTitle("Account")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(model: settings)
+            }
             .confirmationDialog(
                 directionPrompt,
                 isPresented: directionBinding,
@@ -55,15 +73,15 @@ struct SyncView: View {
 
     private var header: some View {
         VStack(spacing: 10) {
-            Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                .font(.system(size: 52))
-                .foregroundStyle(.white)
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .font(.system(size: 44, weight: .semibold))
+                .foregroundStyle(MCATTheme.amberInk)
                 .frame(width: 88, height: 88)
                 .background(
-                    LinearGradient(colors: [.indigo, .blue],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .shadow(color: .blue.opacity(0.3), radius: 10, y: 4)
+                    MCATTheme.amber,
+                    in: RoundedRectangle(cornerRadius: MCATTheme.cornerRadius, style: .continuous)
+                )
+                .shadow(color: MCATTheme.amber.opacity(0.4), radius: 16, y: 6)
             Text("MCAT Sync")
                 .font(.title2.bold())
             Text("Keep your cards and FSRS progress in step across your computer and phone.")
@@ -100,12 +118,9 @@ struct SyncView: View {
                 HStack {
                     if model.isBusy { ProgressView().tint(.white) }
                     Text(model.isBusy ? "Signing in…" : "Sign In")
-                        .fontWeight(.semibold)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(MCATPrimaryButtonStyle())
             .disabled(model.isBusy || username.isEmpty || password.isEmpty)
 
             statusLine
@@ -116,7 +131,7 @@ struct SyncView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(20)
-        .cardBackground()
+        .mcatCard()
     }
 
     // MARK: - Signed in
@@ -127,7 +142,7 @@ struct SyncView: View {
             HStack(spacing: 14) {
                 Image(systemName: "person.crop.circle.fill")
                     .font(.system(size: 40))
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(MCATTheme.brand)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.username.isEmpty ? "Signed in" : model.username)
                         .font(.headline)
@@ -140,7 +155,8 @@ struct SyncView: View {
                 Spacer()
             }
             .padding(16)
-            .cardBackground()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .mcatCard()
 
             // Status
             VStack(spacing: 12) {
@@ -158,16 +174,13 @@ struct SyncView: View {
                             Image(systemName: "arrow.triangle.2.circlepath")
                         }
                         Text(model.isBusy ? "Syncing…" : "Sync Now")
-                            .fontWeight(.semibold)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(MCATPrimaryButtonStyle())
                 .disabled(model.isBusy)
             }
             .padding(20)
-            .cardBackground()
+            .mcatCard()
 
             Button(role: .destructive, action: { model.logout() }) {
                 Text("Sign Out")
@@ -175,6 +188,7 @@ struct SyncView: View {
                     .padding(.vertical, 12)
             }
             .buttonStyle(.bordered)
+            .tint(.red)
             .disabled(model.isBusy)
         }
     }
@@ -193,7 +207,7 @@ struct SyncView: View {
         case let .success(msg):
             Label(msg, systemImage: "checkmark.circle.fill")
                 .font(.footnote)
-                .foregroundStyle(.green)
+                .foregroundStyle(MCATTheme.correct)
         case let .failure(msg):
             Label(msg, systemImage: "exclamationmark.triangle.fill")
                 .font(.footnote)
@@ -230,12 +244,5 @@ struct SyncView: View {
             get: { if case .chooseDirection = model.phase { return true }; return false },
             set: { _ in }  // dismissal handled by the buttons
         )
-    }
-}
-
-private extension View {
-    func cardBackground() -> some View {
-        background(Color(.secondarySystemGroupedBackground),
-                   in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
