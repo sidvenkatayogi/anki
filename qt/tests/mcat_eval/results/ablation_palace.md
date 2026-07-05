@@ -1,6 +1,6 @@
 # Study-feature ablation — AR memory palace (method of loci)
 
-_Generated: 2026-07-05T19:55:01.344269+00:00_
+_Generated: 2026-07-05T20:03:31.637650+00:00_
 
 > *** SYNTHETIC / ILLUSTRATIVE — outcomes are generated from a fixed-seed model, NOT measured on real learners. Shows what results might look like. ***
 

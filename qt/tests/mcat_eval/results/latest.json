@@ -43,7 +43,7 @@
     "near_dup_overlaps": 0
   },
   "llm": {
-    "label": "LLM grader (agent, REAL)",
+    "label": "LLM grader (Claude stand-in)",
     "metrics": {
       "accuracy": 1.0,
       "false_accept_rate": 0.0,
@@ -59,10 +59,11 @@
       "tp": 70
     },
     "passes_cutoff": true,
-    "simulated": false
+    "simulated": false,
+    "stand_in": true
   },
   "llm_note": "graded by an LLM agent (Claude) as a stand-in for gpt-5-nano; the agent judged a blind copy of the set (gold labels withheld) using the exact llm_grade rubric \u2014 a real measurement, not a simulation.",
   "llm_source": "agent",
   "simulated": false,
-  "timestamp": "2026-07-05T18:44:51.480035+00:00"
+  "timestamp": "2026-07-05T20:12:18.306136+00:00"
 }

@@ -1,0 +1,82 @@
+{
+  "_provenance": {
+    "what": "Gold set for the AI CARD-CHECK evaluation (rubric challenge 7f): 50 MCAT-relevant Q&A pairs with known-correct answers, used to check LLM-generated flashcards for factual and pedagogical quality.",
+    "source_name": "OpenStax Biology 2e, Chapter 3: Biological Macromolecules",
+    "source_license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "source_url": "https://openstax.org/books/biology-2e/pages/3-introduction",
+    "source_sections": {
+      "3.1": "Synthesis of Biological Macromolecules (dehydration synthesis, hydrolysis)",
+      "3.2": "Carbohydrates (mono/di/polysaccharides)",
+      "3.3": "Lipids (fats, phospholipids, steroids, waxes)",
+      "3.4": "Proteins (amino acids, peptide bonds, structure levels)",
+      "3.5": "Nucleic Acids (DNA, RNA, nucleotides)"
+    },
+    "record": "(id, content_area, question, correct_answer). correct_answer is the KNOWN-CORRECT ground truth drawn from the named source; it is the only reference the card-checker judges a generated card against.",
+    "how_built": "Facts hand-transcribed from the named OpenStax chapter and cross-checked. These are genuinely correct, unambiguous, exam-relevant facts. This is the honest version of a 'gold set with known-correct answers' -- NOT harvested from a model, and NOT tuned against any generated card.",
+    "exam": "MCAT (Biological and Biochemical Foundations content)",
+    "total": 50,
+    "content_area_counts": {
+      "macromolecule_synthesis": 5,
+      "carbohydrates": 12,
+      "lipids": 12,
+      "proteins": 12,
+      "nucleic_acids": 9
+    }
+  },
+  "gold": [
+    {"id": "g-01", "content_area": "macromolecule_synthesis", "question": "In a dehydration synthesis reaction, what small molecule is released as two monomers are joined?", "correct_answer": "A molecule of water"},
+    {"id": "g-02", "content_area": "macromolecule_synthesis", "question": "What type of reaction breaks a polymer into monomers by adding a water molecule across the bond?", "correct_answer": "Hydrolysis"},
+    {"id": "g-03", "content_area": "macromolecule_synthesis", "question": "What is the general term for the small repeating subunits that link together to form a polymer?", "correct_answer": "Monomers"},
+    {"id": "g-04", "content_area": "macromolecule_synthesis", "question": "What are the four major classes of biological macromolecules?", "correct_answer": "Carbohydrates, lipids, proteins, and nucleic acids"},
+    {"id": "g-05", "content_area": "macromolecule_synthesis", "question": "What class of biological catalyst is required to drive dehydration and hydrolysis reactions in cells?", "correct_answer": "Enzymes"},
+
+    {"id": "g-06", "content_area": "carbohydrates", "question": "What is the general empirical formula for a carbohydrate?", "correct_answer": "(CH2O)n"},
+    {"id": "g-07", "content_area": "carbohydrates", "question": "What is the molecular formula of glucose?", "correct_answer": "C6H12O6"},
+    {"id": "g-08", "content_area": "carbohydrates", "question": "What is the simplest type of carbohydrate, a single sugar unit such as glucose or fructose?", "correct_answer": "A monosaccharide"},
+    {"id": "g-09", "content_area": "carbohydrates", "question": "Which disaccharide (common table sugar) forms from glucose and fructose?", "correct_answer": "Sucrose"},
+    {"id": "g-10", "content_area": "carbohydrates", "question": "Which disaccharide forms from glucose and galactose?", "correct_answer": "Lactose"},
+    {"id": "g-11", "content_area": "carbohydrates", "question": "Which disaccharide forms from two glucose molecules?", "correct_answer": "Maltose"},
+    {"id": "g-12", "content_area": "carbohydrates", "question": "What is the name of the covalent bond that joins two monosaccharides?", "correct_answer": "A glycosidic bond (glycosidic linkage)"},
+    {"id": "g-13", "content_area": "carbohydrates", "question": "What polysaccharide is the primary storage form of glucose in plants?", "correct_answer": "Starch"},
+    {"id": "g-14", "content_area": "carbohydrates", "question": "What polysaccharide is the primary storage form of glucose in animals, stored in liver and muscle?", "correct_answer": "Glycogen"},
+    {"id": "g-15", "content_area": "carbohydrates", "question": "What structural polysaccharide makes up plant cell walls?", "correct_answer": "Cellulose"},
+    {"id": "g-16", "content_area": "carbohydrates", "question": "What structural polysaccharide forms the exoskeletons of arthropods and the cell walls of fungi?", "correct_answer": "Chitin"},
+    {"id": "g-17", "content_area": "carbohydrates", "question": "Glucose, galactose, and fructose all share the formula C6H12O6 but differ in structure; what is this relationship called?", "correct_answer": "They are isomers"},
+
+    {"id": "g-18", "content_area": "lipids", "question": "Are lipids generally hydrophilic or hydrophobic?", "correct_answer": "Hydrophobic (nonpolar and insoluble in water)"},
+    {"id": "g-19", "content_area": "lipids", "question": "A triglyceride (fat) is composed of glycerol bonded to how many fatty acid chains?", "correct_answer": "Three fatty acids"},
+    {"id": "g-20", "content_area": "lipids", "question": "What type of covalent bond links a fatty acid to glycerol in a fat?", "correct_answer": "An ester bond (ester linkage)"},
+    {"id": "g-21", "content_area": "lipids", "question": "What structural feature defines a saturated fatty acid?", "correct_answer": "It has no carbon-carbon double bonds (carbons are saturated with hydrogen)"},
+    {"id": "g-22", "content_area": "lipids", "question": "What structural feature defines an unsaturated fatty acid?", "correct_answer": "It has one or more carbon-carbon double bonds"},
+    {"id": "g-23", "content_area": "lipids", "question": "What class of lipid is the major structural component of cell membranes?", "correct_answer": "Phospholipids"},
+    {"id": "g-24", "content_area": "lipids", "question": "A phospholipid has a hydrophilic head and what kind of tails, making it amphipathic?", "correct_answer": "Hydrophobic (nonpolar) tails"},
+    {"id": "g-25", "content_area": "lipids", "question": "What structural feature is characteristic of all steroids?", "correct_answer": "Four fused carbon rings"},
+    {"id": "g-26", "content_area": "lipids", "question": "Which steroid is a component of animal cell membranes and a precursor to steroid hormones?", "correct_answer": "Cholesterol"},
+    {"id": "g-27", "content_area": "lipids", "question": "At room temperature, are saturated fats typically solid or liquid?", "correct_answer": "Solid"},
+    {"id": "g-28", "content_area": "lipids", "question": "Industrially hydrogenated unsaturated fats with double bonds in the trans configuration are called what?", "correct_answer": "Trans fats"},
+    {"id": "g-29", "content_area": "lipids", "question": "What waterproof lipids form protective coatings on feathers, leaves, and skin?", "correct_answer": "Waxes"},
+
+    {"id": "g-30", "content_area": "proteins", "question": "What is the monomer (building block) of a protein?", "correct_answer": "An amino acid"},
+    {"id": "g-31", "content_area": "proteins", "question": "How many different amino acids are commonly found in proteins?", "correct_answer": "20"},
+    {"id": "g-32", "content_area": "proteins", "question": "What is the name of the covalent bond that links two amino acids together?", "correct_answer": "A peptide bond"},
+    {"id": "g-33", "content_area": "proteins", "question": "Which part of an amino acid varies between the 20 amino acids and determines its chemical properties?", "correct_answer": "The R group (side chain)"},
+    {"id": "g-34", "content_area": "proteins", "question": "What does the primary structure of a protein refer to?", "correct_answer": "The linear sequence of amino acids in the polypeptide chain"},
+    {"id": "g-35", "content_area": "proteins", "question": "What are the two main types of protein secondary structure?", "correct_answer": "Alpha helices and beta-pleated sheets"},
+    {"id": "g-36", "content_area": "proteins", "question": "What type of bonding holds together a protein's secondary structure?", "correct_answer": "Hydrogen bonds (between atoms of the polypeptide backbone)"},
+    {"id": "g-37", "content_area": "proteins", "question": "What does the tertiary structure of a protein describe?", "correct_answer": "The overall three-dimensional shape of a single polypeptide"},
+    {"id": "g-38", "content_area": "proteins", "question": "What structural level exists only in proteins made of more than one polypeptide subunit?", "correct_answer": "Quaternary structure"},
+    {"id": "g-39", "content_area": "proteins", "question": "What is the term for the loss of a protein's three-dimensional shape (and function) due to heat or pH changes?", "correct_answer": "Denaturation"},
+    {"id": "g-40", "content_area": "proteins", "question": "What class of macromolecule are enzymes (which act as biological catalysts)?", "correct_answer": "Proteins"},
+    {"id": "g-41", "content_area": "proteins", "question": "Hemoglobin, made of four polypeptide subunits, is a classic example of which level of protein structure?", "correct_answer": "Quaternary structure"},
+
+    {"id": "g-42", "content_area": "nucleic_acids", "question": "What are the two types of nucleic acids?", "correct_answer": "DNA and RNA"},
+    {"id": "g-43", "content_area": "nucleic_acids", "question": "What is the monomer of a nucleic acid?", "correct_answer": "A nucleotide"},
+    {"id": "g-44", "content_area": "nucleic_acids", "question": "What are the three components of a nucleotide?", "correct_answer": "A nitrogenous base, a pentose (five-carbon) sugar, and a phosphate group"},
+    {"id": "g-45", "content_area": "nucleic_acids", "question": "What five-carbon sugar is found in DNA?", "correct_answer": "Deoxyribose"},
+    {"id": "g-46", "content_area": "nucleic_acids", "question": "What are the four nitrogenous bases found in DNA?", "correct_answer": "Adenine, thymine, guanine, and cytosine"},
+    {"id": "g-47", "content_area": "nucleic_acids", "question": "Which nitrogenous base replaces thymine in RNA?", "correct_answer": "Uracil"},
+    {"id": "g-48", "content_area": "nucleic_acids", "question": "Which two nitrogenous bases are purines?", "correct_answer": "Adenine and guanine"},
+    {"id": "g-49", "content_area": "nucleic_acids", "question": "In DNA, adenine pairs with which base, and guanine pairs with which base?", "correct_answer": "Adenine pairs with thymine, and guanine pairs with cytosine"},
+    {"id": "g-50", "content_area": "nucleic_acids", "question": "Is DNA typically single-stranded or double-stranded?", "correct_answer": "Double-stranded (a double helix)"}
+  ]
+}

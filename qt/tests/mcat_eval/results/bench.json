@@ -1,0 +1,60 @@
+{
+  "all_pass": true,
+  "build_secs": 10.220457375049591,
+  "coldstart_ms": 2.8682081028819084,
+  "metrics": {
+    "dashboard_cold": {
+      "target_ms": 1000.0,
+      "value_ms": 226.26558295451105
+    },
+    "dashboard_refresh": {
+      "summary": {
+        "max": 188.3083749562502,
+        "mean": 176.5754791907966,
+        "min": 170.95233383588493,
+        "n": 30,
+        "p50": 175.44554197229445,
+        "p95": 187.17337492853403
+      },
+      "target_p95_ms": 500.0
+    },
+    "grade_card": {
+      "summary": {
+        "max": 75.7996249012649,
+        "mean": 0.27433736389502883,
+        "min": 0.16416702419519424,
+        "n": 1000,
+        "p50": 0.1888750120997429,
+        "p95": 0.23633288219571114
+      },
+      "target_p95_ms": 50.0
+    },
+    "next_card": {
+      "summary": {
+        "max": 33.85816584341228,
+        "mean": 0.09033372602425516,
+        "min": 0.04812492989003658,
+        "n": 1000,
+        "p50": 0.05583302117884159,
+        "p95": 0.0630838330835104
+      },
+      "target_p95_ms": 100.0
+    }
+  },
+  "n_cards": 50000,
+  "n_graded": 1000,
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "python": "3.13.13",
+  "real_measurements": true,
+  "rss_limit_mb": 1024.0,
+  "rss_mb": 135.984375,
+  "seed": 20260705,
+  "timestamp": "2026-07-05T20:11:40.400450+00:00",
+  "verdicts": {
+    "dashboard_cold": true,
+    "dashboard_refresh": true,
+    "grade_card": true,
+    "memory": true,
+    "next_card": true
+  }
+}

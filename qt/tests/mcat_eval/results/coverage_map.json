@@ -1,0 +1,396 @@
+{
+  "abstain": false,
+  "abstain_threshold": 0.5,
+  "content_categories_covered": 31,
+  "content_categories_total": 31,
+  "deck_tag_source": "DOCUMENTED DEFAULT \u2014 hand-authored MileDown approximation, NOT read from the .apkg",
+  "deck_tags_count": 42,
+  "outline_source": "AAMC MCAT Content Outline (public, official). Foundational Concepts (1-10) and Content Categories (e.g. 1A, 4C) with their short official titles.",
+  "overall_coverage_fraction": 1.0,
+  "sections": [
+    {
+      "categories_covered": 10,
+      "categories_total": 10,
+      "coverage_fraction": 1.0,
+      "foundational_concepts": [
+        {
+          "content_categories": [
+            {
+              "code": "4A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Physics::Kinematics Forces and Energy"
+              ],
+              "title": "Translational motion, forces, work, energy, and equilibrium in living systems"
+            },
+            {
+              "code": "4B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Physics::Fluids and Pressure"
+              ],
+              "title": "Importance of fluids for the circulation of blood, gas movement, and gas exchange"
+            },
+            {
+              "code": "4C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::General Chemistry::Electrochemistry and Circuits"
+              ],
+              "title": "Electrochemistry and electrical circuits and their elements"
+            },
+            {
+              "code": "4D",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Physics::Optics Light and Sound Waves"
+              ],
+              "title": "How light and sound interact with matter"
+            },
+            {
+              "code": "4E",
+              "covered": true,
+              "matched_by": [
+                "MileDown::General Chemistry::Atomic Structure and Periodic Table"
+              ],
+              "title": "Atoms, nuclear decay, electronic structure, and atomic chemical behavior"
+            }
+          ],
+          "id": "FC4",
+          "number": 4,
+          "title": "Complex living organisms transport materials, sense their environment, process signals, and respond to changes using processes understood in terms of physical principles."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "5A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biochemistry::Amino Acids and Proteins",
+                "MileDown::Biochemistry::Glycolysis and Oxidative Phosphorylation",
+                "MileDown::Biology::Circulatory and Respiratory Physiology",
+                "MileDown::General Chemistry::Acids Bases and Buffers",
+                "MileDown::General Chemistry::Solutions and Solubility",
+                "MileDown::Physics::Kinematics Forces and Energy",
+                "MileDown::Physics::Fluids and Pressure",
+                "MileDown::Physics::Optics Light and Sound Waves",
+                "MileDown::Sociology::Demographics and Population"
+              ],
+              "title": "Unique nature of water and its solutions"
+            },
+            {
+              "code": "5B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::General Chemistry::Bonding and Molecular Structure"
+              ],
+              "title": "Nature of molecules and intermolecular interactions"
+            },
+            {
+              "code": "5C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Organic Chemistry::Separation and Spectroscopy"
+              ],
+              "title": "Separation and purification methods"
+            },
+            {
+              "code": "5D",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biochemistry::Carbohydrates and Lipids",
+                "MileDown::Organic Chemistry::Functional Groups and Stereochemistry",
+                "MileDown::Organic Chemistry::Reaction Mechanisms",
+                "MileDown::Organic Chemistry::Separation and Spectroscopy"
+              ],
+              "title": "Structure, function, and reactivity of biologically relevant molecules"
+            },
+            {
+              "code": "5E",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biochemistry::Enzyme Kinetics",
+                "MileDown::General Chemistry::Thermodynamics and Kinetics"
+              ],
+              "title": "Principles of chemical thermodynamics and kinetics"
+            }
+          ],
+          "id": "FC5",
+          "number": 5,
+          "title": "The principles that govern chemical interactions and reactions form the basis for a broader understanding of the molecular dynamics of living systems."
+        }
+      ],
+      "id": "chem_phys",
+      "note": null,
+      "skills_based": false,
+      "title": "Chemical and Physical Foundations of Biological Systems"
+    },
+    {
+      "categories_covered": 0,
+      "categories_total": 0,
+      "coverage_fraction": null,
+      "foundational_concepts": [],
+      "id": "cars",
+      "note": "CARS is a skills-based section: it tests reading comprehension and reasoning over passages, NOT a body of memorizable facts. AAMC publishes no Foundational Concepts or Content Categories for it. It is therefore represented honestly with zero content categories and is EXCLUDED from the content-category coverage denominator. A flashcard deck cannot 'cover' CARS the way it covers a fact-based category; CARS readiness is trained by timed passage practice, not by cards.",
+      "skills_based": true,
+      "title": "Critical Analysis and Reasoning Skills (CARS)"
+    },
+    {
+      "categories_covered": 9,
+      "categories_total": 9,
+      "coverage_fraction": 1.0,
+      "foundational_concepts": [
+        {
+          "content_categories": [
+            {
+              "code": "1A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biochemistry::Amino Acids and Proteins",
+                "MileDown::Biochemistry::Enzyme Kinetics"
+              ],
+              "title": "Structure and function of proteins and their constituent amino acids"
+            },
+            {
+              "code": "1B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biochemistry::DNA and RNA",
+                "MileDown::Biochemistry::Transcription and Translation"
+              ],
+              "title": "Transmission of genetic information from the gene to the protein"
+            },
+            {
+              "code": "1C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biology::Genetics and Heredity"
+              ],
+              "title": "Transmission of heritable information from generation to generation and the processes that increase genetic diversity"
+            },
+            {
+              "code": "1D",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biochemistry::Metabolism and Bioenergetics",
+                "MileDown::Biochemistry::Glycolysis and Oxidative Phosphorylation"
+              ],
+              "title": "Principles of bioenergetics and fuel molecule metabolism"
+            }
+          ],
+          "id": "FC1",
+          "number": 1,
+          "title": "Biomolecules have unique properties that determine how they contribute to the structure and function of cells, and how they participate in the processes necessary to maintain life."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "2A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biology::Cell Structure and Organelles",
+                "MileDown::Biology::Membrane Transport"
+              ],
+              "title": "Assemblies of molecules, cells, and groups of cells within single cellular and multicellular organisms"
+            },
+            {
+              "code": "2B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biology::Prokaryotes Bacteria and Viruses"
+              ],
+              "title": "The structure, growth, physiology, and genetics of prokaryotes and viruses"
+            },
+            {
+              "code": "2C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biology::Cell Cycle and Mitosis",
+                "MileDown::Biology::Development and Differentiation"
+              ],
+              "title": "Processes of cell division, differentiation, and specialization"
+            }
+          ],
+          "id": "FC2",
+          "number": 2,
+          "title": "Highly organized assemblies of molecules, cells, and organs interact to carry out the functions of living organisms."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "3A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biology::Nervous System and Neurons",
+                "MileDown::Biology::Endocrine System and Hormones"
+              ],
+              "title": "Structure and functions of the nervous and endocrine systems and ways these systems coordinate the organ systems"
+            },
+            {
+              "code": "3B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Biology::Circulatory and Respiratory Physiology",
+                "MileDown::Biology::Renal and Digestive Systems",
+                "MileDown::Biology::Immune and Muscular Systems"
+              ],
+              "title": "Structure and integrative functions of the main organ systems"
+            }
+          ],
+          "id": "FC3",
+          "number": 3,
+          "title": "Complex systems of tissues and organs sense the internal and external environments of multicellular organisms, and through integrated functioning, maintain a stable internal environment."
+        }
+      ],
+      "id": "bio_biochem",
+      "note": null,
+      "skills_based": false,
+      "title": "Biological and Biochemical Foundations of Living Systems"
+    },
+    {
+      "categories_covered": 12,
+      "categories_total": 12,
+      "coverage_fraction": 1.0,
+      "foundational_concepts": [
+        {
+          "content_categories": [
+            {
+              "code": "6A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Sensation and Perception"
+              ],
+              "title": "Sensing the environment"
+            },
+            {
+              "code": "6B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Memory Learning and Cognition",
+                "MileDown::Psychology::Attribution Prejudice and Social Cognition"
+              ],
+              "title": "Making sense of the environment"
+            },
+            {
+              "code": "6C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Emotion Stress and Motivation"
+              ],
+              "title": "Responding to the world"
+            }
+          ],
+          "id": "FC6",
+          "number": 6,
+          "title": "Biological, psychological, and sociocultural factors influence the ways that individuals perceive, think about, and react to the world."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "7A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Personality and Biological Basis of Behavior"
+              ],
+              "title": "Individual influences on behavior"
+            },
+            {
+              "code": "7B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Sociology::Socialization and Group Behavior"
+              ],
+              "title": "Social processes that influence human behavior"
+            },
+            {
+              "code": "7C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Attitudes and Persuasion"
+              ],
+              "title": "Attitude and behavior change"
+            }
+          ],
+          "id": "FC7",
+          "number": 7,
+          "title": "Biological, psychological, and sociocultural factors influence behavior and behavior change."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "8A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Self-Identity and Self-Concept"
+              ],
+              "title": "Self-identity"
+            },
+            {
+              "code": "8B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Psychology::Attribution Prejudice and Social Cognition"
+              ],
+              "title": "Social thinking"
+            },
+            {
+              "code": "8C",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Sociology::Social Interaction and Discrimination"
+              ],
+              "title": "Social interactions"
+            }
+          ],
+          "id": "FC8",
+          "number": 8,
+          "title": "Psychological, sociocultural, and biological factors influence the way we think about ourselves and others, as well as how we interact with others."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "9A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Sociology::Social Structure and Institutions"
+              ],
+              "title": "Understanding social structure"
+            },
+            {
+              "code": "9B",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Sociology::Demographics and Population"
+              ],
+              "title": "Demographic characteristics and processes"
+            }
+          ],
+          "id": "FC9",
+          "number": 9,
+          "title": "Cultural and social differences influence well-being."
+        },
+        {
+          "content_categories": [
+            {
+              "code": "10A",
+              "covered": true,
+              "matched_by": [
+                "MileDown::Sociology::Social Inequality and Stratification"
+              ],
+              "title": "Social inequality"
+            }
+          ],
+          "id": "FC10",
+          "number": 10,
+          "title": "Social stratification and access to resources influence well-being."
+        }
+      ],
+      "id": "psych_soc",
+      "note": null,
+      "skills_based": false,
+      "title": "Psychological, Social, and Biological Foundations of Behavior"
+    }
+  ],
+  "timestamp": "2026-07-05T20:12:18.064947+00:00",
+  "uncovered_codes": []
+}

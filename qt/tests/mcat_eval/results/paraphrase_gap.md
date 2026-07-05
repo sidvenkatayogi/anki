@@ -1,6 +1,6 @@
 # Paraphrase test — memory vs performance (the bridge)
 
-_Generated: 2026-07-05T19:55:37.110613+00:00_
+_Generated: 2026-07-05T20:03:31.659485+00:00_
 
 > *** SYNTHETIC / ILLUSTRATIVE — per-card recall and reworded accuracy are generated, NOT measured. The gap statistics are real; the inputs are not. ***
 

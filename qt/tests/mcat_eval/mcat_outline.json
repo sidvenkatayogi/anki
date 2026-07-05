@@ -1,0 +1,138 @@
+{
+  "_authoritative": true,
+  "_source": "AAMC MCAT Content Outline (public, official). Foundational Concepts (1-10) and Content Categories (e.g. 1A, 4C) with their short official titles.",
+  "_note": "This file is the AUTHORITATIVE official exam outline ONLY. It contains NO deck-specific data and NO coverage judgments. Deck-tag keyword mapping and any assumptions about a particular deck live in coverage_map.py and are labeled there as a DOCUMENTED ASSUMPTION, never as part of this outline.",
+  "_structure": "4 sections -> 10 Foundational Concepts -> 31 Content Categories. CARS is skills-based and has no memorizable content categories.",
+  "content_category_count": 31,
+  "sections": [
+    {
+      "id": "chem_phys",
+      "title": "Chemical and Physical Foundations of Biological Systems",
+      "skills_based": false,
+      "foundational_concepts": [
+        {
+          "id": "FC4",
+          "number": 4,
+          "title": "Complex living organisms transport materials, sense their environment, process signals, and respond to changes using processes understood in terms of physical principles.",
+          "content_categories": [
+            {"code": "4A", "title": "Translational motion, forces, work, energy, and equilibrium in living systems"},
+            {"code": "4B", "title": "Importance of fluids for the circulation of blood, gas movement, and gas exchange"},
+            {"code": "4C", "title": "Electrochemistry and electrical circuits and their elements"},
+            {"code": "4D", "title": "How light and sound interact with matter"},
+            {"code": "4E", "title": "Atoms, nuclear decay, electronic structure, and atomic chemical behavior"}
+          ]
+        },
+        {
+          "id": "FC5",
+          "number": 5,
+          "title": "The principles that govern chemical interactions and reactions form the basis for a broader understanding of the molecular dynamics of living systems.",
+          "content_categories": [
+            {"code": "5A", "title": "Unique nature of water and its solutions"},
+            {"code": "5B", "title": "Nature of molecules and intermolecular interactions"},
+            {"code": "5C", "title": "Separation and purification methods"},
+            {"code": "5D", "title": "Structure, function, and reactivity of biologically relevant molecules"},
+            {"code": "5E", "title": "Principles of chemical thermodynamics and kinetics"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cars",
+      "title": "Critical Analysis and Reasoning Skills (CARS)",
+      "skills_based": true,
+      "note": "CARS is a skills-based section: it tests reading comprehension and reasoning over passages, NOT a body of memorizable facts. AAMC publishes no Foundational Concepts or Content Categories for it. It is therefore represented honestly with zero content categories and is EXCLUDED from the content-category coverage denominator. A flashcard deck cannot 'cover' CARS the way it covers a fact-based category; CARS readiness is trained by timed passage practice, not by cards.",
+      "foundational_concepts": []
+    },
+    {
+      "id": "bio_biochem",
+      "title": "Biological and Biochemical Foundations of Living Systems",
+      "skills_based": false,
+      "foundational_concepts": [
+        {
+          "id": "FC1",
+          "number": 1,
+          "title": "Biomolecules have unique properties that determine how they contribute to the structure and function of cells, and how they participate in the processes necessary to maintain life.",
+          "content_categories": [
+            {"code": "1A", "title": "Structure and function of proteins and their constituent amino acids"},
+            {"code": "1B", "title": "Transmission of genetic information from the gene to the protein"},
+            {"code": "1C", "title": "Transmission of heritable information from generation to generation and the processes that increase genetic diversity"},
+            {"code": "1D", "title": "Principles of bioenergetics and fuel molecule metabolism"}
+          ]
+        },
+        {
+          "id": "FC2",
+          "number": 2,
+          "title": "Highly organized assemblies of molecules, cells, and organs interact to carry out the functions of living organisms.",
+          "content_categories": [
+            {"code": "2A", "title": "Assemblies of molecules, cells, and groups of cells within single cellular and multicellular organisms"},
+            {"code": "2B", "title": "The structure, growth, physiology, and genetics of prokaryotes and viruses"},
+            {"code": "2C", "title": "Processes of cell division, differentiation, and specialization"}
+          ]
+        },
+        {
+          "id": "FC3",
+          "number": 3,
+          "title": "Complex systems of tissues and organs sense the internal and external environments of multicellular organisms, and through integrated functioning, maintain a stable internal environment.",
+          "content_categories": [
+            {"code": "3A", "title": "Structure and functions of the nervous and endocrine systems and ways these systems coordinate the organ systems"},
+            {"code": "3B", "title": "Structure and integrative functions of the main organ systems"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "psych_soc",
+      "title": "Psychological, Social, and Biological Foundations of Behavior",
+      "skills_based": false,
+      "foundational_concepts": [
+        {
+          "id": "FC6",
+          "number": 6,
+          "title": "Biological, psychological, and sociocultural factors influence the ways that individuals perceive, think about, and react to the world.",
+          "content_categories": [
+            {"code": "6A", "title": "Sensing the environment"},
+            {"code": "6B", "title": "Making sense of the environment"},
+            {"code": "6C", "title": "Responding to the world"}
+          ]
+        },
+        {
+          "id": "FC7",
+          "number": 7,
+          "title": "Biological, psychological, and sociocultural factors influence behavior and behavior change.",
+          "content_categories": [
+            {"code": "7A", "title": "Individual influences on behavior"},
+            {"code": "7B", "title": "Social processes that influence human behavior"},
+            {"code": "7C", "title": "Attitude and behavior change"}
+          ]
+        },
+        {
+          "id": "FC8",
+          "number": 8,
+          "title": "Psychological, sociocultural, and biological factors influence the way we think about ourselves and others, as well as how we interact with others.",
+          "content_categories": [
+            {"code": "8A", "title": "Self-identity"},
+            {"code": "8B", "title": "Social thinking"},
+            {"code": "8C", "title": "Social interactions"}
+          ]
+        },
+        {
+          "id": "FC9",
+          "number": 9,
+          "title": "Cultural and social differences influence well-being.",
+          "content_categories": [
+            {"code": "9A", "title": "Understanding social structure"},
+            {"code": "9B", "title": "Demographic characteristics and processes"}
+          ]
+        },
+        {
+          "id": "FC10",
+          "number": 10,
+          "title": "Social stratification and access to resources influence well-being.",
+          "content_categories": [
+            {"code": "10A", "title": "Social inequality"}
+          ]
+        }
+      ]
+    }
+  ]
+}

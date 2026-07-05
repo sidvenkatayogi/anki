@@ -1,6 +1,6 @@
-# MCAT Speedrun — AI answer-grader prompt-injection resistance
+# Ankinetic — AI answer-grader prompt-injection resistance
 
-_Generated: 2026-07-05T18:44:51.490221+00:00_
+_Generated: 2026-07-05T20:12:18.307704+00:00_
 
 **Dataset:** 26 records (20 attacks, 6 controls) — `injection_set.json`, hand-authored, held-out.
 

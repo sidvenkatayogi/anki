@@ -53,5 +53,5 @@
   "llm_note": "REAL gpt-5-nano verdicts captured from a live OPENAI_API_KEY run against the HARDENED _SYSTEM_PROMPT (post-mitigation). Set OPENAI_API_KEY to regenerate live.",
   "llm_source": "gpt5nano_hardened",
   "simulated": false,
-  "timestamp": "2026-07-05T18:44:51.490221+00:00"
+  "timestamp": "2026-07-05T20:12:18.307704+00:00"
 }

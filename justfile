@@ -216,8 +216,20 @@ eval-calibration:
 eval-paraphrase:
     {{ uv }} run python qt/tests/mcat_eval/paraphrase_gap.py
 
+# MCAT: AI card-check (7f) — 50 gold Q&A vs 50 generated cards; correct/wrong/bad-teaching counts + block gate (real gpt-5-nano with OPENAI_API_KEY, else labeled stand-in; writes results/card_check.*)
+eval-cards:
+    PYTHONPATH="qt:out/pylib" {{ uv }} run python qt/tests/mcat_eval/card_check.py
+
+# MCAT: coverage map (7c) — deck tags vs the official AAMC MCAT outline; true syllabus coverage % + abstain line (writes results/coverage_map.*)
+eval-coverage:
+    PYTHONPATH="out/pylib" {{ uv }} run python qt/tests/mcat_eval/coverage_map.py
+
 # MCAT: run all three Sunday model evals (ablation + calibration + paraphrase gap)
 eval-models: eval-ablation eval-calibration eval-paraphrase
+
+# MCAT: one-command performance benchmark (7h + Section 10) — p50/p95/worst for grade/next-card/dashboard on a 50k-card deck (set BENCH_CARDS to override; writes results/bench.*)
+bench:
+    PYTHONPATH="out/pylib" BENCH_CARDS="${BENCH_CARDS:-50000}" {{ uv }} run python qt/tests/mcat_eval/bench.py
 
 # MCAT: Friday test suite — two-way sync (7b) + "AI off still scores" + eval self-tests (needs `just build`)
 test-mcat:

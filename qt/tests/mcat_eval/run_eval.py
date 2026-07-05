@@ -42,6 +42,17 @@ SIMULATED_BANNER = (
     "illustrative, not a measurement. ***"
 )
 
+# Shown when the LLM row is the Claude agent stand-in (no OPENAI_API_KEY, but
+# captured agent verdicts are available). It IS a real LLM grading measurement,
+# but it is NOT the shipping model — so we never call it "REAL" gpt-5-nano.
+STAND_IN_BANNER = (
+    "*** LLM grader row is a Claude AGENT STAND-IN for the shipping gpt-5-nano "
+    "(no OPENAI_API_KEY set). It is a real LLM grading measurement on a blind "
+    "copy of the set, but NOT the shipping model. The authoritative shipping "
+    "gpt-5-nano number is 99.2% accuracy / 0.0% false-accept — see "
+    "BASELINE_COMPARISON.md. Set OPENAI_API_KEY and re-run for live numbers. ***"
+)
+
 # Metrics shown in the side-by-side table: (dict key, display label).
 _TABLE_ROWS = [
     ("accuracy", "Accuracy"),
@@ -84,7 +95,11 @@ def compute() -> dict:
         llm_label = "LLM grader (gpt-5-nano)"
     elif os.path.exists(agent_verdicts_path):
         llm_result = llm_driver.load_agent_verdicts(records, agent_verdicts_path)
-        llm_label = "LLM grader (agent, REAL)"
+        # A Claude agent standing in for the shipping gpt-5-nano — a real LLM
+        # grading measurement, but NOT the shipping model. Do not label it "REAL"
+        # (that reads as gpt-5-nano). The authoritative shipping-model number lives
+        # in BASELINE_COMPARISON.md (gpt-5-nano: 99.2% accuracy, 0% false-accept).
+        llm_label = "LLM grader (Claude stand-in)"
     else:
         llm_result = llm_driver.grade_all(records, None)
         llm_label = "LLM grader (SIMULATED)"
@@ -115,6 +130,7 @@ def compute() -> dict:
         "llm": {
             "label": llm_label,
             "simulated": simulated,
+            "stand_in": llm_result.get("source") == "agent",
             "metrics": llm_metrics,
             "passes_cutoff": metrics.passes_cutoff(llm_metrics),
         },
@@ -148,6 +164,7 @@ def render_report(results: dict) -> str:
     ds = results["dataset"]
     leak = results["leakage"]
     simulated = results["simulated"]
+    stand_in = results.get("llm_source") == "agent"
     clean = leak["exact_overlaps"] == 0 and leak["near_dup_overlaps"] == 0
 
     out: list[str] = []
@@ -176,6 +193,9 @@ def render_report(results: dict) -> str:
     if simulated:
         out.append(SIMULATED_BANNER)
         out.append("")
+    elif stand_in:
+        out.append(STAND_IN_BANNER)
+        out.append("")
 
     out.extend(_table_lines(results))
     out.append("")
@@ -193,7 +213,12 @@ def render_report(results: dict) -> str:
     )
     for block in (results["baseline"], results["llm"]):
         m = block["metrics"]
-        tag = "  [SIMULATED — not a real measurement]" if block["simulated"] else ""
+        if block["simulated"]:
+            tag = "  [SIMULATED — not a real measurement]"
+        elif block.get("stand_in"):
+            tag = "  [Claude stand-in, not the shipping gpt-5-nano]"
+        else:
+            tag = ""
         out.append(
             f"  {block['label']:<26} {_verdict(block['passes_cutoff'])} "
             f"(accuracy {m['accuracy']:.3f}, false-accept {m['false_accept_rate']:.3f})"
@@ -210,6 +235,7 @@ def render_markdown(results: dict) -> str:
     ds = results["dataset"]
     leak = results["leakage"]
     simulated = results["simulated"]
+    stand_in = results.get("llm_source") == "agent"
     clean = leak["exact_overlaps"] == 0 and leak["near_dup_overlaps"] == 0
     cutoff = results["cutoff"]
     baseline_m = results["baseline"]["metrics"]
@@ -229,6 +255,11 @@ def render_markdown(results: dict) -> str:
 
     if simulated:
         lines.append(f"> {SIMULATED_BANNER}")
+        lines.append(">")
+        lines.append(f"> {results['llm_note']}")
+        lines.append("")
+    elif stand_in:
+        lines.append(f"> {STAND_IN_BANNER}")
         lines.append(">")
         lines.append(f"> {results['llm_note']}")
         lines.append("")
@@ -260,6 +291,9 @@ def render_markdown(results: dict) -> str:
     if simulated:
         lines.append(f"> {SIMULATED_BANNER}")
         lines.append("")
+    elif stand_in:
+        lines.append(f"> {STAND_IN_BANNER}")
+        lines.append("")
 
     lines.append("## Verdict")
     lines.append("")
@@ -270,7 +304,12 @@ def render_markdown(results: dict) -> str:
     lines.append("")
     for block in (results["baseline"], results["llm"]):
         m = block["metrics"]
-        tag = " _(SIMULATED — not a real measurement)_" if block["simulated"] else ""
+        if block["simulated"]:
+            tag = " _(SIMULATED — not a real measurement)_"
+        elif block.get("stand_in"):
+            tag = " _(Claude stand-in, not the shipping gpt-5-nano)_"
+        else:
+            tag = ""
         lines.append(
             f"- **{block['label']}: {_verdict(block['passes_cutoff'])}** "
             f"(accuracy {m['accuracy']:.3f}, false-accept {m['false_accept_rate']:.3f})"

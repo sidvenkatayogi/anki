@@ -1,0 +1,530 @@
+{
+  "allowed_through": 40,
+  "blocked": 10,
+  "cards_total": 50,
+  "checker_agreement_with_seed": {
+    "fraction": 1.0,
+    "matched": 50,
+    "total": 50
+  },
+  "counts": {
+    "correct_bad_teaching": 5,
+    "correct_useful": 40,
+    "wrong": 5
+  },
+  "cutoff": {
+    "block_policy": "block any card not classified correct_useful",
+    "max_wrong_allowed_through": 0,
+    "min_correct_useful_fraction": 0.8
+  },
+  "fraction_correct_useful": 0.8,
+  "gold_total": 50,
+  "live_model": false,
+  "passes_cutoff": true,
+  "per_card": [
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "macromolecule_synthesis",
+      "gold_id": "g-01",
+      "id": "c-01",
+      "reason": "Matches gold: dehydration synthesis releases water; back names the mechanism.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "macromolecule_synthesis",
+      "gold_id": "g-02",
+      "id": "c-02",
+      "reason": "Matches gold (hydrolysis) and explains the etymology/mechanism.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "macromolecule_synthesis",
+      "gold_id": "g-03",
+      "id": "c-03",
+      "reason": "Correct per gold; adds concrete examples.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_bad_teaching",
+      "content_area": "macromolecule_synthesis",
+      "gold_id": "g-04",
+      "id": "c-04",
+      "reason": "Factually correct but trivial: a yes/no with no content; does not teach the four classes or anything testable.",
+      "seeded_class": "correct_bad_teaching"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "macromolecule_synthesis",
+      "gold_id": "g-05",
+      "id": "c-05",
+      "reason": "Correct per gold; adds why (catalyst lowering activation energy).",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-06",
+      "id": "c-06",
+      "reason": "Matches gold formula and states the C:H:O ratio.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "wrong",
+      "content_area": "carbohydrates",
+      "gold_id": "g-07",
+      "id": "c-07",
+      "reason": "WRONG FACT: glucose is C6H12O6, not C5H10O5. Contradicts the gold answer.",
+      "seeded_class": "wrong"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-08",
+      "id": "c-08",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-09",
+      "id": "c-09",
+      "reason": "Correct per gold; also names the bond.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-10",
+      "id": "c-10",
+      "reason": "Correct per gold; adds a memorable context (milk sugar).",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-11",
+      "id": "c-11",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-12",
+      "id": "c-12",
+      "reason": "Correct per gold; links to the reaction type.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-13",
+      "id": "c-13",
+      "reason": "Correct per gold; names the two components.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "wrong",
+      "content_area": "carbohydrates",
+      "gold_id": "g-14",
+      "id": "c-14",
+      "reason": "WRONG FACT: glycogen is the ANIMAL storage polysaccharide (liver/muscle); plants store glucose as starch. Contradicts the gold.",
+      "seeded_class": "wrong"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-15",
+      "id": "c-15",
+      "reason": "Correct per gold; states its structural role.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-16",
+      "id": "c-16",
+      "reason": "Correct per gold; adds the nitrogen detail.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "carbohydrates",
+      "gold_id": "g-17",
+      "id": "c-17",
+      "reason": "Correct per gold; defines isomer.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-18",
+      "id": "c-18",
+      "reason": "Correct per gold; explains why (nonpolar).",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-19",
+      "id": "c-19",
+      "reason": "Correct per gold; uses the prefix as a mnemonic.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-20",
+      "id": "c-20",
+      "reason": "Correct per gold; adds the reaction that forms it.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-21",
+      "id": "c-21",
+      "reason": "Correct per gold; connects structure to packing.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-22",
+      "id": "c-22",
+      "reason": "Correct per gold; notes the kink.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-23",
+      "id": "c-23",
+      "reason": "Correct per gold; names the bilayer.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-24",
+      "id": "c-24",
+      "reason": "Correct per gold; explains amphipathic consequence.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-25",
+      "id": "c-25",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-26",
+      "id": "c-26",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-27",
+      "id": "c-27",
+      "reason": "Correct per gold; ties to packing and gives examples.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-28",
+      "id": "c-28",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "lipids",
+      "gold_id": "g-29",
+      "id": "c-29",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_bad_teaching",
+      "content_area": "proteins",
+      "gold_id": "g-30",
+      "id": "c-30",
+      "reason": "Circular/non-answer: restates 'monomer' as 'building block' without naming amino acid. Technically not false but teaches nothing.",
+      "seeded_class": "correct_bad_teaching"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "wrong",
+      "content_area": "proteins",
+      "gold_id": "g-31",
+      "id": "c-31",
+      "reason": "WRONG FACT: the standard answer is 20 amino acids, not 22. Contradicts the gold.",
+      "seeded_class": "wrong"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "wrong",
+      "content_area": "proteins",
+      "gold_id": "g-32",
+      "id": "c-32",
+      "reason": "WRONG FACT: amino acids are joined by peptide bonds; glycosidic bonds join sugars. Contradicts the gold.",
+      "seeded_class": "wrong"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_bad_teaching",
+      "content_area": "proteins",
+      "gold_id": "g-33",
+      "id": "c-33",
+      "reason": "Vague/hand-wavy: not false but gives no usable content -- fails to say the R group varies and determines chemical properties.",
+      "seeded_class": "correct_bad_teaching"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-34",
+      "id": "c-34",
+      "reason": "Correct per gold; adds what holds it and where the sequence comes from.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-35",
+      "id": "c-35",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-36",
+      "id": "c-36",
+      "reason": "Correct per gold; specifies which backbone atoms.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-37",
+      "id": "c-37",
+      "reason": "Correct per gold; names the driving interactions.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-38",
+      "id": "c-38",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_bad_teaching",
+      "content_area": "proteins",
+      "gold_id": "g-39",
+      "id": "c-39",
+      "reason": "Vague: 'changes' is too loose to be useful; omits loss of 3D shape/function from heat or pH. Not wrong, but poor teaching.",
+      "seeded_class": "correct_bad_teaching"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-40",
+      "id": "c-40",
+      "reason": "Correct per gold; states their function.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "proteins",
+      "gold_id": "g-41",
+      "id": "c-41",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-42",
+      "id": "c-42",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-43",
+      "id": "c-43",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-44",
+      "id": "c-44",
+      "reason": "Correct per gold; all three components named.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "wrong",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-45",
+      "id": "c-45",
+      "reason": "WRONG FACT: DNA contains deoxyribose; ribose is the RNA sugar. Contradicts the gold.",
+      "seeded_class": "wrong"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-46",
+      "id": "c-46",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-47",
+      "id": "c-47",
+      "reason": "Correct per gold.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-48",
+      "id": "c-48",
+      "reason": "Correct per gold; adds the double-ring cue.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": false,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_useful",
+      "content_area": "nucleic_acids",
+      "gold_id": "g-49",
+      "id": "c-49",
+      "reason": "Correct per gold; both pairings given.",
+      "seeded_class": "correct_useful"
+    },
+    {
+      "blocked": true,
+      "checker_agrees_with_seed": true,
+      "classification": "correct_bad_teaching",
+      "content_area": "macromolecule_synthesis",
+      "gold_id": "g-02",
+      "id": "c-50",
+      "reason": "DUPLICATE: same fact (hydrolysis, gold g-02) as card c-02, which already teaches it more fully. A near-identical redundant card adds no value and should be blocked.",
+      "seeded_class": "correct_bad_teaching"
+    }
+  ],
+  "source_name": "OpenStax Biology 2e, Chapter 3: Biological Macromolecules (CC BY 4.0)",
+  "source_note": "captured stand-in: classifications read from generated_cards.json \u2014 NOT a live model run",
+  "timestamp": "2026-07-05T20:12:18.124922+00:00",
+  "wrong_allowed_through": 0
+}

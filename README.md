@@ -6,8 +6,9 @@
 
 This is a fork of Anki and is distributed under **AGPL-3.0-or-later**, with credit to Anki and its contributors (see [Upstream Anki](#upstream-anki) and [LICENSE](./LICENSE)). Some parts of Anki are BSD-3-Clause.
 
-Development happens on the `feat/didnt-learn-button` branch (the fork's active
-branch; `main` tracks upstream Anki).
+All of the fork's work — the Rust engine change, both apps, the sync server, and
+the eval harness — lives on the **`main`** branch of this fork (the commit history
+below is on `main`).
 
 ## Status
 
@@ -281,6 +282,9 @@ entrypoints cover the Friday work; both need a prior `just build`:
 ```
 just test-mcat     # sync (7b) + "AI off still scores" + eval-harness self-tests
 just eval-ai       # AI answer-grader eval + leakage check -> writes results/latest.{md,json}
+just eval-cards    # AI card-check (7f): 50 gold Q&A vs 50 generated cards -> correct/wrong/bad-teaching + block gate
+just eval-coverage # coverage map (7c): deck tags vs the official AAMC MCAT outline -> true syllabus coverage % + abstain line
+just bench         # one-command benchmark (7h / Section 10): p50/p95/worst for grade/next-card/dashboard on a 50k-card deck
 ```
 
 **What each test proves, and whether it's real or simulated:**
@@ -289,7 +293,10 @@ just eval-ai       # AI answer-grader eval + leakage check -> writes results/lat
 | --- | --- | --- | --- |
 | Two-way sync + conflict (7b, Friday) | `pylib/tests/test_mcat_sync.py` | **REAL** | Boots the fork's actual sync server, seeds A→server→B, reviews 10 distinct cards on A and 10 different on B offline, reconnects: all 20 land with **none lost, none double-counted**; then the same card offline on both → append-only log keeps **both** reviews and the **last-writer-wins** conflict rule picks a deterministic winner. |
 | AI off still scores (Friday) | `pylib/tests/test_mcat_ai_off.py` | **REAL** | Grader **fails closed** with no API key (→ manual grading); the Memory score still computes locally from FSRS history via the `tag_mastery` RPC (real number + 90% CI), with the give-up thresholds met — zero AI, zero network. |
-| AI eval + baseline (Friday) | `just eval-ai`, `qt/tests/test_mcat_eval.py` | **REAL** (baseline + leakage local; LLM = real `gpt-5-nano` via `OPENAI_API_KEY`) | Held-out accuracy / false-accept / false-reject / macro-F1: keyword baseline (75.2%, **fails** cutoff) vs `gpt-5-nano` (100% on this set, **passes**). See [AI evaluation](#ai-evaluation). |
+| AI eval + baseline (Friday) | `just eval-ai`, `qt/tests/test_mcat_eval.py` | **REAL** (baseline + leakage local; LLM = real `gpt-5-nano` via `OPENAI_API_KEY`) | Held-out accuracy / false-accept / false-reject / macro-F1: keyword baseline (75.2%, **fails** cutoff) vs real `gpt-5-nano` (**99.2%**, 0% false-accept, **passes** — see `BASELINE_COMPARISON.md`). With no key, `results/latest.md` shows a **clearly-labeled Claude stand-in**, never presented as the shipping model. See [AI evaluation](#ai-evaluation). |
+| AI card-check (7f) | `qt/tests/mcat_eval/card_check.py` (`just eval-cards`) | **REAL** checker math; card verdicts real `gpt-5-nano` via `OPENAI_API_KEY`, else **labeled stand-in** | 50 gold MCAT Q&A (OpenStax Biology 2e, ch. 3, CC BY 4.0) vs 50 generated cards: **40** correct-useful / **5** wrong / **5** correct-but-bad-teaching; pre-registered cutoff (≥80% useful AND 0 wrong through) → **10 blocked, PASS**. |
+| Coverage map (7c) | `qt/tests/mcat_eval/coverage_map.py` (`just eval-coverage`) | **REAL** outline (authoritative AAMC); deck-tag mapping is a **documented assumption** | Maps deck tags onto the official AAMC outline (31 content categories across 10 Foundational Concepts; CARS excluded honestly). True syllabus coverage % with an explicit **abstain line** (readiness withheld < 50% coverage) — distinct from the in-app deck-progress metric. |
+| Speed / benchmark (7h, Section 10) | `qt/tests/mcat_eval/bench.py` (`just bench`) | **REAL** (live Collection + Rust core) | p50/p95/worst on a **50,000-card** deck: grade card p95 0.24 ms (<50), next-card p95 0.06 ms (<100), dashboard cold p95 197 ms (<1000), refresh p95 187 ms (<500), peak RSS 137 MiB — **all targets met**. See `SPEED_TARGETS.md`. |
 | Leakage (7e) | `qt/tests/mcat_eval/leakage.py` (via `just eval-ai`) | **REAL** | 0 exact + 0 near-duplicate overlaps between the held-out set and the grader prompt — CLEAN, enforced as a hard gate. |
 | Prompt injection (section 10) | `qt/tests/mcat_eval/injection_eval.py` (via `just eval-ai`) | **REAL** (baseline local; LLM = real `gpt-5-nano`, before+after) | 26-record adversarial set (20 attacks). Un-hardened prompt resisted 18/20 (10%, **fails**); we hardened `_SYSTEM_PROMPT` and re-measured → **20/20 (0%, PASS)**. Keyword baseline fooled by 6/20. See [Prompt-injection resistance](#prompt-injection-resistance-rubric-section-10). |
 | Rust engine change | `cargo test -p anki tag_mastery` (23) · `cargo test -p anki never_learned` (18) | **REAL** | Mastery-query aggregation, honest-score fields, give-up boundary, read-only/undo/integrity; never-learned bulk op. |
